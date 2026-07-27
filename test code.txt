@@ -1,0 +1,28 @@
+JWT Secret แบบสุ่มผ่าน Node.js ได้ด้วยคำสั่ง
+//*node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+
+ตัวอย่างการใช้สำหรับ Admin เท่านั้น:
+
+
+role.middleware.ts
+router.get(
+  "/admin-only",
+  authenticateToken,
+  authorizeRoles("ADMIN"),
+  adminController,
+);
+
+หรืออนุญาตทั้งสอง Role:
+
+router.get(
+  "/users-and-admins",
+  authenticateToken,
+  authorizeRoles("USER", "ADMIN"),
+  controller,
+);
+
+401 Unauthorized
+ยังไม่ได้ล็อกอิน หรือ Token ไม่ถูกต้อง
+
+403 Forbidden
+ล็อกอินแล้ว แต่ไม่มีสิทธิ์ตาม Role
