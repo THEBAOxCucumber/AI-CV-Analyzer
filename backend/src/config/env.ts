@@ -44,4 +44,14 @@ export const env = {
     secret: getRequiredEnv("JWT_SECRET"),
     expiresIn: process.env.JWT_EXPIRES_IN ?? "1d",
   },
+
+   upload: {
+    resumeDirectory:
+      process.env.UPLOAD_DIR ?? "uploads/resumes",
+
+    maxResumeSizeMb: getNumberEnv(
+      "MAX_RESUME_SIZE_MB",
+      5,
+    ),
+  },
 };

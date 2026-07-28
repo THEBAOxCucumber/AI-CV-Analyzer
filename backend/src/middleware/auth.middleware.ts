@@ -6,6 +6,7 @@ import type {
 import jwt, { type JwtPayload } from "jsonwebtoken";
 
 import { env } from "../config/env.js";
+import { AppError } from "../errors/app-error.js";
 import { findUserById } from "../modules/auth/auth.repository.js";
 
 interface AccessTokenPayload extends JwtPayload {
@@ -30,58 +31,58 @@ function isAccessTokenPayload(
 
 export async function authenticateToken(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): Promise<void> {
   try {
     const authorizationHeader = req.headers.authorization;
 
     if (!authorizationHeader) {
-      res.status(401).json({
-        success: false,
-        message: "กรุณาเข้าสู่ระบบ",
-      });
-      return;
+      throw new AppError(
+        "กรุณาเข้าสู่ระบบ",
+        401,
+        "TOKEN_REQUIRED",
+      );
     }
 
     const [scheme, token] = authorizationHeader.split(" ");
 
     if (scheme !== "Bearer" || !token) {
-      res.status(401).json({
-        success: false,
-        message: "รูปแบบ Token ไม่ถูกต้อง",
-      });
-      return;
+      throw new AppError(
+        "รูปแบบ Token ไม่ถูกต้อง",
+        401,
+        "INVALID_TOKEN_FORMAT",
+      );
     }
 
     const decoded = jwt.verify(token, env.jwt.secret);
 
     if (!isAccessTokenPayload(decoded)) {
-      res.status(401).json({
-        success: false,
-        message: "ข้อมูลใน Token ไม่ถูกต้อง",
-      });
-      return;
+      throw new AppError(
+        "ข้อมูลใน Token ไม่ถูกต้อง",
+        401,
+        "INVALID_TOKEN_PAYLOAD",
+      );
     }
 
     const userId = Number(decoded.sub);
 
     if (!Number.isInteger(userId) || userId <= 0) {
-      res.status(401).json({
-        success: false,
-        message: "รหัสผู้ใช้ใน Token ไม่ถูกต้อง",
-      });
-      return;
+      throw new AppError(
+        "รหัสผู้ใช้ใน Token ไม่ถูกต้อง",
+        401,
+        "INVALID_USER_ID",
+      );
     }
 
     const user = await findUserById(userId);
 
     if (!user) {
-      res.status(401).json({
-        success: false,
-        message: "ไม่พบบัญชีผู้ใช้",
-      });
-      return;
+      throw new AppError(
+        "ไม่พบบัญชีผู้ใช้",
+        401,
+        "USER_NOT_FOUND",
+      );
     }
 
     req.user = {
@@ -93,26 +94,27 @@ export async function authenticateToken(
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      res.status(401).json({
-        success: false,
-        message: "Token หมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง",
-      });
+      next(
+        new AppError(
+          "Token หมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง",
+          401,
+          "TOKEN_EXPIRED",
+        ),
+      );
       return;
     }
 
     if (error instanceof jwt.JsonWebTokenError) {
-      res.status(401).json({
-        success: false,
-        message: "Token ไม่ถูกต้อง",
-      });
+      next(
+        new AppError(
+          "Token ไม่ถูกต้อง",
+          401,
+          "INVALID_TOKEN",
+        ),
+      );
       return;
     }
 
-    console.error("Authentication error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
-    });
+    next(error);
   }
 }

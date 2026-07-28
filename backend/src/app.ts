@@ -1,12 +1,14 @@
 import cors from "cors";
-import express, {
-  type NextFunction,
-  type Request,
-  type Response,
-} from "express";
+import express from "express";
 
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./middleware/error.middleware.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { profileRouter } from "./modules/profile/profile.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
+import { resumeRouter } from "./modules/resume/resume.routes.js";
 
 export const app = express();
 
@@ -20,7 +22,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (_req: Request, res: Response) => {
+app.get("/", (_req, res) => {
   res.status(200).json({
     success: true,
     message: "AI Resume Analyzer API",
@@ -29,25 +31,17 @@ app.get("/", (_req: Request, res: Response) => {
 
 app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: "API endpoint not found",
-  });
-});
+app.use("/api/profile", profileRouter);
+app.use("/api/resumes", resumeRouter);
 
-app.use(
-  (
-    error: Error,
-    _req: Request,
-    res: Response,
-    _next: NextFunction,
-  ) => {
-    console.error(error);
+/*
+ * ใช้เมื่อไม่พบ Route
+ * ต้องอยู่หลัง Route ทั้งหมด
+ */
+app.use(notFoundHandler);
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  },
-);
+/*
+ * Error Handler กลาง
+ * ต้องอยู่ท้ายสุดเสมอ
+ */
+app.use(errorHandler);

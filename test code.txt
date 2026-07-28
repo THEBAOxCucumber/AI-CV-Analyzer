@@ -1,10 +1,11 @@
+http://localhost/phpmyadmin
+
 JWT Secret แบบสุ่มผ่าน Node.js ได้ด้วยคำสั่ง
 //*node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
+
+role.middleware.tsrole.middleware.ts
 ตัวอย่างการใช้สำหรับ Admin เท่านั้น:
-
-
-role.middleware.ts
 router.get(
   "/admin-only",
   authenticateToken,
@@ -26,3 +27,41 @@ router.get(
 
 403 Forbidden
 ล็อกอินแล้ว แต่ไม่มีสิทธิ์ตาม Role
+
+findProfileByUserId
+SELECT *
+FROM user_profiles
+WHERE user_id = ?
+LIMIT 1;
+
+createProfile
+INSERT INTO user_profiles
+(
+user_id,
+phone,
+university,
+faculty,
+major,
+education_level,
+graduation_year,
+interested_position,
+experience_level,
+bio
+)
+VALUES
+(?,?,?,?,?,?,?,?,?,?)
+
+UPDATE user_profiles
+SET
+
+phone=?,
+university=?,
+faculty=?,
+major=?,
+education_level=?,
+graduation_year=?,
+interested_position=?,
+experience_level=?,
+bio=?
+
+WHERE user_id=?

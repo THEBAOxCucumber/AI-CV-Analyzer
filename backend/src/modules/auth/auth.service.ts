@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt, { type SignOptions } from "jsonwebtoken";
-
+import { AppError } from "../../errors/app-error.js";
 import { env } from "../../config/env.js";
 import {
   createUser,
@@ -64,7 +64,11 @@ export async function register(
   const existingUser = await findUserByEmail(normalizedInput.email);
 
   if (existingUser) {
-    throw new Error("อีเมลนี้ถูกใช้งานแล้ว");
+    throw new AppError(
+  "อีเมลนี้ถูกใช้งานแล้ว",
+  409,
+  "EMAIL_ALREADY_EXISTS",
+);
   }
 
   const passwordHash = await bcrypt.hash(
@@ -90,8 +94,12 @@ export async function login(
   const userRow = await findUserByEmail(email);
 
   if (!userRow) {
-    throw new Error("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-  }
+  throw new AppError(
+    "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+    401,
+    "INVALID_CREDENTIALS",
+  );
+}
 
   const passwordMatches = await bcrypt.compare(
     input.password,
@@ -99,8 +107,12 @@ export async function login(
   );
 
   if (!passwordMatches) {
-    throw new Error("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-  }
+  throw new AppError(
+    "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+    401,
+    "INVALID_CREDENTIALS",
+  );
+}
 
   const user: PublicUser = {
     id: userRow.id,
@@ -121,9 +133,12 @@ export async function getCurrentUser(
   const userRow = await findUserById(userId);
 
   if (!userRow) {
-    throw new Error("ไม่พบบัญชีผู้ใช้");
-  }
-
+  throw new AppError(
+    "ไม่พบบัญชีผู้ใช้",
+    404,
+    "USER_NOT_FOUND",
+  );
+}
   return {
     id: userRow.id,
     firstName: userRow.first_name,

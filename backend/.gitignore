@@ -4,3 +4,5 @@ dist
 uploads
 *.log
 .DS_Store
+uploads/resumes/*
+!uploads/resumes/.gitkeep
