@@ -12,20 +12,23 @@ function getRequiredEnv(name: string): string {
   return value;
 }
 
-function getNumberEnv(name: string, defaultValue: number): number {
-  const value = process.env[name];
+function getNumberEnv(
+  key: string,
+  fallback: number,
+): number {
+  const rawValue = process.env[key];
 
-  if (!value) {
-    return defaultValue;
+  if (!rawValue) {
+    return fallback;
   }
 
-  const numberValue = Number(value);
+  const parsedValue = Number(rawValue);
 
-  if (Number.isNaN(numberValue)) {
-    throw new Error(`Environment variable ${name} must be a number`);
+  if (!Number.isFinite(parsedValue)) {
+    throw new Error(`${key} ต้องเป็นตัวเลข`);
   }
 
-  return numberValue;
+  return parsedValue;
 }
 
 export const env = {
@@ -52,6 +55,69 @@ export const env = {
     maxResumeSizeMb: getNumberEnv(
       "MAX_RESUME_SIZE_MB",
       5,
+    ),
+  },
+
+   embedding: {
+    provider:
+      process.env.EMBEDDING_PROVIDER ?? "gemini",
+
+    model:
+      process.env.EMBEDDING_MODEL ??
+      "gemini-embedding-001",
+
+    dimensions: getNumberEnv(
+      "EMBEDDING_DIMENSIONS",
+      1536,
+    ),
+
+    batchSize: getNumberEnv(
+      "EMBEDDING_BATCH_SIZE",
+      20,
+    ),
+  },
+
+  gemini: {
+    apiKey: getRequiredEnv("GEMINI_API_KEY"),
+
+  generationModel:
+    process.env.GEMINI_GENERATION_MODEL ??
+    "gemini-3.6-flash",
+  },
+
+  qdrant: {
+    url:
+      process.env.QDRANT_URL ??
+      "http://localhost:6333",
+
+    apiKey:
+      process.env.QDRANT_API_KEY || undefined,
+
+    collection:
+      process.env.QDRANT_COLLECTION ??
+      "resume_chunks_gemini_1536",
+  },
+
+   semanticSearch: {
+    defaultLimit: getNumberEnv(
+      "SEMANTIC_SEARCH_LIMIT",
+      5,
+    ),
+
+    scoreThreshold: getNumberEnv(
+      "SEMANTIC_SCORE_THRESHOLD",
+      0.45,
+    ),
+  },
+
+   resumeAnalysis: {
+    promptVersion:
+      process.env.RESUME_ANALYSIS_PROMPT_VERSION ??
+      "resume-analysis-v1",
+
+    maxContextCharacters: getNumberEnv(
+      "RESUME_ANALYSIS_MAX_CONTEXT_CHARS",
+      40_000,
     ),
   },
 };

@@ -33,6 +33,11 @@ function mapResumeChunk(
     content: row.content,
     characterCount: row.character_count,
     embeddingStatus: row.embedding_status,
+    vectorPointId: row.vector_point_id,
+    embeddingModel: row.embedding_model,
+    embeddingDimensions: row.embedding_dimensions,
+    embeddingError: row.embedding_error,
+    embeddedAt: row.embedded_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

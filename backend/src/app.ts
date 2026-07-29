@@ -9,6 +9,9 @@ import { authRouter } from "./modules/auth/auth.routes.js";
 import { profileRouter } from "./modules/profile/profile.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
 import { resumeRouter } from "./modules/resume/resume.routes.js";
+import {
+  semanticSearchRouter,
+} from "./modules/search/semantic-search.routes.js";
 
 export const app = express();
 
@@ -33,6 +36,13 @@ app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/resumes", resumeRouter);
+app.use(
+  "/api/resumes",
+  semanticSearchRouter,
+);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 /*
  * ใช้เมื่อไม่พบ Route

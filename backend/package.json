@@ -13,6 +13,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/genai": "^2.13.0",
+    "@qdrant/js-client-rest": "^1.18.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -22,7 +24,8 @@
     "multer": "^2.2.0",
     "mysql2": "^3.23.1",
     "pdf-parse": "^2.4.5",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

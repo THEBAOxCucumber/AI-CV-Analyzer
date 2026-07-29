@@ -3,9 +3,12 @@ import type {
   ResultSetHeader,
 } from "mysql2/promise";
 
+
+
 import { database } from "../../config/database.js";
 import type {
   CreateResumeChunkInput,
+  PendingResumeChunk,
   ResumeChunkRow,
 } from "./resume-chunk.types.js";
 
@@ -82,6 +85,11 @@ export async function findChunksByResumeId(
           content,
           character_count,
           embedding_status,
+          vector_point_id,
+          embedding_model,
+          embedding_dimensions,
+          embedding_error,
+          embedded_at,
           created_at,
           updated_at
         FROM resume_chunks
@@ -159,4 +167,151 @@ export async function markResumeChunkingFailed(
     `,
     [errorMessage, resumeId, userId],
   );
+}
+
+export async function findPendingChunksByResumeId(
+  resumeId: number,
+  userId: number,
+  limit: number,
+): Promise<PendingResumeChunk[]> {
+  const [rows] = await database.execute<
+    Array<
+      import("mysql2").RowDataPacket &
+        PendingResumeChunk
+    >
+  >(
+    `
+      SELECT
+        id,
+        resume_id AS resumeId,
+        user_id AS userId,
+        section,
+        chunk_index AS chunkIndex,
+        content
+      FROM resume_chunks
+      WHERE resume_id = ?
+        AND user_id = ?
+        AND embedding_status = 'PENDING'
+      ORDER BY chunk_index ASC
+      LIMIT ?
+    `,
+    [resumeId, userId, limit],
+  );
+
+  return rows;
+}
+
+//เปลี่ยนสถานะเป็น PROCESSING
+export async function markChunksProcessing(
+  chunkIds: number[],
+): Promise<void> {
+  if (chunkIds.length === 0) {
+    return;
+  }
+
+  const placeholders = chunkIds
+    .map(() => "?")
+    .join(", ");
+
+  await database.execute<ResultSetHeader>(
+    `
+      UPDATE resume_chunks
+      SET
+        embedding_status = 'PROCESSING',
+        embedding_error = NULL
+      WHERE id IN (${placeholders})
+        AND embedding_status = 'PENDING'
+    `,
+    chunkIds,
+  );
+}
+
+//เปลี่ยนสถานะเป็น COMPLETED
+export interface CompleteChunkEmbeddingInput {
+  chunkId: number;
+  vectorPointId: string;
+  embeddingModel: string;
+  embeddingDimensions: number;
+}
+
+//เปลี่ยนสถานะเป็น FAILED
+export async function markChunkEmbeddingCompleted(
+  input: CompleteChunkEmbeddingInput,
+  connection?: PoolConnection,
+): Promise<boolean> {
+  const executor = connection ?? database;
+
+  const [result] =
+    await executor.execute<ResultSetHeader>(
+      `
+        UPDATE resume_chunks
+        SET
+          embedding_status = 'COMPLETED',
+          vector_point_id = ?,
+          embedding_model = ?,
+          embedding_dimensions = ?,
+          embedding_error = NULL,
+          embedded_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [
+        input.vectorPointId,
+        input.embeddingModel,
+        input.embeddingDimensions,
+        input.chunkId,
+      ],
+    );
+
+  return result.affectedRows > 0;
+}
+
+export async function markChunksEmbeddingFailed(
+  chunkIds: number[],
+  errorMessage: string,
+): Promise<void> {
+  if (chunkIds.length === 0) {
+    return;
+  }
+
+  const placeholders = chunkIds
+    .map(() => "?")
+    .join(", ");
+
+  await database.execute<ResultSetHeader>(
+    `
+      UPDATE resume_chunks
+      SET
+        embedding_status = 'FAILED',
+        embedding_error = ?
+      WHERE id IN (${placeholders})
+    `,
+    [errorMessage, ...chunkIds],
+  );
+}
+
+export async function resetProcessingChunksToPending(
+  resumeId: number,
+  userId: number,
+): Promise<number> {
+  const [result] =
+    await database.execute<ResultSetHeader>(
+      `
+        UPDATE resume_chunks
+        SET
+          embedding_status = 'PENDING',
+          embedding_error = NULL
+        WHERE resume_id = ?
+          AND user_id = ?
+          AND embedding_status = 'PROCESSING'
+          AND updated_at <
+              DATE_SUB(NOW(), INTERVAL 10 MINUTE)
+      `,
+      [resumeId, userId],
+    );
+    await resetProcessingChunksToPending(
+  resumeId,
+  userId,
+);
+
+  return result.affectedRows;
 }

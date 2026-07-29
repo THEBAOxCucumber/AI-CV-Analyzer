@@ -6,6 +6,7 @@ import { resumeUpload } from "../../middleware/resume-upload.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import {
   createResumeChunksController,
+  createResumeEmbeddingsController,
   getResumeChunksController,
   getMyResumesController,
   uploadResumeController,
@@ -44,3 +45,38 @@ resumeRouter.get(
   }),
   getResumeChunksController,
 );
+
+resumeRouter.post(
+  "/upload",
+  authenticateToken,
+  resumeUpload.single("resume"),
+  uploadResumeController,
+);
+
+resumeRouter.post(
+  "/:resumeId/chunks",
+  authenticateToken,
+  validate({
+    params: resumeIdParamsSchema,
+  }),
+  createResumeChunksController,
+);
+
+resumeRouter.get(
+  "/:resumeId/chunks",
+  authenticateToken,
+  validate({
+    params: resumeIdParamsSchema,
+  }),
+  getResumeChunksController,
+);
+
+resumeRouter.post(
+  "/:resumeId/embeddings",
+  authenticateToken,
+  validate({
+    params: resumeIdParamsSchema,
+  }),
+  createResumeEmbeddingsController,
+);
+
