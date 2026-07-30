@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS resumes (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-    user_id INT NOT NULL,
+    user_id INT UNSIGNED NOT NULL UNIQUE,
 
     original_name VARCHAR(255) NOT NULL,
     stored_name VARCHAR(255) NOT NULL,

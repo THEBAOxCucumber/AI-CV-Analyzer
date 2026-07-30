@@ -12,6 +12,10 @@ import { resumeRouter } from "./modules/resume/resume.routes.js";
 import {
   semanticSearchRouter,
 } from "./modules/search/semantic-search.routes.js";
+import {
+  resumeAnalysisRouter,
+} from "./modules/analysis/resume-analysis.routes.js";
+
 
 export const app = express();
 
@@ -39,6 +43,10 @@ app.use("/api/resumes", resumeRouter);
 app.use(
   "/api/resumes",
   semanticSearchRouter,
+);
+app.use(
+  "/api/resumes",
+  resumeAnalysisRouter,
 );
 
 app.use(notFoundHandler);

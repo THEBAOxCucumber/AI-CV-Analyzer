@@ -174,6 +174,10 @@ export async function findPendingChunksByResumeId(
   userId: number,
   limit: number,
 ): Promise<PendingResumeChunk[]> {
+  const safeLimit = Number.isFinite(limit)
+    ? Math.max(1, Math.floor(limit))
+    : 10;
+
   const [rows] = await database.execute<
     Array<
       import("mysql2").RowDataPacket &
@@ -193,9 +197,9 @@ export async function findPendingChunksByResumeId(
         AND user_id = ?
         AND embedding_status = 'PENDING'
       ORDER BY chunk_index ASC
-      LIMIT ?
+      LIMIT ${safeLimit}
     `,
-    [resumeId, userId, limit],
+    [resumeId, userId],
   );
 
   return rows;
@@ -314,4 +318,61 @@ export async function resetProcessingChunksToPending(
 );
 
   return result.affectedRows;
+}
+
+export interface CompletedResumeChunk {
+  id: number;
+  resumeId: number;
+  chunkIndex: number;
+  section: string;
+  content: string;
+}
+
+import type {
+  RowDataPacket,
+} from "mysql2";
+
+
+
+interface CompletedResumeChunkRow
+  extends RowDataPacket {
+  id: number;
+  resume_id: number;
+  chunk_index: number;
+  section: string;
+  content: string;
+}
+
+export async function findCompletedChunksByResumeId(
+  resumeId: number,
+  userId: number,
+): Promise<CompletedResumeChunk[]> {
+  const [rows] = await database.execute<
+    CompletedResumeChunkRow[]
+  >(
+    `
+      SELECT
+        rc.id,
+        rc.resume_id,
+        rc.chunk_index,
+        rc.section,
+        rc.content
+      FROM resume_chunks AS rc
+      INNER JOIN resumes AS r
+        ON r.id = rc.resume_id
+      WHERE rc.resume_id = ?
+        AND r.user_id = ?
+        AND rc.embedding_status = 'COMPLETED'
+      ORDER BY rc.chunk_index ASC
+    `,
+    [resumeId, userId],
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    resumeId: row.resume_id,
+    chunkIndex: row.chunk_index,
+    section: row.section,
+    content: row.content,
+  }));
 }

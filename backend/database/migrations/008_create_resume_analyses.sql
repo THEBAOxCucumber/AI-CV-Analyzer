@@ -1,8 +1,8 @@
 CREATE TABLE resume_analyses (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-    resume_id BIGINT UNSIGNED NOT NULL,
-    user_id BIGINT UNSIGNED NOT NULL,
+    resume_id INT UNSIGNED NOT NULL UNIQUE,
+    user_id INT UNSIGNED NOT NULL,
 
     status ENUM(
         'PENDING',
@@ -51,11 +51,7 @@ CREATE TABLE resume_analyses (
         REFERENCES users(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT uq_resume_analysis
-        UNIQUE (resume_id, user_id),
-
-    INDEX idx_resume_analysis_status (
-        user_id,
-        status
-    )
+    INDEX idx_resume_analyses_resume_id (resume_id),
+    INDEX idx_resume_analyses_user_id (user_id),
+    INDEX idx_resume_analyses_status (status)
 );

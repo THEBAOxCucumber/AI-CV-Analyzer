@@ -1,7 +1,7 @@
 CREATE TABLE user_profiles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
-    user_id INT NOT NULL UNIQUE,
+    user_id INT UNSIGNED NOT NULL UNIQUE,
 
     phone VARCHAR(20),
 
@@ -38,7 +38,7 @@ CREATE TABLE user_profiles (
         ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_profile_user
-        FOREIGN KEY(user_id)
+        FOREIGN KEY (user_id)
         REFERENCES users(id)
         ON DELETE CASCADE
 );
