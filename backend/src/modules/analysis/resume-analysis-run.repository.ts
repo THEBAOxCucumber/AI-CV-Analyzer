@@ -302,3 +302,47 @@ export async function markAnalysisRunFailed(
     ],
   );
 }
+
+export async function findActiveAnalysisRun(
+  resumeId: number,
+  userId: number,
+): Promise<ResumeAnalysisRunRecord | null> {
+  const [rows] = await database.execute<
+    AnalysisRunRow[]
+  >(
+    `
+      SELECT
+        id,
+        resume_id,
+        user_id,
+        job_description_id,
+        analysis_type,
+        status,
+        base_resume_score,
+        job_match_score,
+        prompt_version,
+        model,
+        attempt_count,
+        error_code,
+        error_message,
+        created_at,
+        updated_at
+      FROM resume_analysis_runs
+      WHERE resume_id = ?
+        AND user_id = ?
+        AND status IN (
+          'QUEUED',
+          'PROCESSING'
+        )
+      ORDER BY created_at DESC
+      LIMIT 1
+    `,
+    [resumeId, userId],
+  );
+
+  const row = rows[0];
+
+  return row
+    ? mapAnalysisRun(row)
+    : null;
+}

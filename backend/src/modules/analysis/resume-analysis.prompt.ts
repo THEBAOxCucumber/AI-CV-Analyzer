@@ -4,7 +4,17 @@ import type {
 
 interface BuildResumeAnalysisPromptInput {
   chunks: CompletedResumeChunk[];
+
+  analysisType:
+    | "BASE"
+    | "JOB_MATCH"
+    | "COMBINED";
+
+  jobDescription?: string | null;
+  
 }
+
+
 
 function formatResumeChunks(
   chunks: CompletedResumeChunk[],
@@ -28,8 +38,28 @@ export function buildResumeAnalysisPrompt(
     input.chunks,
   );
 
+  const jobContext = input.jobDescription
+    ? `
+Job Description:
+
+${input.jobDescription}
+`
+    : `
+ไม่มี Job Description
+
+หาก analysisType เป็น BASE:
+- วิเคราะห์คุณภาพ Resume โดยอิสระ
+- ห้ามสมมติ Job Description
+- ประเมิน jobRelevance จากความสอดคล้องภายใน Resume เท่านั้น
+`;
+
   return `
 คุณเป็นระบบตรวจสอบและให้คะแนน Resume อย่างเป็นกลาง
+
+Analysis Type:
+${input.analysisType}
+
+${jobContext}
 
 คุณต้องวิเคราะห์จากข้อความ Resume ที่ให้มาเท่านั้น
 ห้ามเดา ห้ามแต่งข้อมูล และห้ามใช้ความรู้ภายนอกมาเติมข้อมูลที่ Resume ไม่ได้ระบุ

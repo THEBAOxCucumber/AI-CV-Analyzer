@@ -2,7 +2,14 @@ import { Router } from "express";
 
 import { authenticateToken } from "../../middleware/auth.middleware.js";
 import { resumeUpload } from "../../middleware/resume-upload.middleware.js";
+import {
+  createResumeAnalysisRunController,
+  getResumeAnalysisHistoryController,
+} from "../analysis/resume-analysis-run.controller.js";
 
+import {
+  createAnalysisRunBodySchema,
+} from "../analysis/resume-analysis-run.validation.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import {
   createResumeChunksController,
@@ -80,3 +87,21 @@ resumeRouter.post(
   createResumeEmbeddingsController,
 );
 
+resumeRouter.post(
+  "/:resumeId/analyses",
+  authenticateToken,
+  validate({
+    params: resumeIdParamsSchema,
+    body: createAnalysisRunBodySchema,
+  }),
+  createResumeAnalysisRunController,
+);
+
+resumeRouter.get(
+  "/:resumeId/analyses",
+  authenticateToken,
+  validate({
+    params: resumeIdParamsSchema,
+  }),
+  getResumeAnalysisHistoryController,
+);

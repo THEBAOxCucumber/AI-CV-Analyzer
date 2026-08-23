@@ -216,6 +216,8 @@ export async function analyzeResume(
         const prompt =
             buildResumeAnalysisPrompt({
                 chunks: selectedChunks,
+                analysisType: "BASE",
+                jobDescription: null,
             });
 
         console.log(

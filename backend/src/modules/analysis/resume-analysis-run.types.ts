@@ -13,8 +13,12 @@ export type ResumeAnalysisStatus =
 export interface CreateAnalysisRunInput {
   resumeId: number;
   userId: number;
-  jobDescriptionId?: number;
   analysisType: ResumeAnalysisType;
+
+  jobDescriptionId:
+    | number
+    | null;
+
   promptVersion: string;
 }
 
@@ -54,7 +58,9 @@ export interface ResumeAnalysisRunRecord {
   id: number;
   resumeId: number;
   userId: number;
-  jobDescriptionId: number | null;
+  jobDescriptionId:
+    | number
+    | null;
 
   analysisType: ResumeAnalysisType;
   status: ResumeAnalysisStatus;

@@ -1,6 +1,8 @@
 import cors from "cors";
 import express from "express";
-
+import {
+  analysisRouter,
+} from "./modules/analysis/analysis.routes.js";
 import {
   errorHandler,
   notFoundHandler,
@@ -47,6 +49,10 @@ app.use(
 app.use(
   "/api/resumes",
   resumeAnalysisRouter,
+);
+app.use(
+  "/api/analyses",
+  analysisRouter,
 );
 
 app.use(notFoundHandler);
