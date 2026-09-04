@@ -35,7 +35,8 @@ export async function enqueueResumeAnalysis(
         analysisType:
           analysisRun.analysisType,
         promptVersion:
-          analysisRun.promptVersion,
+          analysisRun.promptVersion
+          ,
       },
       {
         jobId:
@@ -51,4 +52,17 @@ export async function enqueueResumeAnalysis(
         resumeAnalysisQueue.name,
     },
   );
+
+  console.log(
+  "Enqueue resume analysis:",
+  {
+    analysisRunId: analysisRun.id,
+    resumeId: analysisRun.resumeId,
+    userId: analysisRun.userId,
+    analysisType:
+      analysisRun.analysisType,
+    promptVersion:
+      analysisRun.promptVersion,
+  },
+);
 }

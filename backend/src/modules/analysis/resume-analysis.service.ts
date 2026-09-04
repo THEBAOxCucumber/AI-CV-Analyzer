@@ -214,11 +214,14 @@ export async function analyzeResume(
 
     try {
         const prompt =
-            buildResumeAnalysisPrompt({
-                chunks: selectedChunks,
-                analysisType: "BASE",
-                jobDescription: null,
-            });
+            buildResumeAnalysisPrompt(
+                {
+                    chunks: selectedChunks,
+                    analysisType: "BASE",
+                    jobDescription: null,
+                },
+                 env.resumeAnalysis.promptVersion,
+            );
 
         console.log(
             "Gemini resume analysis request:",

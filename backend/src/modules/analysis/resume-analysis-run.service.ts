@@ -23,6 +23,7 @@ import {
   findActiveAnalysisRun,
   findAnalysisHistory,
   findAnalysisRunById,
+  markAnalysisRunFailed,
 } from "./resume-analysis-run.repository.js";
 
 import type {
@@ -129,10 +130,6 @@ if (activeAnalysis) {
   );
 }
 
-await enforceAnalysisRateLimit(
-  input.userId,
-);
-
   /*
    * 4. Rate Limit
    *
@@ -148,33 +145,36 @@ await enforceAnalysisRateLimit(
    * 5. สร้าง Analysis Run
    */
   const analysisRun =
-    await createAnalysisRun({
-      resumeId:
-        input.resumeId,
+  await createAnalysisRun({
+    resumeId: input.resumeId,
+    userId: input.userId,
+    analysisType: input.analysisType,
+    jobDescriptionId,
+    promptVersion:
+      env.resumeAnalysis.promptVersion,
+  });
 
-      userId:
-        input.userId,
-
-      analysisType:
-        input.analysisType,
-
-      jobDescriptionId,
-
-      promptVersion:
-        env.resumeAnalysis.promptVersion,
-    });
-
-  /*
-   * 6. ส่งงานเข้า BullMQ
-   */
+try {
   await enqueueResumeAnalysis(
     analysisRun,
   );
+} catch (error) {
+  await markAnalysisRunFailed(
+    analysisRun.id,
+    "QUEUE_ENQUEUE_FAILED",
+    error instanceof Error
+      ? error.message
+      : "Failed to enqueue analysis job",
+  );
 
-  /*
-   * 7. Controller นำข้อมูลนี้ไปตอบ 202
-   */
-  return analysisRun;
+  throw new AppError(
+    "ไม่สามารถเริ่มงานวิเคราะห์ได้ในขณะนี้",
+    503,
+    "ANALYSIS_QUEUE_UNAVAILABLE",
+  );
+}
+
+return analysisRun;
 }
 
 export async function getResumeAnalysisHistory(

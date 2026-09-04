@@ -53,21 +53,6 @@ resumeRouter.get(
   getResumeChunksController,
 );
 
-resumeRouter.post(
-  "/upload",
-  authenticateToken,
-  resumeUpload.single("resume"),
-  uploadResumeController,
-);
-
-resumeRouter.post(
-  "/:resumeId/chunks",
-  authenticateToken,
-  validate({
-    params: resumeIdParamsSchema,
-  }),
-  createResumeChunksController,
-);
 
 resumeRouter.get(
   "/:resumeId/chunks",

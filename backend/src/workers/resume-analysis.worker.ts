@@ -6,7 +6,7 @@ import {
 import { env } from "../config/env.js";
 
 import {
-  redisConnection,
+  createRedisConnection,
 } from "../config/redis.js";
 
 import {
@@ -24,6 +24,9 @@ import {
 import type {
   ResumeAnalysisJobData,
 } from "../modules/analysis/resume-analysis-queue.types.js";
+
+const workerRedisConnection =
+  createRedisConnection();
 
 export const resumeAnalysisWorker =
   new Worker<ResumeAnalysisJobData>(
@@ -104,7 +107,7 @@ export const resumeAnalysisWorker =
 
     {
       connection:
-        redisConnection,
+        workerRedisConnection,
 
       concurrency:
         2,

@@ -68,9 +68,9 @@ export const createResumeAnalysisRunController =
         jobDescriptionId,
       } = req.body as {
         analysisType:
-          | "BASE"
-          | "JOB_MATCH"
-          | "COMBINED";
+        | "BASE"
+        | "JOB_MATCH"
+        | "COMBINED";
         jobDescriptionId?: number;
       };
 
@@ -108,19 +108,20 @@ export const getResumeAnalysisHistoryController =
           "resumeId",
         );
 
+      const parsedLimit =
+        Number(req.query.limit);
+
       const limit =
-        req.query.limit === undefined
+        req.query.limit === undefined ||
+          Number.isNaN(parsedLimit)
           ? 20
           : Math.min(
-              100,
-              Math.max(
-                1,
-                Number(
-                  req.query.limit,
-                ) || 20,
-              ),
-            );
-
+            100,
+            Math.max(
+              1,
+              parsedLimit,
+            ),
+          );
       const analyses =
         await getResumeAnalysisHistory(
           resumeId,

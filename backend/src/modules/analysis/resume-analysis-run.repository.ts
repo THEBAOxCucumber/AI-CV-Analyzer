@@ -18,15 +18,15 @@ interface AnalysisRunRow
   user_id: number;
   job_description_id: number | null;
   analysis_type:
-    | "BASE"
-    | "JOB_MATCH"
-    | "COMBINED";
+  | "BASE"
+  | "JOB_MATCH"
+  | "COMBINED";
   status:
-    | "PENDING"
-    | "QUEUED"
-    | "PROCESSING"
-    | "COMPLETED"
-    | "FAILED";
+  | "PENDING"
+  | "QUEUED"
+  | "PROCESSING"
+  | "COMPLETED"
+  | "FAILED";
   base_resume_score: number | null;
   job_match_score: number | null;
   prompt_version: string;
@@ -150,9 +150,9 @@ export async function findAnalysisHistory(
 ): Promise<ResumeAnalysisRunRecord[]> {
   const safeLimit = Number.isFinite(limit)
     ? Math.min(
-        100,
-        Math.max(1, Math.floor(limit)),
-      )
+      100,
+      Math.max(1, Math.floor(limit)),
+    )
     : 20;
 
   const [rows] = await database.execute<
@@ -178,7 +178,7 @@ export async function findAnalysisHistory(
       FROM resume_analysis_runs
       WHERE resume_id = ?
         AND user_id = ?
-      ORDER BY created_at DESC
+      ORDER BY created_at DESC, id DESC
       LIMIT ${safeLimit}
     `,
     [resumeId, userId],
@@ -189,20 +189,24 @@ export async function findAnalysisHistory(
 
 export async function markAnalysisRunProcessing(
   analysisRunId: number,
-): Promise<void> {
-  await database.execute<ResultSetHeader>(
-    `
-      UPDATE resume_analysis_runs
-      SET
-        status = 'PROCESSING',
-        started_at = NOW(),
-        attempt_count = attempt_count + 1,
-        error_code = NULL,
-        error_message = NULL
-      WHERE id = ?
-    `,
-    [analysisRunId],
-  );
+): Promise<boolean> {
+  const [result] =
+    await database.execute<ResultSetHeader>(
+      `
+        UPDATE resume_analysis_runs
+        SET
+          status = 'PROCESSING',
+          started_at = NOW(),
+          attempt_count = attempt_count + 1,
+          error_code = NULL,
+          error_message = NULL
+        WHERE id = ?
+          AND status IN ('QUEUED', 'PROCESSING')
+      `,
+      [analysisRunId],
+    );
+
+  return result.affectedRows === 1;
 }
 
 export async function markAnalysisRunCompleted(
@@ -242,6 +246,7 @@ export async function markAnalysisRunCompleted(
         error_code = NULL,
         error_message = NULL
       WHERE id = ?
+        AND status = 'PROCESSING'
     `,
     [
       result.baseResumeScore,
@@ -287,13 +292,17 @@ export async function markAnalysisRunFailed(
 ): Promise<void> {
   await database.execute<ResultSetHeader>(
     `
-      UPDATE resume_analysis_runs
+            UPDATE resume_analysis_runs
       SET
         status = 'FAILED',
         error_code = ?,
         error_message = ?,
         failed_at = NOW()
       WHERE id = ?
+        AND status IN (
+          'QUEUED',
+          'PROCESSING'
+        )
     `,
     [
       errorCode,
@@ -334,7 +343,7 @@ export async function findActiveAnalysisRun(
           'QUEUED',
           'PROCESSING'
         )
-      ORDER BY created_at DESC
+      ORDER BY created_at DESC, id DESC
       LIMIT 1
     `,
     [resumeId, userId],

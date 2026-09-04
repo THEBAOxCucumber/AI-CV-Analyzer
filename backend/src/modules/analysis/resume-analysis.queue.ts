@@ -1,21 +1,24 @@
 import { Queue } from "bullmq";
 
 import { env } from "../../config/env.js";
+
 import {
-  redisConnection,
+  createRedisConnection,
 } from "../../config/redis.js";
 
 import type {
   ResumeAnalysisJobData,
 } from "./resume-analysis-queue.types.js";
 
+const queueRedisConnection =
+  createRedisConnection();
 
 export const resumeAnalysisQueue =
   new Queue<ResumeAnalysisJobData>(
     env.analysisQueue.name,
     {
       connection:
-        redisConnection,
+        queueRedisConnection,
 
       defaultJobOptions: {
         attempts:

@@ -2,16 +2,18 @@ import type {
   CompletedResumeChunk,
 } from "../resume/resume-chunk.repository.js";
 
+import { AppError } from "../../errors/app-error.js";
+
 interface BuildResumeAnalysisPromptInput {
   chunks: CompletedResumeChunk[];
 
   analysisType:
-    | "BASE"
-    | "JOB_MATCH"
-    | "COMBINED";
+  | "BASE"
+  | "JOB_MATCH"
+  | "COMBINED";
 
   jobDescription?: string | null;
-  
+
 }
 
 
@@ -31,97 +33,216 @@ function formatResumeChunks(
     .join("\n\n---\n\n");
 }
 
-export function buildResumeAnalysisPrompt(
+function buildResumeAnalysisPromptV2(
   input: BuildResumeAnalysisPromptInput,
 ): string {
-  const context = formatResumeChunks(
-    input.chunks,
-  );
+  const context =
+    formatResumeChunks(
+      input.chunks,
+    );
 
-  const jobContext = input.jobDescription
-    ? `
+  const hasJobDescription =
+    Boolean(
+      input.jobDescription,
+    );
+
+  const jobContext =
+    input.jobDescription
+      ? `
 Job Description:
 
 ${input.jobDescription}
 `
-    : `
+      : `
 ไม่มี Job Description
 
-หาก analysisType เป็น BASE:
-- วิเคราะห์คุณภาพ Resume โดยอิสระ
+สำหรับ BASE analysis:
+- วิเคราะห์คุณภาพ Resume อย่างอิสระ
 - ห้ามสมมติ Job Description
-- ประเมิน jobRelevance จากความสอดคล้องภายใน Resume เท่านั้น
+- jobMatchScore ต้องเป็น null
+- jobMatch ต้องเป็น null
 `;
 
   return `
-คุณเป็นระบบตรวจสอบและให้คะแนน Resume อย่างเป็นกลาง
+คุณเป็นผู้เชี่ยวชาญด้านการวิเคราะห์ Resume
 
 Analysis Type:
 ${input.analysisType}
 
 ${jobContext}
 
-คุณต้องวิเคราะห์จากข้อความ Resume ที่ให้มาเท่านั้น
-ห้ามเดา ห้ามแต่งข้อมูล และห้ามใช้ความรู้ภายนอกมาเติมข้อมูลที่ Resume ไม่ได้ระบุ
+วิเคราะห์โดยใช้เฉพาะข้อมูลที่ปรากฏใน Resume และ Job Description ที่ให้มาเท่านั้น
 
-เกณฑ์ให้คะแนน:
+ข้อห้าม:
+- ห้ามเดาข้อมูลที่ไม่มีใน Resume
+- ห้ามเพิ่มประสบการณ์ ทักษะ ผลงาน หรือคุณสมบัติที่ไม่ได้ระบุ
+- ห้ามใช้ความรู้ภายนอกเพื่อสมมติข้อมูลของผู้สมัคร
+- ห้ามใช้ Markdown
+- ห้ามครอบ JSON ด้วย Markdown code block
+- ห้ามเพิ่ม field ที่ไม่ได้กำหนดไว้ใน Output
 
-1. contactInformation คะแนนเต็ม 10
-- มีชื่อ
-- มีอีเมลหรือช่องทางติดต่อ
-- มีข้อมูลสำคัญสำหรับการติดต่อ
-- ห้ามเปิดเผยหรือสร้างข้อมูลส่วนตัวใหม่
+Base Resume Score:
 
-2. professionalSummary คะแนนเต็ม 10
-- มีบทสรุปวิชาชีพที่ชัดเจน
-- ระบุทักษะหรือเป้าหมายอาชีพ
-- กระชับและเกี่ยวข้องกับสายงาน
+scores ต้องประกอบด้วย 7 หมวดเท่านั้น:
 
-3. skills คะแนนเต็ม 15
-- มี Technical Skills ที่ชัดเจน
-- มีการจัดกลุ่มหรืออธิบายทักษะ
-- ทักษะสอดคล้องกับประสบการณ์หรือโครงการ
+1. contactInformation
+คะแนนเต็ม 10
+พิจารณาความครบถ้วนและความชัดเจนของข้อมูลติดต่อ
 
-4. experience คะแนนเต็ม 20
-- มีตำแหน่ง หน้าที่ หรือบทบาทที่ชัดเจน
-- อธิบายสิ่งที่ลงมือทำ
-- มีผลลัพธ์หรือผลกระทบ
-- มีตัวเลขหรือหลักฐานเมื่อมีข้อมูล
+2. professionalSummary
+คะแนนเต็ม 15
+พิจารณาความชัดเจน ความกระชับ และการสื่อจุดเด่นทางอาชีพ
 
-5. projects คะแนนเต็ม 20
-- มีชื่อหรือรายละเอียดโครงการ
-- ระบุบทบาทและเทคโนโลยี
-- อธิบายปัญหา วิธีแก้ หรือผลลัพธ์
-- ห้ามให้คะแนนจากเทคโนโลยีที่ไม่ได้ระบุ
+3. skills
+คะแนนเต็ม 20
+พิจารณาความชัดเจนของ technical skills และความสอดคล้องกับประสบการณ์หรือโครงการ
 
-6. education คะแนนเต็ม 10
-- มีสถานศึกษา หลักสูตร หรือวุฒิ
-- มีข้อมูลที่เพียงพอและอ่านเข้าใจได้
+4. experience
+คะแนนเต็ม 25
+พิจารณาหน้าที่ ความรับผิดชอบ ผลลัพธ์ ผลกระทบ และหลักฐานเชิงปริมาณเมื่อมีข้อมูล
 
-7. readability คะแนนเต็ม 10
-- ข้อความเป็นระเบียบ
-- แบ่งหัวข้อชัดเจน
-- ไม่ซ้ำซ้อนมากเกินไป
-- อ่านแล้วเข้าใจหน้าที่และทักษะ
+5. projects
+คะแนนเต็ม 10
+พิจารณารายละเอียดโครงการ บทบาท เทคโนโลยี และผลลัพธ์
 
-8. jobRelevance คะแนนเต็ม 5
-- ทักษะ ประสบการณ์ และโครงการเชื่อมโยงกัน
-- มีภาพรวมของสายงานที่ชัดเจน
-- หากไม่มี Job Description ให้ประเมินความสอดคล้องภายใน Resume เท่านั้น
+6. education
+คะแนนเต็ม 10
+พิจารณาความครบถ้วนและความชัดเจนของข้อมูลการศึกษา
 
-กฎของคะแนน:
-- overallScore ต้องเท่ากับผลรวมของคะแนนทุกหมวด
-- overallScore ต้องอยู่ระหว่าง 0 ถึง 100
-- คะแนนต้องเป็นจำนวนเต็ม
-- หากไม่มีข้อมูลในหมวดใด ให้ลดคะแนนของหมวดนั้น
-- อย่าให้คะแนนจากสิ่งที่คาดเดา
-- strengths, weaknesses และ recommendations ต้องอ้างอิงสิ่งที่พบจริง
-- ตอบเป็นภาษาไทย
-- ห้ามใส่ Markdown ในค่าข้อความ
-- ห้ามใส่ JSON ภายใน Markdown code block
+7. readability
+คะแนนเต็ม 10
+พิจารณาโครงสร้าง ความเป็นระเบียบ ความชัดเจน และความอ่านง่าย
+
+กฎ Base Resume Score:
+- ทุกคะแนนต้องเป็นจำนวนเต็ม
+- ทุกคะแนนต้องอยู่ในช่วงของหมวดนั้น
+- baseResumeScore ต้องเท่ากับผลรวมของทั้ง 7 หมวด
+- baseResumeScore ต้องอยู่ระหว่าง 0 ถึง 100
+- ถ้าข้อมูลในหมวดใดไม่มีหรืออ่อน ให้ลดคะแนนหมวดนั้น
+- ห้ามให้คะแนนจากข้อมูลที่คาดเดา
+
+Job Match:
+
+${
+  hasJobDescription
+    ? `
+ต้องเปรียบเทียบ Resume กับ Job Description
+
+jobMatchScore:
+- เป็นจำนวนเต็มตั้งแต่ 0 ถึง 100
+- ประเมินความสอดคล้องระหว่าง Resume กับ Job Description
+- ต้องเท่ากับ jobMatch.score
+
+jobMatch ต้องมี:
+- score
+- matchedSkills
+- missingSkills
+- keywordMatches
+
+matchedSkills:
+- ทักษะหรือคุณสมบัติที่ Job Description ต้องการ และมีหลักฐานอยู่ใน Resume
+
+missingSkills:
+- ทักษะหรือคุณสมบัติที่ Job Description ต้องการ แต่ไม่พบหลักฐานใน Resume
+
+keywordMatches:
+- คำสำคัญหรือแนวคิดจาก Job Description ที่ตรงกับ Resume
+
+ห้ามถือว่าผู้สมัครมีทักษะเพียงเพราะทักษะนั้นปรากฏใน Job Description
+`
+    : `
+เมื่อไม่มี Job Description:
+- jobMatchScore ต้องเป็น null
+- jobMatch ต้องเป็น null
+`
+}
+
+กฎตาม Analysis Type:
+
+BASE:
+- วิเคราะห์ Base Resume Score
+- jobMatchScore ต้องเป็น null
+- jobMatch ต้องเป็น null
+
+JOB_MATCH:
+- วิเคราะห์ Base Resume Score
+- วิเคราะห์ Job Match
+- jobMatchScore ต้องเป็นตัวเลข
+- jobMatch ต้องไม่เป็น null
+
+COMBINED:
+- วิเคราะห์ Base Resume Score
+- วิเคราะห์ Job Match
+- jobMatchScore ต้องเป็นตัวเลข
+- jobMatch ต้องไม่เป็น null
+
+Output ต้องเป็น JSON object ที่มีโครงสร้างนี้เท่านั้น:
+
+{
+  "baseResumeScore": number,
+  "jobMatchScore": number | null,
+  "scores": {
+    "contactInformation": number,
+    "professionalSummary": number,
+    "skills": number,
+    "experience": number,
+    "projects": number,
+    "education": number,
+    "readability": number
+  },
+  "jobMatch": {
+    "score": number,
+    "matchedSkills": string[],
+    "missingSkills": string[],
+    "keywordMatches": string[]
+  } | null,
+  "summary": string,
+  "strengths": string[],
+  "weaknesses": string[],
+  "recommendations": string[]
+}
+
+กฎสำหรับ summary, strengths, weaknesses และ recommendations:
+- ต้องอ้างอิง Resume จริง
+- ถ้ามี Job Description สามารถอ้างอิงความสอดคล้องกับงานได้
+- ใช้ภาษาไทย
+- เขียนให้เฉพาะเจาะจงและนำไปปรับ Resume ได้จริง
 
 Resume Context:
 
 ${context}
 `.trim();
+}
+type ResumeAnalysisPromptBuilder =
+  (
+    input: BuildResumeAnalysisPromptInput,
+  ) => string;
+
+const promptBuilders: Record<
+  string,
+  ResumeAnalysisPromptBuilder
+> = {
+  "resume-analysis-v2.0.0":
+    buildResumeAnalysisPromptV2,
+};
+
+export function buildResumeAnalysisPrompt(
+  input: BuildResumeAnalysisPromptInput,
+  promptVersion: string,
+): string {
+  const builder =
+    promptBuilders[promptVersion];
+
+  if (!builder) {
+    throw new AppError(
+      "ไม่รองรับ Resume analysis prompt version นี้",
+      500,
+      "UNSUPPORTED_ANALYSIS_PROMPT_VERSION",
+      {
+        promptVersion,
+      },
+    );
+  }
+
+  return builder(input);
 }

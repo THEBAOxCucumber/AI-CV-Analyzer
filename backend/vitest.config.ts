@@ -10,12 +10,19 @@ export default defineConfig({
       "./tests/setup.ts",
     ],
 
-    testTimeout: 15_000,
+    testTimeout: 20_000,
 
-    hookTimeout: 15_000,
+    hookTimeout: 20_000,
 
     sequence: {
       concurrent: false,
+    },
+
+    env: {
+      NODE_ENV: "test",
+
+      ANALYSIS_QUEUE_NAME:
+        "resume-analysis-test",
     },
   },
 });

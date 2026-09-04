@@ -38,9 +38,22 @@ export async function processResumeAnalysis(
    *
    * repository ควรเพิ่ม attempt_count ด้วย
    */
+  const started =
   await markAnalysisRunProcessing(
     jobData.analysisRunId,
   );
+
+if (!started) {
+  console.log(
+    "Skipping stale analysis job:",
+    {
+      analysisRunId:
+        jobData.analysisRunId,
+    },
+  );
+
+  return;
+}
 
   /*
    * ดึง Resume chunks
@@ -89,12 +102,15 @@ export async function processResumeAnalysis(
    * สร้าง Prompt
    */
   const prompt =
-    buildResumeAnalysisPrompt({
-      chunks,
-      jobDescription,
-      analysisType:
-        jobData.analysisType,
-    });
+    buildResumeAnalysisPrompt(
+      {
+        chunks,
+        jobDescription,
+        analysisType:
+          jobData.analysisType,
+      },
+      jobData.promptVersion,
+    );
 
   /*
    * เรียก Gemini
