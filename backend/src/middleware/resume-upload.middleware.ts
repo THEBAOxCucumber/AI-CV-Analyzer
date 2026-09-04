@@ -47,12 +47,18 @@ const fileFilter: multer.Options["fileFilter"] = (
     .extname(file.originalname)
     .toLowerCase();
 
-  const isPdfMimeType =
-    file.mimetype === "application/pdf";
+  const allowedMimeTypes = [
+    "application/pdf",
+    "application/x-pdf",
+    "application/octet-stream",
+  ];
 
   const isPdfExtension = extension === ".pdf";
+  const isAllowedMimeType = allowedMimeTypes.includes(
+    file.mimetype.toLowerCase(),
+  );
 
-  if (!isPdfMimeType || !isPdfExtension) {
+  if (!isPdfExtension || !isAllowedMimeType) {
     callback(
       new AppError(
         "อนุญาตให้อัปโหลดเฉพาะไฟล์ PDF เท่านั้น",
@@ -77,4 +83,5 @@ export const resumeUpload = multer({
     files: 1,
     fields: 5,
   },
+
 });
