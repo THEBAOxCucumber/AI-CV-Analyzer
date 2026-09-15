@@ -1,7 +1,12 @@
 import { Router } from "express";
 
 import { authenticateToken } from "../../middleware/auth.middleware.js";
-import { resumeUpload } from "../../middleware/resume-upload.middleware.js";
+
+import {
+  resumeUpload,
+  verifyUploadedResumePdf,
+} from "../../middleware/resume-upload.middleware.js";
+
 import {
   createResumeAnalysisRunController,
   getResumeAnalysisHistoryController,
@@ -20,6 +25,8 @@ import {
 } from "./resume.controller.js";
 import { resumeIdParamsSchema } from "./resume.validation.js";
 
+
+
 export const resumeRouter = Router();
 
 resumeRouter.get(
@@ -32,6 +39,7 @@ resumeRouter.post(
   "/upload",
   authenticateToken,
   resumeUpload.single("resume"),
+  verifyUploadedResumePdf,
   uploadResumeController,
 );
 
@@ -43,16 +51,6 @@ resumeRouter.post(
   }),
   createResumeChunksController,
 );
-
-resumeRouter.get(
-  "/:resumeId/chunks",
-  authenticateToken,
-  validate({
-    params: resumeIdParamsSchema,
-  }),
-  getResumeChunksController,
-);
-
 
 resumeRouter.get(
   "/:resumeId/chunks",

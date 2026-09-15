@@ -55,7 +55,13 @@ export async function authenticateToken(
       );
     }
 
-    const decoded = jwt.verify(token, env.jwt.secret);
+    const decoded = jwt.verify(
+  token,
+  env.jwt.secret,
+  {
+    algorithms: ["HS256"],
+  },
+);
 
     if (!isAccessTokenPayload(decoded)) {
       throw new AppError(

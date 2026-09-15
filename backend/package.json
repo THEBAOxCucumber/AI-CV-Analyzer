@@ -4,11 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "worker:dev": "tsx watch src/worker.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",
-    "worker:start": "node dist/worker.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },

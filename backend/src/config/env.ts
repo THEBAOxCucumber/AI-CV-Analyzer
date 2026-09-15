@@ -16,6 +16,23 @@ function getRequiredEnv(
   return value;
 }
 
+function getJwtSecret(): string {
+  const secret =
+    getRequiredEnv("JWT_SECRET");
+
+  if (
+    process.env.NODE_ENV ===
+    "production" &&
+    secret.length < 32
+  ) {
+    throw new Error(
+      "JWT_SECRET must be at least 32 characters in production",
+    );
+  }
+
+  return secret;
+}
+
 function getNumberEnv(
   key: string,
   fallback: number,
@@ -70,10 +87,7 @@ export const env = {
   },
 
   jwt: {
-    secret:
-      getRequiredEnv(
-        "JWT_SECRET",
-      ),
+    secret: getJwtSecret(),
 
     expiresIn:
       process.env.JWT_EXPIRES_IN ??
@@ -223,4 +237,11 @@ export const env = {
         600,
       ),
   },
+
+  cors: {
+    origin:
+      process.env.CORS_ORIGIN ??
+      "http://localhost:5173",
+  },
+
 };

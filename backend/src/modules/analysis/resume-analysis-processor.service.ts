@@ -31,6 +31,7 @@ import type {
 
 export async function processResumeAnalysis(
   jobData: ResumeAnalysisJobData,
+  jobId: string,
 ): Promise<void> {
   /*
    * QUEUED / PROCESSING
@@ -41,6 +42,7 @@ export async function processResumeAnalysis(
   const started =
   await markAnalysisRunProcessing(
     jobData.analysisRunId,
+    jobId,
   );
 
 if (!started) {

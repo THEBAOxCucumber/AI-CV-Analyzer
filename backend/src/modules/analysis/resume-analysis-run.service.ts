@@ -15,8 +15,12 @@ import {
 } from "./analysis-rate-limit.service.js";
 
 import {
-  enqueueResumeAnalysis,
-} from "./resume-analysis-queue.service.js";
+  database,
+} from "../../config/database.js";
+
+import {
+  createAnalysisOutboxEvent,
+} from "./analysis-outbox.repository.js";
 
 import {
   createAnalysisRun,
@@ -32,10 +36,10 @@ import type {
 } from "./resume-analysis-run.types.js";
 
 interface StartAnalysisRunInput {
-    resumeId: number;
-    userId: number;
-    analysisType: ResumeAnalysisType;
-    jobDescriptionId?: number;
+  resumeId: number;
+  userId: number;
+  analysisType: ResumeAnalysisType;
+  jobDescriptionId?: number;
 }
 
 export async function startAnalysisRun(
@@ -81,9 +85,9 @@ export async function startAnalysisRun(
 
   if (
     input.analysisType ===
-      "JOB_MATCH" ||
+    "JOB_MATCH" ||
     input.analysisType ===
-      "COMBINED"
+    "COMBINED"
   ) {
     if (!input.jobDescriptionId) {
       throw new AppError(
@@ -111,24 +115,24 @@ export async function startAnalysisRun(
       jobDescription.id;
   }
   const activeAnalysis =
-  await findActiveAnalysisRun(
-    input.resumeId,
-    input.userId,
-  );
+    await findActiveAnalysisRun(
+      input.resumeId,
+      input.userId,
+    );
 
-if (activeAnalysis) {
-  throw new AppError(
-    "Resume นี้มีงานวิเคราะห์ที่กำลังดำเนินการอยู่",
-    409,
-    "ANALYSIS_ALREADY_IN_PROGRESS",
-    {
-      analysisRunId:
-        activeAnalysis.id,
-      status:
-        activeAnalysis.status,
-    },
-  );
-}
+  if (activeAnalysis) {
+    throw new AppError(
+      "Resume นี้มีงานวิเคราะห์ที่กำลังดำเนินการอยู่",
+      409,
+      "ANALYSIS_ALREADY_IN_PROGRESS",
+      {
+        analysisRunId:
+          activeAnalysis.id,
+        status:
+          activeAnalysis.status,
+      },
+    );
+  }
 
   /*
    * 4. Rate Limit
@@ -144,81 +148,88 @@ if (activeAnalysis) {
   /*
    * 5. สร้าง Analysis Run
    */
-  const analysisRun =
-  await createAnalysisRun({
-    resumeId: input.resumeId,
-    userId: input.userId,
-    analysisType: input.analysisType,
-    jobDescriptionId,
-    promptVersion:
-      env.resumeAnalysis.promptVersion,
-  });
+  const connection =
+    await database.getConnection();
 
-try {
-  await enqueueResumeAnalysis(
-    analysisRun,
-  );
-} catch (error) {
-  await markAnalysisRunFailed(
-    analysisRun.id,
-    "QUEUE_ENQUEUE_FAILED",
-    error instanceof Error
-      ? error.message
-      : "Failed to enqueue analysis job",
-  );
+  let analysisRun:
+    ResumeAnalysisRunRecord;
 
-  throw new AppError(
-    "ไม่สามารถเริ่มงานวิเคราะห์ได้ในขณะนี้",
-    503,
-    "ANALYSIS_QUEUE_UNAVAILABLE",
-  );
-}
+  try {
+    await connection.beginTransaction();
 
-return analysisRun;
+    analysisRun =
+      await createAnalysisRun(
+        {
+          resumeId: input.resumeId,
+          userId: input.userId,
+          analysisType:
+            input.analysisType,
+          jobDescriptionId,
+          promptVersion:
+            env.resumeAnalysis.promptVersion,
+        },
+        connection,
+      );
+
+    await createAnalysisOutboxEvent(
+      analysisRun.id,
+      connection,
+    );
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  return analysisRun;
 }
 
 export async function getResumeAnalysisHistory(
-    resumeId: number,
-    userId: number,
-    limit = 20,
+  resumeId: number,
+  userId: number,
+  limit = 20,
 ): Promise<ResumeAnalysisRunRecord[]> {
-    const resume = await findResumeById(
-        resumeId,
-        userId,
-    );
+  const resume = await findResumeById(
+    resumeId,
+    userId,
+  );
 
-    if (!resume) {
-        throw new AppError(
-            "ไม่พบ Resume",
-            404,
-            "RESUME_NOT_FOUND",
-        );
-    }
-
-    return findAnalysisHistory(
-        resumeId,
-        userId,
-        limit,
+  if (!resume) {
+    throw new AppError(
+      "ไม่พบ Resume",
+      404,
+      "RESUME_NOT_FOUND",
     );
+  }
+
+  return findAnalysisHistory(
+    resumeId,
+    userId,
+    limit,
+  );
 }
 
 export async function getAnalysisRun(
-    analysisRunId: number,
-    userId: number,
+  analysisRunId: number,
+  userId: number,
 ): Promise<ResumeAnalysisRunRecord> {
-    const analysisRun =
-        await findAnalysisRunById(
-            analysisRunId,
-            userId,
-        );
+  const analysisRun =
+    await findAnalysisRunById(
+      analysisRunId,
+      userId,
+    );
 
-    if (!analysisRun) {
-        throw new AppError(
-            "ไม่พบ Analysis",
-            404,
-            "ANALYSIS_RUN_NOT_FOUND",
-        );
-    }
+  if (!analysisRun) {
+    throw new AppError(
+      "ไม่พบ Analysis",
+      404,
+      "ANALYSIS_RUN_NOT_FOUND",
+    );
+  }
 
-    return analysisRun;
+  return analysisRun;
 }

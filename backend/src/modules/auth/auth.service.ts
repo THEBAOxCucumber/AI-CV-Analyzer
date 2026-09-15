@@ -20,8 +20,10 @@ interface AuthResult {
 
 function createToken(user: PublicUser): string {
   const options: SignOptions = {
-    expiresIn: env.jwt.expiresIn as SignOptions["expiresIn"],
-  };
+  algorithm: "HS256",
+  expiresIn:
+    env.jwt.expiresIn as SignOptions["expiresIn"],
+};
 
   return jwt.sign(
     {

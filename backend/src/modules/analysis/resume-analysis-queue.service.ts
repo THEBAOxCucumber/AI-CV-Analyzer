@@ -20,49 +20,48 @@ export async function enqueueResumeAnalysis(
     },
   );
 
-  const job =
-    await resumeAnalysisQueue.add(
-      "analyze-resume",
-      {
-        analysisRunId:
-          analysisRun.id,
-        resumeId:
-          analysisRun.resumeId,
-        userId:
-          analysisRun.userId,
-        jobDescriptionId:
-          analysisRun.jobDescriptionId,
-        analysisType:
-          analysisRun.analysisType,
-        promptVersion:
-          analysisRun.promptVersion
-          ,
-      },
-      {
-        jobId:
-          `analysis-${analysisRun.id}`,
-      },
-    );
+
+  await resumeAnalysisQueue.add(
+    "analyze-resume",
+    {
+      analysisRunId:
+        analysisRun.id,
+      resumeId:
+        analysisRun.resumeId,
+      userId:
+        analysisRun.userId,
+      jobDescriptionId:
+        analysisRun.jobDescriptionId,
+      analysisType:
+        analysisRun.analysisType,
+      promptVersion:
+        analysisRun.promptVersion,
+    },
+    {
+      jobId:
+        `analysis-${analysisRun.id}`,
+    },
+  );
 
   console.log(
     "Resume analysis queued:",
     {
-      jobId: job.id,
+      jobId: `analysis-${analysisRun.id}`,
       queueName:
         resumeAnalysisQueue.name,
     },
   );
 
   console.log(
-  "Enqueue resume analysis:",
-  {
-    analysisRunId: analysisRun.id,
-    resumeId: analysisRun.resumeId,
-    userId: analysisRun.userId,
-    analysisType:
-      analysisRun.analysisType,
-    promptVersion:
-      analysisRun.promptVersion,
-  },
-);
+    "Enqueue resume analysis:",
+    {
+      analysisRunId: analysisRun.id,
+      resumeId: analysisRun.resumeId,
+      userId: analysisRun.userId,
+      analysisType:
+        analysisRun.analysisType,
+      promptVersion:
+        analysisRun.promptVersion,
+    },
+  );
 }

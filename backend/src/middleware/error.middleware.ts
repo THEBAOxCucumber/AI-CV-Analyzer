@@ -14,6 +14,12 @@ interface MySqlError extends Error {
   sqlMessage?: string;
 }
 
+interface HttpBodyParserError extends Error {
+  type?: string;
+  status?: number;
+  statusCode?: number;
+}
+
 export const notFoundHandler = (
   req: Request,
   _res: unknown,
@@ -34,7 +40,6 @@ export const errorHandler: ErrorRequestHandler = (
   res,
   _next,
 ) => {
-  console.error("Application error:", error);
 
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
@@ -85,19 +90,43 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  if (error instanceof AppError) {
-  res.status(error.statusCode).json({
-    success: false,
-    message: error.message,
-    code: error.code,
-    ...(error.details !== undefined && {
-      errors: error.details,
-    }),
-  });
+  const httpError =
+  error as HttpBodyParserError;
 
+if (
+  httpError.type === "entity.too.large"
+) {
+  res.status(413).json({
+    success: false,
+    message:
+      "ข้อมูลที่ส่งมามีขนาดใหญ่เกินกำหนด",
+    code: "REQUEST_BODY_TOO_LARGE",
+    
+  });
+  
   return;
+  
 }
 
+  if (error instanceof AppError) {
+    if (error.statusCode >= 500) {
+      console.error(
+        "Application error:",
+        error,
+      );
+    }
+
+    res.status(error.statusCode).json({
+      success: false,
+      message: error.message,
+      code: error.code,
+      ...(error.details !== undefined && {
+        errors: error.details,
+      }),
+    });
+
+    return;
+  }
   const mysqlError = error as MySqlError;
 
   if (mysqlError.code === "ER_DUP_ENTRY") {
@@ -120,6 +149,11 @@ export const errorHandler: ErrorRequestHandler = (
     });
     return;
   }
+
+  console.error(
+    "Unhandled application error:",
+    error,
+  );
 
   res.status(500).json({
     success: false,

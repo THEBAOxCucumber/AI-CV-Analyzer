@@ -1,4 +1,5 @@
 import type {
+  PoolConnection,
   ResultSetHeader,
   RowDataPacket,
 } from "mysql2/promise";
@@ -65,9 +66,13 @@ function mapAnalysisRun(
 
 export async function createAnalysisRun(
   input: CreateAnalysisRunInput,
+  connection?: PoolConnection,
 ): Promise<ResumeAnalysisRunRecord> {
+  const executor =
+    connection ?? database;
+
   const [result] =
-    await database.execute<ResultSetHeader>(
+    await executor.execute<ResultSetHeader>(
       `
         INSERT INTO resume_analysis_runs (
           resume_id,
@@ -93,6 +98,7 @@ export async function createAnalysisRun(
     await findAnalysisRunById(
       result.insertId,
       input.userId,
+      connection,
     );
 
   if (!analysis) {
@@ -107,34 +113,80 @@ export async function createAnalysisRun(
 export async function findAnalysisRunById(
   analysisRunId: number,
   userId: number,
+  connection?: PoolConnection,
 ): Promise<ResumeAnalysisRunRecord | null> {
-  const [rows] = await database.execute<
-    AnalysisRunRow[]
-  >(
-    `
-      SELECT
-        id,
-        resume_id,
-        user_id,
-        job_description_id,
-        analysis_type,
-        status,
-        base_resume_score,
-        job_match_score,
-        prompt_version,
-        model,
-        attempt_count,
-        error_code,
-        error_message,
-        created_at,
-        updated_at
-      FROM resume_analysis_runs
-      WHERE id = ?
-        AND user_id = ?
-      LIMIT 1
-    `,
-    [analysisRunId, userId],
-  );
+  const executor =
+    connection ?? database;
+
+  const [rows] =
+    await executor.execute<
+      AnalysisRunRow[]
+    >(
+      `
+        SELECT
+          id,
+          resume_id,
+          user_id,
+          job_description_id,
+          analysis_type,
+          status,
+          base_resume_score,
+          job_match_score,
+          prompt_version,
+          model,
+          attempt_count,
+          error_code,
+          error_message,
+          created_at,
+          updated_at
+        FROM resume_analysis_runs
+        WHERE id = ?
+          AND user_id = ?
+        LIMIT 1
+      `,
+      [
+        analysisRunId,
+        userId,
+      ],
+    );
+
+  const row = rows[0];
+
+  return row
+    ? mapAnalysisRun(row)
+    : null;
+}
+
+export async function findAnalysisRunByIdInternal(
+  analysisRunId: number,
+): Promise<ResumeAnalysisRunRecord | null> {
+  const [rows] =
+    await database.execute<
+      AnalysisRunRow[]
+    >(
+      `
+        SELECT
+          id,
+          resume_id,
+          user_id,
+          job_description_id,
+          analysis_type,
+          status,
+          base_resume_score,
+          job_match_score,
+          prompt_version,
+          model,
+          attempt_count,
+          error_code,
+          error_message,
+          created_at,
+          updated_at
+        FROM resume_analysis_runs
+        WHERE id = ?
+        LIMIT 1
+      `,
+      [analysisRunId],
+    );
 
   const row = rows[0];
 
@@ -189,6 +241,7 @@ export async function findAnalysisHistory(
 
 export async function markAnalysisRunProcessing(
   analysisRunId: number,
+  processingJobId: string,
 ): Promise<boolean> {
   const [result] =
     await database.execute<ResultSetHeader>(
@@ -196,14 +249,29 @@ export async function markAnalysisRunProcessing(
         UPDATE resume_analysis_runs
         SET
           status = 'PROCESSING',
-          started_at = NOW(),
-          attempt_count = attempt_count + 1,
+          processing_job_id = ?,
+          started_at = COALESCE(
+            started_at,
+            NOW()
+          ),
+          attempt_count =
+            attempt_count + 1,
           error_code = NULL,
           error_message = NULL
         WHERE id = ?
-          AND status IN ('QUEUED', 'PROCESSING')
+          AND (
+            status = 'QUEUED'
+            OR (
+              status = 'PROCESSING'
+              AND processing_job_id = ?
+            )
+          )
       `,
-      [analysisRunId],
+      [
+        processingJobId,
+        analysisRunId,
+        processingJobId,
+      ],
     );
 
   return result.affectedRows === 1;

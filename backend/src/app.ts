@@ -1,6 +1,9 @@
 import cors from "cors";
 import express from "express";
 import {
+  env,
+} from "./config/env.js";
+import {
   analysisRouter,
 } from "./modules/analysis/analysis.routes.js";
 import {
@@ -23,13 +26,27 @@ export const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: env.cors.origin,
     credentials: true,
   }),
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  express.json({
+    limit: "1mb",
+  }),
+);
+
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "1mb",
+  }),
+);
+
 
 app.get("/", (_req, res) => {
   res.status(200).json({
@@ -55,8 +72,6 @@ app.use(
   analysisRouter,
 );
 
-app.use(notFoundHandler);
-app.use(errorHandler);
 
 /*
  * ใช้เมื่อไม่พบ Route

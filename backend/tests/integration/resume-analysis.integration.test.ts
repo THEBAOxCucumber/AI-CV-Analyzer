@@ -299,6 +299,39 @@ describe(
     );
 
     it(
+      "returns 404 when the resume does not exist",
+      async () => {
+        const {
+          token,
+        } =
+          await createTestUserAndToken();
+
+        const response =
+          await request(app)
+            .post(
+              "/api/resumes/999999999/analyses",
+            )
+            .set(
+              "Authorization",
+              `Bearer ${token}`,
+            )
+            .send({
+              analysisType: "BASE",
+            });
+
+        expect(response.status)
+          .toBe(404);
+
+        expect(response.body.success)
+          .toBe(false);
+
+        expect(response.body.code)
+          .toBe("RESUME_NOT_FOUND");
+      },
+    );
+
+
+    it(
       "stores the configured prompt version on a new analysis run",
       async () => {
         const {
@@ -582,7 +615,7 @@ describe(
     );
 
     it(
-      "marks the analysis as failed when enqueueing fails",
+      "creates a queued analysis and pending outbox event before dispatch",
       async () => {
         const {
           userId,
@@ -593,11 +626,6 @@ describe(
         const resumeId =
           await createCompletedResume(
             userId,
-          );
-
-        mockEnqueueResumeAnalysis
-          .mockRejectedValueOnce(
-            new Error("Redis unavailable"),
           );
 
         const response =
@@ -613,48 +641,76 @@ describe(
               analysisType: "BASE",
             });
 
-        expect(response.status).toBe(503);
-        expect(response.body.code).toBe(
-          "ANALYSIS_QUEUE_UNAVAILABLE",
-        );
+        expect(response.status)
+          .toBe(202);
+
+        expect(response.body.success)
+          .toBe(true);
+
+        const analysisRun =
+          response.body.data.analysisRun;
+
+        expect(analysisRun)
+          .toBeTruthy();
+
+        expect(analysisRun.status)
+          .toBe("QUEUED");
+
+        expect(analysisRun.resumeId)
+          .toBe(resumeId);
+
+        expect(analysisRun.userId)
+          .toBe(userId);
 
         const [rows] =
           await database.execute<
             Array<
-              import("mysql2/promise").RowDataPacket & {
+              import("mysql2").RowDataPacket & {
                 status: string;
-                error_code: string | null;
-                error_message: string | null;
+                attempt_count: number;
+                last_error: string | null;
+                dispatched_at: Date | null;
               }
             >
           >(
             `
           SELECT
             status,
-            error_code,
-            error_message
-          FROM resume_analysis_runs
-          WHERE resume_id = ?
-            AND user_id = ?
-          ORDER BY id DESC
+            attempt_count,
+            last_error,
+            dispatched_at
+          FROM analysis_outbox
+          WHERE analysis_run_id = ?
           LIMIT 1
         `,
-            [resumeId, userId],
+            [analysisRun.id],
           );
 
-        expect(rows[0]?.status).toBe(
-          "FAILED",
-        );
+        expect(rows)
+          .toHaveLength(1);
 
-        expect(
-          rows[0]?.error_code,
-        ).toBe("QUEUE_ENQUEUE_FAILED");
+        expect(rows[0]?.status)
+          .toBe("PENDING");
 
+        expect(rows[0]?.attempt_count)
+          .toBe(0);
+
+        expect(rows[0]?.last_error)
+          .toBeNull();
+
+        expect(rows[0]?.dispatched_at)
+          .toBeNull();
+
+        /*
+         * API ไม่ควร enqueue BullMQ โดยตรงแล้ว
+         * dispatcher เป็นผู้รับผิดชอบเรื่องนี้
+         */
         expect(
-          rows[0]?.error_message,
-        ).toContain("Redis unavailable");
+          mockEnqueueResumeAnalysis,
+        ).not.toHaveBeenCalled();
       },
     );
+
 
     it(
       "queues BASE analysis without a job description",
@@ -753,8 +809,194 @@ describe(
         ).toBeNull();
       },
     );
+
+    it(
+      "does not allow a user to create an analysis for another user's resume",
+      async () => {
+        const owner =
+          await createTestUserAndToken();
+
+        const attacker =
+          await createTestUserAndToken();
+
+        const resumeId =
+          await createCompletedResume(
+            owner.userId,
+          );
+
+        const response =
+          await request(app)
+            .post(
+              `/api/resumes/${resumeId}/analyses`,
+            )
+            .set(
+              "Authorization",
+              `Bearer ${attacker.token}`,
+            )
+            .send({
+              analysisType: "BASE",
+            });
+
+        expect(response.status).toBe(404);
+
+        expect(response.body.success)
+          .toBe(false);
+
+        /*
+         * ไม่ควรสร้าง analysis run
+         * ให้ resume ของ user คนอื่น
+         */
+        const [analysisRows] =
+          await database.execute<
+            Array<
+              import("mysql2").RowDataPacket & {
+                id: number;
+              }
+            >
+          >(
+            `
+          SELECT id
+          FROM resume_analysis_runs
+          WHERE resume_id = ?
+        `,
+            [resumeId],
+          );
+
+        expect(
+          analysisRows,
+        ).toHaveLength(0);
+
+        /*
+         * และต้องไม่มี outbox event หลุดออกมา
+         */
+        const [outboxRows] =
+          await database.execute<
+            Array<
+              import("mysql2").RowDataPacket & {
+                id: number;
+              }
+            >
+          >(
+            `
+          SELECT ao.id
+          FROM analysis_outbox ao
+          INNER JOIN resume_analysis_runs ar
+            ON ar.id = ao.analysis_run_id
+          WHERE ar.resume_id = ?
+        `,
+            [resumeId],
+          );
+
+        expect(
+          outboxRows,
+        ).toHaveLength(0);
+
+        expect(
+          mockEnqueueResumeAnalysis,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+
+    it(
+      "returns 401 when creating an analysis without authentication",
+      async () => {
+        const response =
+          await request(app)
+            .post("/api/resumes/1/analyses")
+            .send({
+              analysisType: "BASE",
+            });
+
+        expect(response.status).toBe(401);
+        expect(response.body.success).toBe(false);
+      },
+    );
+
+    it(
+      "returns 401 when reading analysis history without authentication",
+      async () => {
+        const response =
+          await request(app)
+            .get("/api/resumes/1/analyses");
+
+        expect(response.status).toBe(401);
+        expect(response.body.success).toBe(false);
+      },
+    );
+
+    it(
+      "returns 401 when reading an analysis run without authentication",
+      async () => {
+        const response =
+          await request(app)
+            .get("/api/analyses/1");
+
+        expect(response.status).toBe(401);
+        expect(response.body.success).toBe(false);
+      },
+    );
+
+    it(
+      "rejects an invalid resumeId when creating an analysis",
+      async () => {
+        const {
+          token,
+        } =
+          await createTestUserAndToken();
+
+        const response =
+          await request(app)
+            .post("/api/resumes/not-a-number/analyses")
+            .set(
+              "Authorization",
+              `Bearer ${token}`,
+            )
+            .send({
+              analysisType: "BASE",
+            });
+
+
+        expect(response.status).toBe(400);
+
+        expect(response.body.success)
+          .toBe(false);
+
+        expect(response.body.code)
+          .toBe("VALIDATION_ERROR");
+      },
+    );
+
+    it(
+      "rejects an invalid analysisRunId",
+      async () => {
+        const {
+          token,
+        } =
+          await createTestUserAndToken();
+
+        const response =
+          await request(app)
+            .get("/api/analyses/not-a-number")
+            .set(
+              "Authorization",
+              `Bearer ${token}`,
+            );
+
+
+        expect(response.status).toBe(400);
+
+        expect(response.body.success)
+          .toBe(false);
+
+        expect(response.body.code)
+          .toBe("VALIDATION_ERROR");
+      },
+    );
+
   },
 );
+
 
 it(
   "returns 429 when the user exceeds analysis rate limit",
@@ -923,6 +1165,35 @@ describe(
             .jobDescriptionId,
         ).toBeNull();
 
+      },
+    );
+
+    it(
+      "returns 404 when the resume history resource does not exist",
+      async () => {
+        const {
+          token,
+        } =
+          await createTestUserAndToken();
+
+        const response =
+          await request(app)
+            .get(
+              "/api/resumes/999999999/analyses",
+            )
+            .set(
+              "Authorization",
+              `Bearer ${token}`,
+            );
+
+        expect(response.status)
+          .toBe(404);
+
+        expect(response.body.success)
+          .toBe(false);
+
+        expect(response.body.code)
+          .toBe("RESUME_NOT_FOUND");
       },
     );
 
@@ -1505,5 +1776,37 @@ describe(
         );
       },
     );
+
+    it(
+      "returns 404 when the analysis run does not exist",
+      async () => {
+        const {
+          token,
+        } =
+          await createTestUserAndToken();
+
+        const response =
+          await request(app)
+            .get(
+              "/api/analyses/999999999",
+            )
+            .set(
+              "Authorization",
+              `Bearer ${token}`,
+            );
+
+        expect(response.status)
+          .toBe(404);
+
+        expect(response.body.success)
+          .toBe(false);
+
+        expect(response.body.code)
+          .toBe(
+            "ANALYSIS_RUN_NOT_FOUND",
+          );
+      },
+    );
+
   },
 );

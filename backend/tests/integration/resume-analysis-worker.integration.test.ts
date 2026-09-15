@@ -14,6 +14,10 @@ import {
     createJobDescription,
 } from "../../src/modules/job-description/job-description.repository.js";
 
+import {
+    dispatchAnalysisOutboxBatch,
+} from "../../src/modules/analysis/analysis-outbox-dispatcher.service.js";
+
 const {
     mockGenerateContent,
 } = vi.hoisted(() => ({
@@ -200,6 +204,7 @@ async function createTestUserAndToken() {
                 email,
                 password,
             });
+
 
     expect(
         registerResponse.status,
@@ -451,6 +456,12 @@ beforeEach(async () => {
         true,
     );
 
+    await database.execute(
+        `
+      DELETE FROM analysis_outbox
+    `,
+    );
+
     const rateLimitKeys =
         await redisConnection.keys(
             "analysis:rate-limit:user:*",
@@ -518,6 +529,8 @@ describe(
                                 "BASE",
                         });
 
+
+
                 expect(
                     response.status,
                 ).toBe(202);
@@ -525,6 +538,8 @@ describe(
                 expect(
                     response.body.success,
                 ).toBe(true);
+
+                await dispatchAnalysisOutboxBatch();
 
                 const analysisRun =
                     response.body.data
@@ -651,6 +666,7 @@ describe(
                             analysisType: "BASE",
                         });
 
+
                 expect(
                     response.status,
                 ).toBe(202);
@@ -661,6 +677,100 @@ describe(
                             .analysisRun.id,
                     );
 
+
+                const [beforeDispatchRows] =
+                    await database.execute<
+                        Array<
+                            RowDataPacket & {
+                                id: number;
+                                status: string;
+                                attempt_count: number;
+                                last_error: string | null;
+                            }
+                        >
+                    >(
+                        `
+      SELECT
+        id,
+        status,
+        attempt_count,
+        last_error
+      FROM analysis_outbox
+      WHERE analysis_run_id = ?
+      LIMIT 1
+    `,
+                        [analysisRunId],
+                    );
+
+                console.log(
+                    "Outbox before dispatch:",
+                    {
+                        analysisRunId,
+                        row: beforeDispatchRows[0],
+                    },
+                );
+
+                expect(
+                    beforeDispatchRows[0]?.status,
+                ).toBe("PENDING");
+
+                await dispatchAnalysisOutboxBatch();
+
+                const [afterDispatchRows] =
+                    await database.execute<
+                        Array<
+                            RowDataPacket & {
+                                id: number;
+                                status: string;
+                                attempt_count: number;
+                                last_error: string | null;
+                            }
+                        >
+                    >(
+                        `
+      SELECT
+        id,
+        status,
+        attempt_count,
+        last_error
+      FROM analysis_outbox
+      WHERE analysis_run_id = ?
+      LIMIT 1
+    `,
+                        [analysisRunId],
+                    );
+
+                console.log(
+                    "Outbox after dispatch:",
+                    {
+                        analysisRunId,
+                        row: afterDispatchRows[0],
+                    },
+                );
+
+                const queuedJob =
+                    await resumeAnalysisQueue.getJob(
+                        `analysis-${analysisRunId}`,
+                    );
+
+                console.log(
+                    "Job immediately after dispatch:",
+                    {
+                        analysisRunId,
+                        found: Boolean(queuedJob),
+                        state: queuedJob
+                            ? await queuedJob.getState()
+                            : "NOT_FOUND",
+                    },
+                );
+
+                expect(
+                    afterDispatchRows[0]?.status,
+                ).toBe("DISPATCHED");
+
+                expect(queuedJob)
+                    .toBeTruthy();
+
                 /*
                  * รอ job แรกทำเสร็จ
                  */
@@ -669,8 +779,8 @@ describe(
                         analysisRunId,
                         "COMPLETED",
                     );
-
                 expect(
+                    
                     completed.status,
                 ).toBe("COMPLETED");
 
@@ -834,6 +944,8 @@ describe(
                                 "BASE",
                         });
 
+                await dispatchAnalysisOutboxBatch();
+
                 expect(
                     response.status,
                 ).toBe(202);
@@ -846,6 +958,8 @@ describe(
                     Number(
                         analysisRun.id,
                     );
+
+                await dispatchAnalysisOutboxBatch();
 
                 const completed =
                     await waitForAnalysisStatus(
@@ -925,6 +1039,8 @@ describe(
                         analysisRun.id,
                     );
 
+                await dispatchAnalysisOutboxBatch();
+
                 const completed =
                     await waitForAnalysisStatus(
                         analysisRunId,
@@ -997,6 +1113,8 @@ describe(
                     Number(
                         analysisRun.id,
                     );
+
+                await dispatchAnalysisOutboxBatch();
 
                 const failed =
                     await waitForAnalysisStatus(
@@ -1078,6 +1196,8 @@ describe(
                     Number(
                         analysisRun.id,
                     );
+
+                await dispatchAnalysisOutboxBatch();
 
                 const failed =
                     await waitForAnalysisStatus(
@@ -1178,6 +1298,8 @@ describe(
                         analysisRun.id,
                     );
 
+                await dispatchAnalysisOutboxBatch();
+
                 const completed =
                     await waitForAnalysisStatus(
                         analysisRunId,
@@ -1269,6 +1391,7 @@ describe(
                         response.body.data
                             .analysisRun.id,
                     );
+                await dispatchAnalysisOutboxBatch();
 
                 const completed =
                     await waitForAnalysisStatus(
@@ -1306,3 +1429,269 @@ afterAll(async () => {
     await resumeAnalysisQueue.close();
 });
 
+it(
+    "skips a concurrent duplicate job while the original analysis is processing",
+    async () => {
+        let releaseGemini:
+            (() => void) | undefined;
+
+        const geminiBlocked =
+            new Promise<void>(
+                (resolve) => {
+                    releaseGemini =
+                        resolve;
+                },
+            );
+
+        mockGenerateContent
+            .mockImplementation(
+                async () => {
+                    await geminiBlocked;
+
+                    return createSuccessfulGeminiResponse();
+                },
+            );
+
+        const {
+            userId,
+            token,
+        } =
+            await createTestUserAndToken();
+
+        const resumeId =
+            await createCompletedResume(
+                userId,
+            );
+
+        await createCompletedResumeChunk(
+            resumeId,
+            userId,
+        );
+
+        const response =
+            await request(app)
+                .post(
+                    `/api/resumes/${resumeId}/analyses`,
+                )
+                .set(
+                    "Authorization",
+                    `Bearer ${token}`,
+                )
+                .send({
+                    analysisType: "BASE",
+                });
+
+        expect(
+            response.status,
+        ).toBe(202);
+
+        const analysisRunId =
+            Number(
+                response.body.data
+                    .analysisRun.id,
+            );
+        await dispatchAnalysisOutboxBatch();
+
+        /*
+         * รอจน job แรก claim DB
+         * และเข้า Gemini แล้ว
+         */
+        const startedAt =
+            Date.now();
+
+        while (
+            mockGenerateContent.mock.calls
+                .length === 0 &&
+            Date.now() - startedAt <
+            10_000
+        ) {
+            await new Promise(
+                (resolve) =>
+                    setTimeout(
+                        resolve,
+                        50,
+                    ),
+            );
+        }
+
+        expect(
+            mockGenerateContent,
+        ).toHaveBeenCalledTimes(1);
+
+        /*
+         * ตอนนี้ analysis ต้องยัง PROCESSING
+         */
+        const [processingRows] =
+            await database.execute<
+                Array<
+                    RowDataPacket & {
+                        status: string;
+                        attempt_count:
+                        number;
+                        processing_job_id:
+                        string | null;
+                    }
+                >
+            >(
+                `
+                    SELECT
+                        status,
+                        attempt_count,
+                        processing_job_id
+                    FROM resume_analysis_runs
+                    WHERE id = ?
+                    LIMIT 1
+                `,
+                [
+                    analysisRunId,
+                ],
+            );
+
+        expect(
+            processingRows[0]?.status,
+        ).toBe("PROCESSING");
+
+        expect(
+            processingRows[0]?.attempt_count,
+        ).toBe(1);
+
+        expect(
+            processingRows[0]
+                ?.processing_job_id,
+        ).toBe(
+            `analysis-${analysisRunId}`,
+        );
+
+        /*
+         * original job ยังติดอยู่ที่ Gemini
+         * สร้าง duplicate คนละ BullMQ job
+         */
+        const originalJob =
+            await resumeAnalysisQueue.getJob(
+                `analysis-${analysisRunId}`,
+            );
+
+        expect(
+            originalJob,
+        ).toBeTruthy();
+
+        const duplicateJob =
+            await resumeAnalysisQueue.add(
+                "analyze-resume",
+                originalJob!.data,
+                {
+                    jobId:
+                        `concurrent-duplicate-${analysisRunId}`,
+                },
+            );
+
+        /*
+         * Worker concurrency = 2
+         * ดังนั้น duplicate สามารถถูกหยิบ
+         * ขณะ original ยัง block อยู่
+         */
+        const duplicateStartedAt =
+            Date.now();
+
+        while (
+            Date.now() -
+            duplicateStartedAt <
+            10_000
+        ) {
+            const state =
+                await duplicateJob.getState();
+
+            if (
+                state === "completed"
+            ) {
+                break;
+            }
+
+            if (
+                state === "failed"
+            ) {
+                throw new Error(
+                    "Concurrent duplicate job unexpectedly failed",
+                );
+            }
+
+            await new Promise(
+                (resolve) =>
+                    setTimeout(
+                        resolve,
+                        50,
+                    ),
+            );
+        }
+
+        expect(
+            await duplicateJob.getState(),
+        ).toBe("completed");
+
+        /*
+         * duplicate ต้องถูก ownership guard
+         * หยุดก่อน Gemini
+         */
+        expect(
+            mockGenerateContent,
+        ).toHaveBeenCalledTimes(1);
+
+        /*
+         * duplicate ต้องไม่เพิ่ม attempt_count
+         */
+        const [stillProcessingRows] =
+            await database.execute<
+                Array<
+                    RowDataPacket & {
+                        status: string;
+                        attempt_count:
+                        number;
+                    }
+                >
+            >(
+                `
+                    SELECT
+                        status,
+                        attempt_count
+                    FROM resume_analysis_runs
+                    WHERE id = ?
+                    LIMIT 1
+                `,
+                [
+                    analysisRunId,
+                ],
+            );
+
+        expect(
+            stillProcessingRows[0]?.status,
+        ).toBe("PROCESSING");
+
+        expect(
+            stillProcessingRows[0]
+                ?.attempt_count,
+        ).toBe(1);
+
+        /*
+         * ปล่อย original Gemini
+         */
+        releaseGemini?.();
+
+        const completed =
+            await waitForAnalysisStatus(
+                analysisRunId,
+                "COMPLETED",
+            );
+
+        expect(
+            completed.status,
+        ).toBe("COMPLETED");
+
+        expect(
+            completed.attempt_count,
+        ).toBe(1);
+
+        expect(
+            mockGenerateContent,
+        ).toHaveBeenCalledTimes(1);
+    },
+);

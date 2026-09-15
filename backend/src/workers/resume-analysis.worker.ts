@@ -49,8 +49,9 @@ export const resumeAnalysisWorker =
 
       try {
         await processResumeAnalysis(
-          job.data,
-        );
+  job.data,
+  String(job.id),
+);
       } catch (error) {
         /*
          * เฉพาะ Gemini 429 / 503

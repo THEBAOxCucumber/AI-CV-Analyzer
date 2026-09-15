@@ -1,8 +1,15 @@
 import fs from "node:fs";
+import fsPromises from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 
 import multer from "multer";
+
+import type {
+  NextFunction,
+  Request,
+  Response,
+} from "express";
 
 import { env } from "../config/env.js";
 import { AppError } from "../errors/app-error.js";
@@ -85,3 +92,65 @@ export const resumeUpload = multer({
   },
 
 });
+
+export async function verifyUploadedResumePdf(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> {
+  if (!req.file) {
+    next();
+    return;
+  }
+
+  try {
+    const fileHandle =
+      await fsPromises.open(
+        req.file.path,
+        "r",
+      );
+
+    let isPdf = false;
+
+    try {
+      const signature =
+        Buffer.alloc(5);
+
+      await fileHandle.read(
+        signature,
+        0,
+        5,
+        0,
+      );
+
+      isPdf =
+        signature.toString("ascii") ===
+        "%PDF-";
+    } finally {
+      await fileHandle.close();
+    }
+
+    if (!isPdf) {
+      await fsPromises
+        .unlink(req.file.path)
+        .catch(() => undefined);
+
+      next(
+        new AppError(
+          "ไฟล์ที่อัปโหลดไม่ใช่ PDF ที่ถูกต้อง",
+          400,
+          "INVALID_RESUME_FILE_CONTENT",
+        ),
+      );
+      return;
+    }
+
+    next();
+  } catch (error) {
+    await fsPromises
+      .unlink(req.file.path)
+      .catch(() => undefined);
+
+    next(error);
+  }
+}
