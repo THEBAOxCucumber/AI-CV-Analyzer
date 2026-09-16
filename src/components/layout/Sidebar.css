@@ -1,0 +1,320 @@
+.sidebar {
+  position: sticky;
+  top: 0;
+
+  height: 100vh;
+  padding:
+    var(--space-6)
+    var(--space-4);
+
+  display: flex;
+  flex-direction: column;
+
+  color: #ffffff;
+  background:
+    var(--color-navy);
+}
+
+.sidebar__brand {
+  min-height: 56px;
+
+  padding:
+    0
+    var(--space-3);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sidebar__brand-icon {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border-radius:
+    var(--radius-md);
+
+  color:
+    var(--color-navy);
+
+  background:
+    var(--color-soft-peach);
+}
+
+.sidebar__brand strong,
+.sidebar__brand span {
+  display: block;
+}
+
+.sidebar__brand strong {
+  font-size:
+    var(--font-size-md);
+}
+
+.sidebar__brand span {
+  margin-top: 1px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.65
+    );
+
+  font-size:
+    var(--font-size-xs);
+}
+
+.sidebar__navigation {
+  margin-top:
+    var(--space-10);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sidebar__link {
+  min-height: 48px;
+
+  padding:
+    0
+    var(--space-4);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  border-radius:
+    var(--radius-md);
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.7
+    );
+
+  font-size:
+    var(--font-size-sm);
+
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.sidebar__link:hover {
+  color: #ffffff;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+.sidebar__link--active {
+  color:
+    var(--color-navy);
+
+  background:
+    var(--color-soft-peach);
+}
+
+.sidebar__link--active:hover {
+  color:
+    var(--color-navy);
+
+  background:
+    var(--color-soft-peach);
+}
+
+.sidebar__footer {
+  margin-top: auto;
+
+  padding-top:
+    var(--space-5);
+
+  border-top:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    );
+}
+
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sidebar__avatar {
+  width: 40px;
+  height: 40px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border-radius:
+    var(--radius-full);
+
+  color:
+    var(--color-navy);
+
+  background:
+    var(--color-light-blue);
+
+  font-size:
+    var(--font-size-sm);
+
+  font-weight: 600;
+}
+
+.sidebar__user-info {
+  min-width: 0;
+}
+
+.sidebar__user-info strong,
+.sidebar__user-info span {
+  display: block;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__user-info strong {
+  font-size:
+    var(--font-size-sm);
+
+  font-weight: 500;
+}
+
+.sidebar__user-info span {
+  margin-top: 2px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.55
+    );
+
+  font-size:
+    var(--font-size-xs);
+}
+
+.sidebar__logout {
+  width: 100%;
+  min-height: 44px;
+
+  margin-top:
+    var(--space-4);
+
+  padding:
+    0
+    var(--space-3);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  border-radius:
+    var(--radius-md);
+
+  cursor: pointer;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.7
+    );
+
+  background: transparent;
+
+  font-size:
+    var(--font-size-sm);
+}
+
+.sidebar__logout:hover {
+  color: #ffffff;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    z-index: 100;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    width: 100%;
+    height: 68px;
+
+    padding:
+      var(--space-2)
+      var(--space-3);
+
+    display: block;
+  }
+
+  .sidebar__brand,
+  .sidebar__footer {
+    display: none;
+  }
+
+  .sidebar__navigation {
+    height: 100%;
+    margin: 0;
+
+    display: grid;
+    grid-template-columns:
+      repeat(4, 1fr);
+
+    gap: var(--space-1);
+  }
+
+  .sidebar__link {
+    min-height: 52px;
+
+    padding:
+      var(--space-1);
+
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+
+    font-size: 0.65rem;
+  }
+
+  .sidebar__link svg {
+    width: 19px;
+    height: 19px;
+  }
+}
