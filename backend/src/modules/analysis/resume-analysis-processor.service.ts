@@ -29,6 +29,26 @@ import type {
   ResumeAnalysisJobData,
 } from "./resume-analysis-queue.types.js";
 
+function getGeminiStatus(
+  error: unknown,
+): number | undefined {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error
+  ) {
+    const status =
+      (error as { status?: unknown })
+        .status;
+
+    if (typeof status === "number") {
+      return status;
+    }
+  }
+
+  return undefined;
+}
+
 export async function processResumeAnalysis(
   jobData: ResumeAnalysisJobData,
   jobId: string,
@@ -98,7 +118,16 @@ if (!started) {
 
     jobDescription =
       job.description;
+
+      jobDescription =
+  job.description;
+
+console.log("Job description size:", {
+  analysisRunId: jobData.analysisRunId,
+  characters: job.description.length,
+});
   }
+
 
   /*
    * สร้าง Prompt
@@ -114,6 +143,15 @@ if (!started) {
       jobData.promptVersion,
     );
 
+    console.log("Resume analysis prompt size:", {
+  analysisRunId: jobData.analysisRunId,
+  analysisType: jobData.analysisType,
+  characters: prompt.length,
+  chunks: chunks.length,
+});
+
+
+
   /*
    * เรียก Gemini
    *
@@ -124,49 +162,128 @@ if (!started) {
    */
   let response;
 
-  try {
-    response =
-      await gemini.models.generateContent({
-        model:
-          env.gemini.generationModel,
+let usedModel =
+  env.gemini.generationModel;
 
-        contents:
-          prompt,
+const fallbackModel =
+  "gemini-3.8-flash";
 
-        config: {
-          temperature: 0.1,
+const generateContent = (
+  model: string,
+) =>
+  gemini.models.generateContent({
+    model,
 
-          maxOutputTokens:
-            2500,
+    contents:
+      prompt,
 
-          responseMimeType:
-            "application/json",
+    config: {
+      temperature: 0.1,
 
-          responseJsonSchema:
-            z.toJSONSchema(
-              resumeAnalysisResultSchema,
-              {
-                target:
-                  "draft-07",
-              },
-            ),
-        },
-      });
-  } catch (error) {
-    console.error(
-      "Gemini analysis request failed:",
-      error,
+      maxOutputTokens:
+        2500,
+
+      responseMimeType:
+        "application/json",
+
+      responseJsonSchema:
+        z.toJSONSchema(
+          resumeAnalysisResultSchema,
+          {
+            target:
+              "draft-07",
+          },
+        ),
+    },
+  });
+
+try {
+  response =
+    await generateContent(
+      usedModel,
+    );
+} catch (error) {
+  const status =
+    getGeminiStatus(error);
+
+  /*
+   * Primary model มี high demand
+   * ลอง fallback model ก่อนให้ BullMQ retry
+   */
+  if (
+    status === 503 &&
+    usedModel !== fallbackModel
+  ) {
+    console.warn(
+      "Primary Gemini model unavailable, trying fallback:",
+      {
+        primaryModel:
+          usedModel,
+        fallbackModel,
+        status,
+      },
     );
 
-    /*
-     * ส่ง original error ไป Worker
-     *
-     * Worker จะเป็นคนตัดสิน:
-     * 429 / 503 → retry
-     * อื่น ๆ → fail ทันที
-     */
+    usedModel =
+      fallbackModel;
+
+    try {
+      response =
+        await generateContent(
+          usedModel,
+        );
+
+      console.log(
+        "Gemini fallback model succeeded:",
+        {
+          model:
+            usedModel,
+        },
+      );
+    } catch (
+      fallbackError
+    ) {
+      console.error(
+        "Gemini fallback request failed:",
+        {
+          model:
+            usedModel,
+          status:
+            getGeminiStatus(
+              fallbackError,
+            ),
+          error:
+            fallbackError instanceof Error
+              ? fallbackError.message
+              : String(
+                  fallbackError,
+                ),
+        },
+      );
+
+      /*
+       * ส่ง original Gemini error
+       * ให้ Worker ตัดสินใจ retry
+       */
+      throw fallbackError;
+    }
+  } else {
+    console.error(
+      "Gemini analysis request failed:",
+      {
+        model:
+          usedModel,
+        status,
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      },
+    );
+
     throw error;
   }
+}
 
   /*
    * อ่าน response text
@@ -227,8 +344,8 @@ if (!started) {
    * จึง mark COMPLETED
    */
   await markAnalysisRunCompleted(
-    jobData.analysisRunId,
-    parsed.data,
-    env.gemini.generationModel,
-  );
+  jobData.analysisRunId,
+  parsed.data,
+  usedModel,
+);
 }

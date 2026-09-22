@@ -1,4 +1,5 @@
 import {
+  BaggageClaimIcon,
   BarChart3,
   FileClock,
   FileText,
@@ -16,7 +17,7 @@ import {
   useAuth,
 } from "../../hooks/useAuth"
 
-import "./Sidebar.css"
+import "../../styles/components/Sidebar.css"
 
 const navigation = [
   {
@@ -38,6 +39,11 @@ const navigation = [
     to: "/insights",
     label: "Insights",
     icon: BarChart3,
+  },
+  {
+    to: "/jobs",
+    label: "Job Matches",
+    icon: BaggageClaimIcon,
   },
 ]
 

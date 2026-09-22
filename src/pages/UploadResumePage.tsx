@@ -24,7 +24,21 @@ import type {
   Resume,
 } from "../types/resume"
 
-import "./UploadResumePage.css"
+
+import {
+  useNavigate,
+} from "react-router-dom"
+
+import {
+  startBaseAnalysis,
+} from "../services/analysis.service"
+
+import {
+  embedResume,
+} from "../services/embedding.service"
+
+import "../styles/pages/UploadResumePage.css"
+
 
 const MAX_FILE_SIZE =
   10 * 1024 * 1024
@@ -63,6 +77,11 @@ export function UploadResumePage() {
   const [isUploading, setIsUploading] =
     useState(false)
 
+  const navigate = useNavigate()
+
+  const [isStartingAnalysis, setIsStartingAnalysis] =
+    useState(false)
+
   function validateFile(
     selectedFile: File,
   ): boolean {
@@ -71,7 +90,7 @@ export function UploadResumePage() {
 
     const isPdf =
       selectedFile.type ===
-        "application/pdf" ||
+      "application/pdf" ||
       selectedFile.name
         .toLowerCase()
         .endsWith(".pdf")
@@ -80,6 +99,7 @@ export function UploadResumePage() {
       setError(
         "รองรับเฉพาะไฟล์ PDF เท่านั้น",
       )
+
 
       return false
     }
@@ -94,7 +114,6 @@ export function UploadResumePage() {
 
       return false
     }
-
     return true
   }
 
@@ -181,6 +200,47 @@ export function UploadResumePage() {
     setFile(null)
     setError("")
   }
+  async function handleAnalyze() {
+    if (
+      !uploadedResume ||
+      isStartingAnalysis
+    ) {
+      return
+    }
+
+    setError("")
+    setIsStartingAnalysis(true)
+
+    try {
+      await embedResume(
+        uploadedResume.id,
+      )
+
+      const response =
+        await startBaseAnalysis(
+          uploadedResume.id,
+        )
+
+      navigate(
+        `/analyses/${response.data.analysisRun.id}`,
+      )
+    } catch (analysisError) {
+      if (
+        analysisError instanceof ApiError
+      ) {
+        setError(
+          analysisError.message,
+        )
+      } else {
+        setError(
+          "ไม่สามารถเตรียมและวิเคราะห์ Resume ได้",
+        )
+      }
+
+      setIsStartingAnalysis(false)
+    }
+  }
+
 
   return (
     <main className="upload-page">
@@ -357,11 +417,12 @@ export function UploadResumePage() {
             <button
               type="button"
               className="upload-submit"
-              onClick={() =>
-                setUploadedResume(null)
-              }
+              disabled={isStartingAnalysis}
+              onClick={handleAnalyze}
             >
-              Upload Another Resume
+              {isStartingAnalysis
+                ? "Preparing Resume..."
+                : "Analyze Resume"}
             </button>
           </div>
         )}

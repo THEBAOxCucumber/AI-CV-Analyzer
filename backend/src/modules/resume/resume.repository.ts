@@ -227,3 +227,19 @@ export async function markResumeChunkingFailed(
   );
 }
 
+export async function deleteResumeById(
+  resumeId: number,
+  userId: number,
+): Promise<boolean> {
+  const [result] =
+    await database.execute<ResultSetHeader>(
+      `
+        DELETE FROM resumes
+        WHERE id = ?
+          AND user_id = ?
+      `,
+      [resumeId, userId],
+    )
+
+  return result.affectedRows > 0
+}

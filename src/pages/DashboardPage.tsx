@@ -3,6 +3,7 @@ import {
   FileText,
   Plus,
   Sparkles,
+  Trash2,
 } from "lucide-react"
 
 import {
@@ -19,6 +20,7 @@ import {
 } from "../hooks/useAuth"
 
 import {
+  deleteResume,
   getResumes,
 } from "../services/resume.service"
 
@@ -26,7 +28,17 @@ import type {
   Resume,
 } from "../types/resume"
 
-import "./DashboardPage.css"
+import {
+  getResumeAnalysisHistory,
+} from "../services/analysis.service"
+
+import type {
+  ResumeAnalysisRun,
+} from "../types/analysis"
+
+import "../styles/pages/DashboardPage.css"
+
+
 
 function formatFileSize(
   bytes: number,
@@ -97,29 +109,69 @@ export function DashboardPage() {
   const [resumes, setResumes] =
     useState<Resume[]>([])
 
+  const [analyses, setAnalyses] =
+    useState<ResumeAnalysisRun[]>([])
+
   const [isLoading, setIsLoading] =
     useState(true)
 
   const [error, setError] =
     useState("")
 
+  const [deletingResumeId, setDeletingResumeId] = useState<number | null>(null)
+  const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null)
+
   useEffect(() => {
     let cancelled = false
 
     async function loadDashboard() {
       try {
-        const response =
+        const resumeResponse =
           await getResumes()
+
+        const loadedResumes =
+          resumeResponse.data.resumes
+
+        const historyResponses =
+          await Promise.all(
+            loadedResumes.map(
+              (resume) =>
+                getResumeAnalysisHistory(
+                  resume.id,
+                  100,
+                ),
+            ),
+          )
+
+        const loadedAnalyses =
+          historyResponses
+            .flatMap(
+              (response) =>
+                response.data.analyses,
+            )
+            .sort(
+              (a, b) =>
+                new Date(
+                  b.createdAt,
+                ).getTime() -
+                new Date(
+                  a.createdAt,
+                ).getTime(),
+            )
 
         if (!cancelled) {
           setResumes(
-            response.data.resumes,
+            loadedResumes,
+          )
+
+          setAnalyses(
+            loadedAnalyses,
           )
         }
       } catch {
         if (!cancelled) {
           setError(
-            "ไม่สามารถโหลดข้อมูล Resume ได้",
+            "ไม่สามารถโหลดข้อมูล Dashboard ได้",
           )
         }
       } finally {
@@ -136,15 +188,53 @@ export function DashboardPage() {
     }
   }, [])
 
-  const completedCount =
-    resumes.filter(
-      (resume) =>
-        resume.status ===
-        "COMPLETED",
-    ).length
-
   const recentResumes =
     resumes.slice(0, 5)
+
+  const latestCompletedAnalysis =
+    analyses
+      .filter((analysis) => analysis.status === "COMPLETED")
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime(),
+      )[0] ?? null
+
+  const latestBaseScore =
+    latestCompletedAnalysis
+      ?.baseResumeScore ?? null
+
+
+
+
+  async function handleDeleteResume() {
+    if (!resumeToDelete) return
+
+    const resume = resumeToDelete
+
+    setDeletingResumeId(resume.id)
+    setError("")
+
+    try {
+      await deleteResume(resume.id)
+
+      setResumes((current) =>
+        current.filter((item) => item.id !== resume.id),
+      )
+
+      setAnalyses((current) =>
+        current.filter(
+          (analysis) => analysis.resumeId !== resume.id,
+        ),
+      )
+
+      setResumeToDelete(null)
+    } catch {
+      setError("ไม่สามารถลบ Resume ได้")
+    } finally {
+      setDeletingResumeId(null)
+    }
+  }
 
   return (
     <main className="dashboard">
@@ -185,7 +275,7 @@ export function DashboardPage() {
 
       <section
         className="dashboard__stats"
-        aria-label="Resume statistics"
+        aria-label="Dashboard statistics"
       >
         <article className="stat-card">
           <div className="stat-card__icon">
@@ -207,24 +297,6 @@ export function DashboardPage() {
 
         <article className="stat-card">
           <div className="stat-card__icon">
-            <FileCheck2 size={23} />
-          </div>
-
-          <div>
-            <span>
-              พร้อมใช้งาน
-            </span>
-
-            <strong>
-              {isLoading
-                ? "..."
-                : completedCount}
-            </strong>
-          </div>
-        </article>
-
-        <article className="stat-card">
-          <div className="stat-card__icon">
             <Sparkles size={23} />
           </div>
 
@@ -234,11 +306,65 @@ export function DashboardPage() {
             </span>
 
             <strong>
-              —
+              {isLoading
+                ? "..."
+                : analyses.length}
+            </strong>
+          </div>
+        </article>
+
+        <article className="stat-card">
+          <div className="stat-card__icon">
+            <FileCheck2 size={23} />
+          </div>
+
+          <div>
+            <span>
+              คะแนนล่าสุด
+            </span>
+
+            <strong>
+              {isLoading
+                ? "..."
+                : latestBaseScore !== null
+                  ? `${latestBaseScore}/100`
+                  : "—"}
             </strong>
           </div>
         </article>
       </section>
+      {latestCompletedAnalysis && (
+        <section className="latest-analysis">
+          <div className="latest-analysis__content">
+            <div className="latest-analysis__icon">
+              <Sparkles size={22} />
+            </div>
+
+            <div>
+              <span className="latest-analysis__label">
+                Latest Analysis
+              </span>
+
+              <h2>
+                {latestCompletedAnalysis.baseResumeScore !== null
+                  ? `${latestCompletedAnalysis.baseResumeScore}/100`
+                  : "Analysis completed"}
+              </h2>
+
+              <p>
+                การวิเคราะห์ Resume ล่าสุดของคุณเสร็จเรียบร้อยแล้ว
+              </p>
+            </div>
+          </div>
+
+          <Link
+            className="latest-analysis__button"
+            to={`/analyses/${latestCompletedAnalysis.id}`}
+          >
+            View Analysis
+          </Link>
+        </section>
+      )}
 
       <section className="dashboard__panel">
         <div className="dashboard__panel-header">
@@ -325,6 +451,88 @@ export function DashboardPage() {
                       resume.status,
                     )}
                   </span>
+
+                  <button
+                    type="button"
+                    className="resume-list__delete"
+                    aria-label={`ลบ ${resume.originalName}`}
+                    title="ลบ Resume"
+                    disabled={
+                      deletingResumeId === resume.id
+                    }
+                    onClick={() => {
+                      setResumeToDelete(resume)
+                    }}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                  {resumeToDelete && (
+                    <div
+                      className="delete-modal"
+                      role="presentation"
+                      onMouseDown={() => {
+                        if (deletingResumeId === null) {
+                          setResumeToDelete(null)
+                        }
+                      }}
+                    >
+                      <div
+                        className="delete-modal__dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="delete-resume-title"
+                        onMouseDown={(event) => {
+                          event.stopPropagation()
+                        }}
+                      >
+                        <div className="delete-modal__icon">
+                          <Trash2 size={24} />
+                        </div>
+
+                        <div className="delete-modal__content">
+                          <h2 id="delete-resume-title">
+                            ลบ Resume?
+                          </h2>
+
+                          <p>
+                            ต้องการลบ{" "}
+                            <strong>{resumeToDelete.originalName}</strong>{" "}
+                            ใช่หรือไม่?
+                          </p>
+
+                          <p className="delete-modal__warning">
+                            ข้อมูลการวิเคราะห์ของ Resume นี้จะถูกลบด้วย
+                          </p>
+                        </div>
+
+                        <div className="delete-modal__actions">
+                          <button
+                            type="button"
+                            className="delete-modal__cancel"
+                            disabled={deletingResumeId !== null}
+                            onClick={() => {
+                              setResumeToDelete(null)
+                            }}
+                          >
+                            ยกเลิก
+                          </button>
+
+                          <button
+                            type="button"
+                            className="delete-modal__confirm"
+                            disabled={deletingResumeId !== null}
+                            onClick={() => {
+                              void handleDeleteResume()
+                            }}
+                          >
+                            {deletingResumeId !== null
+                              ? "กำลังลบ..."
+                              : "ลบ Resume"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </article>
               ),
             )}

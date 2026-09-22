@@ -140,6 +140,36 @@ export const env = {
       "gemini-3.6-flash",
   },
 
+  jooble: {
+    apiKey:
+      getRequiredEnv(
+        "JOOBLE_API_KEY",
+      ),
+
+    baseUrl:
+      process.env
+        .JOOBLE_BASE_URL ??
+      "https://jooble.org/api",
+  },
+
+  careerjet: {
+    apiKey:
+      getRequiredEnv(
+        "CAREERJET_API_KEY",
+      ),
+
+    baseUrl:
+      process.env
+        .CAREERJET_BASE_URL ??
+      "https://search.api.careerjet.net",
+
+    localeCode:
+      process.env
+        .CAREERJET_LOCALE_CODE ??
+      "th_TH",
+  },
+
+
   qdrant: {
     url:
       process.env.QDRANT_URL ??
@@ -236,6 +266,7 @@ export const env = {
         "ANALYSIS_RATE_LIMIT_WINDOW_SECONDS",
         600,
       ),
+
   },
 
   cors: {

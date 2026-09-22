@@ -7,6 +7,7 @@ import {
 } from "../../utils/pdf.util.js";
 import {
   createResumeRecord,
+  deleteResumeById,
   findResumeById,
   findResumesByUserId,
   markResumeExtractionFailed,
@@ -17,6 +18,10 @@ import type {
   Resume,
   ResumeRow,
 } from "./resume.types.js";
+
+import {
+  deleteResumeVectors,
+} from "../embedding/vector-store.service.js"
 
 import { chunkResumeText } from "./resume-chunk.service.js";
 
@@ -188,4 +193,42 @@ export async function getUserResumes(
 
     return resume;
   });
+}
+
+export async function deleteResume(
+  resumeId: number,
+  userId: number,
+): Promise<void> {
+  const resume =
+    await findResumeById(
+      resumeId,
+      userId,
+    )
+
+  if (!resume) {
+    throw new AppError(
+      "ไม่พบ Resume",
+      404,
+      "RESUME_NOT_FOUND",
+    )
+  }
+
+  await deleteResumeVectors(
+    resumeId,
+    userId,
+  )
+
+  const deleted =
+    await deleteResumeById(
+      resumeId,
+      userId,
+    )
+
+  if (!deleted) {
+    throw new AppError(
+      "ไม่สามารถลบ Resume ได้",
+      500,
+      "RESUME_DELETE_FAILED",
+    )
+  }
 }

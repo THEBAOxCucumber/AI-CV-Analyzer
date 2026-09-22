@@ -7,6 +7,7 @@ import type {
 import { AppError } from "../../errors/app-error.js";
 import { asyncHandler } from "../../shared/async-handler.js";
 import {
+  deleteResume,
   getUserResumes,
   saveUploadedResume,
 } from "./resume.service.js";
@@ -190,4 +191,27 @@ export const createResumeEmbeddingsController =
     },
   );
 
-  
+export const deleteResumeController = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new AppError(
+        "กรุณาเข้าสู่ระบบ",
+        401,
+        "UNAUTHENTICATED",
+      );
+    }
+
+    const resumeId =
+      Number(req.params.resumeId);
+
+    await deleteResume(
+      resumeId,
+      req.user.id,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "ลบ Resume สำเร็จ",
+    });
+  },
+);

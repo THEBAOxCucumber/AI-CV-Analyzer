@@ -2,7 +2,7 @@ import type {
   InputHTMLAttributes,
 } from "react"
 
-import "./Input.css"
+import "../../styles/components/Input.css"
 
 interface InputProps
   extends InputHTMLAttributes<HTMLInputElement> {

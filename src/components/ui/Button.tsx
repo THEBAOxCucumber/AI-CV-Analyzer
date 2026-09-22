@@ -3,7 +3,7 @@ import type {
   ReactNode,
 } from "react"
 
-import "./Button.css"
+import "../../styles/components/Button.css"
 
 interface ButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement> {

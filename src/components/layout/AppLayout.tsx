@@ -6,7 +6,7 @@ import {
   Sidebar,
 } from "./Sidebar"
 
-import "./AppLayout.css"
+import "../../styles/components/AppLayout.css"
 
 export function AppLayout() {
   return (

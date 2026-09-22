@@ -9,6 +9,7 @@ import {
 } from "../../middleware/validate.middleware.js";
 
 import {
+  deleteAnalysisRunController,
   getAnalysisRunController,
 } from "./resume-analysis-run.controller.js";
 
@@ -29,3 +30,12 @@ analysisRouter.get(
   getAnalysisRunController,
 );
 
+analysisRouter.delete(
+  "/:analysisRunId",
+  authenticateToken,
+  validate({
+    params:
+      analysisRunIdParamsSchema,
+  }),
+  deleteAnalysisRunController,
+);

@@ -21,6 +21,14 @@ import {
   resumeAnalysisRouter,
 } from "./modules/analysis/resume-analysis.routes.js";
 
+import { 
+  jobDescriptionRouter,
+} from "./modules/job-description/job-description.routes.js";
+
+import {
+  jobRouter,
+} from "./modules/job/job.routes.js";
+
 
 export const app = express();
 
@@ -70,6 +78,15 @@ app.use(
 app.use(
   "/api/analyses",
   analysisRouter,
+);
+app.use(
+  "/api/job-descriptions",
+  jobDescriptionRouter,
+);
+
+app.use(
+  "/api/jobs",
+  jobRouter,
 );
 
 

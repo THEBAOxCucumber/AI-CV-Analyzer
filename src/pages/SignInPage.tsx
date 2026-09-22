@@ -30,7 +30,7 @@ import {
   useAuth,
 } from "../hooks/useAuth"
 
-import "./SignInPage.css"
+import "../styles/pages/SignInPage.css"
 
 interface LocationState {
   from?: string

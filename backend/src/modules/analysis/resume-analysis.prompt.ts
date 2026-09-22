@@ -2,6 +2,10 @@ import type {
   CompletedResumeChunk,
 } from "../resume/resume-chunk.repository.js";
 
+import {
+  BASE_RESUME_SCORE_LIMITS,
+} from "./resume-analysis-rubric.js";
+
 import { AppError } from "../../errors/app-error.js";
 
 interface BuildResumeAnalysisPromptInput {
@@ -86,31 +90,31 @@ Base Resume Score:
 scores ต้องประกอบด้วย 7 หมวดเท่านั้น:
 
 1. contactInformation
-คะแนนเต็ม 10
+คะแนนเต็ม ${BASE_RESUME_SCORE_LIMITS.contactInformation}
 พิจารณาความครบถ้วนและความชัดเจนของข้อมูลติดต่อ
 
 2. professionalSummary
-คะแนนเต็ม 15
+คะแนนเต็ม ${BASE_RESUME_SCORE_LIMITS.professionalSummary}
 พิจารณาความชัดเจน ความกระชับ และการสื่อจุดเด่นทางอาชีพ
 
 3. skills
-คะแนนเต็ม 20
+คะแนนเต็ม ${BASE_RESUME_SCORE_LIMITS.skills}
 พิจารณาความชัดเจนของ technical skills และความสอดคล้องกับประสบการณ์หรือโครงการ
 
 4. experience
-คะแนนเต็ม 25
+คะแนนเต็ม ${BASE_RESUME_SCORE_LIMITS.experience}
 พิจารณาหน้าที่ ความรับผิดชอบ ผลลัพธ์ ผลกระทบ และหลักฐานเชิงปริมาณเมื่อมีข้อมูล
 
 5. projects
-คะแนนเต็ม 10
+คะแนนเต็ม ${BASE_RESUME_SCORE_LIMITS.projects}
 พิจารณารายละเอียดโครงการ บทบาท เทคโนโลยี และผลลัพธ์
 
 6. education
-คะแนนเต็ม 10
+คะแนนเต็ม ${BASE_RESUME_SCORE_LIMITS.education}
 พิจารณาความครบถ้วนและความชัดเจนของข้อมูลการศึกษา
 
 7. readability
-คะแนนเต็ม 10
+คะแนนเต็ม ${BASE_RESUME_SCORE_LIMITS.readability}
 พิจารณาโครงสร้าง ความเป็นระเบียบ ความชัดเจน และความอ่านง่าย
 
 กฎ Base Resume Score:

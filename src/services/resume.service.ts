@@ -49,3 +49,14 @@ export function uploadResume(
     },
   )
 }
+
+export function deleteResume(
+  resumeId: number,
+): Promise<ApiResponse<unknown>> {
+  return apiRequest<ApiResponse<unknown>>(
+    `/resumes/${resumeId}`,
+    {
+      method: "DELETE",
+    },
+  )
+}

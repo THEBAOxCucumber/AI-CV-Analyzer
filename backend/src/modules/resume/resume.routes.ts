@@ -22,6 +22,7 @@ import {
   getResumeChunksController,
   getMyResumesController,
   uploadResumeController,
+  deleteResumeController,
 } from "./resume.controller.js";
 import { resumeIdParamsSchema } from "./resume.validation.js";
 
@@ -88,3 +89,12 @@ resumeRouter.get(
   }),
   getResumeAnalysisHistoryController,
 );
+
+resumeRouter.delete(
+  "/:resumeId",
+  authenticateToken,
+  validate({
+    params: resumeIdParamsSchema,
+  }),
+  deleteResumeController,
+)

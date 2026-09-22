@@ -986,7 +986,7 @@ describe(
         );
 
         it(
-            "retries Gemini 503 and completes on the second attempt",
+            "falls back after Gemini 503 and completes on the first attempt",
             async () => {
                 mockGenerateContent
                     .mockRejectedValueOnce(
@@ -1057,7 +1057,7 @@ describe(
 
                 expect(
                     completed.attempt_count,
-                ).toBe(2);
+                ).toBe(1);
 
                 expect(
                     mockGenerateContent,

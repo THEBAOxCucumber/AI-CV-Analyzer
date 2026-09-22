@@ -27,20 +27,13 @@ export interface ResumeJobMatchResult {
   keywordMatches: string[]
 }
 
-export interface ResumeAnalysisResult {
-  baseResumeScore: number
-  jobMatchScore: number | null
-
-  scores: ResumeAnalysisScores
-
-  jobMatch:
-    | ResumeJobMatchResult
-    | null
-
-  summary: string
-  strengths: string[]
-  weaknesses: string[]
-  recommendations: string[]
+export interface AnalysisJobSummary {
+  id: number
+  title: string
+  company: string | null
+  location: string | null
+  source: string | null
+  sourceUrl: string | null
 }
 
 export interface ResumeAnalysisRun {
@@ -48,20 +41,23 @@ export interface ResumeAnalysisRun {
   resumeId: number
   userId: number
 
-  jobDescriptionId:
-    | number
-    | null
+  jobDescriptionId: number | null
+  job: AnalysisJobSummary | null
 
   analysisType: ResumeAnalysisType
   status: ResumeAnalysisStatus
 
-  baseResumeScore:
-    | number
-    | null
+  baseResumeScore: number | null
+  jobMatchScore: number | null
 
-  jobMatchScore:
-    | number
-    | null
+  scores: ResumeAnalysisScores | null
+  jobMatch: ResumeJobMatchResult | null
+  
+  summary: string | null
+  
+  strengths: string[]
+  weaknesses: string[]
+  recommendations: string[]
 
   promptVersion: string
   model: string | null

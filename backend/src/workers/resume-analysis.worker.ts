@@ -46,13 +46,27 @@ export const resumeAnalysisWorker =
             job.attemptsMade + 1,
         },
       );
-
+    
+      const startedAt = Date.now()
+      
       try {
         await processResumeAnalysis(
   job.data,
   String(job.id),
 );
-      } catch (error) {
+     console.log(
+      "Resume analysis attempt completed:",
+      {
+        jobId: job.id,
+        analysisRunId:
+          job.data.analysisRunId,
+        attempt:
+          job.attemptsMade + 1,
+        durationMs:
+          Date.now() - startedAt,
+      },
+    );
+  } catch (error) {
         /*
          * เฉพาะ Gemini 429 / 503
          * ให้ BullMQ retry
@@ -71,6 +85,9 @@ export const resumeAnalysisWorker =
               attempt:
                 job.attemptsMade + 1,
 
+                 durationMs:
+            Date.now() - startedAt,
+
               error:
                 error instanceof Error
                   ? error.message
@@ -88,13 +105,19 @@ export const resumeAnalysisWorker =
         console.error(
           "Non-retryable analysis error:",
           {
-            jobId:
-              job.id,
+             jobId: job.id,
+        analysisRunId:
+          job.data.analysisRunId,
+        attempt:
+          job.attemptsMade + 1,
 
-            error:
-              error instanceof Error
-                ? error.message
-                : String(error),
+        durationMs:
+          Date.now() - startedAt,
+
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
           },
         );
 
@@ -122,7 +145,9 @@ resumeAnalysisWorker.on(
       "Analysis completed:",
       job.id,
     );
+    
   },
+  
 );
 
 resumeAnalysisWorker.on(
@@ -148,7 +173,9 @@ resumeAnalysisWorker.on(
 
     console.error(
       "Resume analysis job failed:",
+      
       {
+        
         jobId: job.id,
         analysisRunId:
           job.data.analysisRunId,
@@ -159,8 +186,11 @@ resumeAnalysisWorker.on(
         attemptsExhausted,
         error:
           error.message,
+          
       },
+      
     );
+    
 
     /*
      * Retryable error และยังเหลือ attempt

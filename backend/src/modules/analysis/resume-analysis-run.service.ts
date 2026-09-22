@@ -24,6 +24,7 @@ import {
 
 import {
   createAnalysisRun,
+  deleteAnalysisRunById,
   findActiveAnalysisRun,
   findAnalysisHistory,
   findAnalysisRunById,
@@ -232,4 +233,49 @@ export async function getAnalysisRun(
   }
 
   return analysisRun;
+}
+
+export async function deleteAnalysisRun(
+  analysisRunId: number,
+  userId: number,
+): Promise<void> {
+  const analysisRun =
+    await findAnalysisRunById(
+      analysisRunId,
+      userId,
+    );
+
+  if (!analysisRun) {
+    throw new AppError(
+      "ไม่พบ Analysis",
+      404,
+      "ANALYSIS_RUN_NOT_FOUND",
+    );
+  }
+
+  if (
+    analysisRun.status === "PENDING" ||
+    analysisRun.status === "QUEUED" ||
+    analysisRun.status === "PROCESSING"
+  ) {
+    throw new AppError(
+      "ไม่สามารถลบ Analysis ที่กำลังดำเนินการอยู่",
+      409,
+      "ANALYSIS_RUN_IN_PROGRESS",
+    );
+  }
+
+  const deleted =
+    await deleteAnalysisRunById(
+      analysisRunId,
+      userId,
+    );
+
+  if (!deleted) {
+    throw new AppError(
+      "ไม่สามารถลบ Analysis ได้",
+      500,
+      "ANALYSIS_DELETE_FAILED",
+    );
+  }
 }

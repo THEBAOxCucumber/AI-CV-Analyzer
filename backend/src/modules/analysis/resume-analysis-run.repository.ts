@@ -30,6 +30,36 @@ interface AnalysisRunRow
   | "FAILED";
   base_resume_score: number | null;
   job_match_score: number | null;
+  contact_information_score:
+  number | null
+  professional_summary_score:
+  number | null
+  skills_score:
+  number | null
+  experience_score:
+  number | null
+  projects_score:
+  number | null
+  education_score:
+  number | null
+  readability_score:
+  number | null
+
+  matched_skills:
+  string | string[] | null
+  missing_skills:
+  string | string[] | null
+  keyword_matches:
+  string | string[] | null
+
+  summary: string | null
+
+  strengths:
+  string | string[] | null
+  weaknesses:
+  string | string[] | null
+  recommendations:
+  string | string[] | null
   prompt_version: string;
   model: string | null;
   attempt_count: number;
@@ -37,11 +67,118 @@ interface AnalysisRunRow
   error_message: string | null;
   created_at: Date;
   updated_at: Date;
+
+  job_title: string | null;
+  job_company: string | null;
+  job_location: string | null;
+  job_source: string | null;
+  job_source_url: string | null;
+}
+
+const analysisRunSelectColumns = `
+  ar.id,
+  ar.resume_id,
+  ar.user_id,
+  ar.job_description_id,
+  ar.analysis_type,
+  ar.status,
+
+  ar.base_resume_score,
+  ar.job_match_score,
+
+  ar.contact_information_score,
+  ar.professional_summary_score,
+  ar.skills_score,
+  ar.experience_score,
+  ar.projects_score,
+  ar.education_score,
+  ar.readability_score,
+
+  ar.matched_skills,
+  ar.missing_skills,
+  ar.keyword_matches,
+
+  ar.summary,
+  ar.strengths,
+  ar.weaknesses,
+  ar.recommendations,
+
+  ar.prompt_version,
+  ar.model,
+  ar.attempt_count,
+
+  ar.error_code,
+  ar.error_message,
+  ar.created_at,
+  ar.updated_at,
+
+  jd.title AS job_title,
+  jd.company AS job_company,
+  jd.location AS job_location,
+  jd.source AS job_source,
+  jd.source_url AS job_source_url
+`
+
+function parseStringArray(
+  value:
+    | string
+    | string[]
+    | null,
+): string[] {
+  if (Array.isArray(value)) {
+    return value
+  }
+
+  if (!value) {
+    return []
+  }
+
+  try {
+    const parsed: unknown =
+      JSON.parse(value)
+
+    return Array.isArray(parsed)
+      ? parsed.filter(
+        (
+          item,
+        ): item is string =>
+          typeof item === "string",
+      )
+      : []
+  } catch {
+    return []
+  }
 }
 
 function mapAnalysisRun(
   row: AnalysisRunRow,
 ): ResumeAnalysisRunRecord {
+  const hasScores =
+
+    row.contact_information_score !==
+    null &&
+    row.professional_summary_score !==
+    null &&
+    row.skills_score !== null &&
+    row.experience_score !== null &&
+    row.projects_score !== null &&
+    row.education_score !== null &&
+    row.readability_score !== null
+
+  const matchedSkills =
+    parseStringArray(
+      row.matched_skills,
+    )
+
+  const missingSkills =
+    parseStringArray(
+      row.missing_skills,
+    )
+
+  const keywordMatches =
+    parseStringArray(
+      row.keyword_matches,
+    )
   return {
     id: row.id,
     resumeId: row.resume_id,
@@ -54,6 +191,71 @@ function mapAnalysisRun(
       row.base_resume_score,
     jobMatchScore:
       row.job_match_score,
+    scores: hasScores
+      ? {
+        contactInformation:
+          row.contact_information_score!,
+        professionalSummary:
+          row.professional_summary_score!,
+        skills:
+          row.skills_score!,
+        experience:
+          row.experience_score!,
+        projects:
+          row.projects_score!,
+        education:
+          row.education_score!,
+        readability:
+          row.readability_score!,
+      }
+      : null,
+
+    jobMatch:
+      row.job_match_score !== null
+        ? {
+          score:
+            row.job_match_score,
+          matchedSkills,
+          missingSkills,
+          keywordMatches,
+        }
+        : null,
+
+    summary: row.summary,
+
+    job:
+  row.job_description_id === null
+    ? null
+    : {
+        id: row.job_description_id,
+        title:
+          row.job_title ??
+          "Untitled Job",
+        company:
+          row.job_company,
+        location:
+          row.job_location,
+        source:
+          row.job_source,
+        sourceUrl:
+          row.job_source_url,
+      },
+
+    strengths:
+      parseStringArray(
+        row.strengths,
+      ),
+
+    weaknesses:
+      parseStringArray(
+        row.weaknesses,
+      ),
+
+    recommendations:
+      parseStringArray(
+        row.recommendations,
+      ),
+
     promptVersion: row.prompt_version,
     model: row.model,
     attemptCount: row.attempt_count,
@@ -123,27 +325,15 @@ export async function findAnalysisRunById(
       AnalysisRunRow[]
     >(
       `
-        SELECT
-          id,
-          resume_id,
-          user_id,
-          job_description_id,
-          analysis_type,
-          status,
-          base_resume_score,
-          job_match_score,
-          prompt_version,
-          model,
-          attempt_count,
-          error_code,
-          error_message,
-          created_at,
-          updated_at
-        FROM resume_analysis_runs
-        WHERE id = ?
-          AND user_id = ?
-        LIMIT 1
-      `,
+      SELECT
+        ${analysisRunSelectColumns}
+      FROM resume_analysis_runs ar
+      LEFT JOIN job_descriptions jd
+        ON jd.id = ar.job_description_id
+      WHERE ar.id = ?
+        AND ar.user_id = ?
+      LIMIT 1
+    `,
       [
         analysisRunId,
         userId,
@@ -165,26 +355,14 @@ export async function findAnalysisRunByIdInternal(
       AnalysisRunRow[]
     >(
       `
-        SELECT
-          id,
-          resume_id,
-          user_id,
-          job_description_id,
-          analysis_type,
-          status,
-          base_resume_score,
-          job_match_score,
-          prompt_version,
-          model,
-          attempt_count,
-          error_code,
-          error_message,
-          created_at,
-          updated_at
-        FROM resume_analysis_runs
-        WHERE id = ?
-        LIMIT 1
-      `,
+      SELECT
+        ${analysisRunSelectColumns}
+      FROM resume_analysis_runs ar
+      LEFT JOIN job_descriptions jd
+        ON jd.id = ar.job_description_id
+      WHERE ar.id = ?
+      LIMIT 1
+    `,
       [analysisRunId],
     );
 
@@ -207,34 +385,23 @@ export async function findAnalysisHistory(
     )
     : 20;
 
-  const [rows] = await database.execute<
-    AnalysisRunRow[]
-  >(
-    `
+  const [rows] =
+    await database.execute<
+      AnalysisRunRow[]
+    >(
+      `
       SELECT
-        id,
-        resume_id,
-        user_id,
-        job_description_id,
-        analysis_type,
-        status,
-        base_resume_score,
-        job_match_score,
-        prompt_version,
-        model,
-        attempt_count,
-        error_code,
-        error_message,
-        created_at,
-        updated_at
-      FROM resume_analysis_runs
-      WHERE resume_id = ?
-        AND user_id = ?
-      ORDER BY created_at DESC, id DESC
+        ${analysisRunSelectColumns}
+      FROM resume_analysis_runs ar
+      LEFT JOIN job_descriptions jd
+        ON jd.id = ar.job_description_id
+      WHERE ar.resume_id = ?
+        AND ar.user_id = ?
+      ORDER BY ar.created_at DESC, ar.id DESC
       LIMIT ${safeLimit}
     `,
-    [resumeId, userId],
-  );
+      [resumeId, userId],
+    );
 
   return rows.map(mapAnalysisRun);
 }
@@ -246,7 +413,7 @@ export async function markAnalysisRunProcessing(
   const [result] =
     await database.execute<ResultSetHeader>(
       `
-        UPDATE resume_analysis_runs
+        UPDATE resume_analysis_runs ar
         SET
           status = 'PROCESSING',
           processing_job_id = ?,
@@ -384,38 +551,27 @@ export async function findActiveAnalysisRun(
   resumeId: number,
   userId: number,
 ): Promise<ResumeAnalysisRunRecord | null> {
-  const [rows] = await database.execute<
-    AnalysisRunRow[]
-  >(
-    `
+  const [rows] =
+    await database.execute<
+      AnalysisRunRow[]
+    >(
+      `
       SELECT
-        id,
-        resume_id,
-        user_id,
-        job_description_id,
-        analysis_type,
-        status,
-        base_resume_score,
-        job_match_score,
-        prompt_version,
-        model,
-        attempt_count,
-        error_code,
-        error_message,
-        created_at,
-        updated_at
-      FROM resume_analysis_runs
-      WHERE resume_id = ?
-        AND user_id = ?
-        AND status IN (
+        ${analysisRunSelectColumns}
+      FROM resume_analysis_runs ar
+      LEFT JOIN job_descriptions jd
+        ON jd.id = ar.job_description_id
+      WHERE ar.resume_id = ?
+        AND ar.user_id = ?
+        AND ar.status IN (
           'QUEUED',
           'PROCESSING'
         )
-      ORDER BY created_at DESC, id DESC
+      ORDER BY ar.created_at DESC, ar.id DESC
       LIMIT 1
     `,
-    [resumeId, userId],
-  );
+      [resumeId, userId],
+    );
 
   const row = rows[0];
 
@@ -423,3 +579,33 @@ export async function findActiveAnalysisRun(
     ? mapAnalysisRun(row)
     : null;
 }
+
+export async function deleteAnalysisRunById(
+  analysisRunId: number,
+  userId: number,
+): Promise<boolean> {
+  const [result] =
+    await database.execute<ResultSetHeader>(
+      `
+        DELETE FROM resume_analysis_runs
+        WHERE id = ?
+          AND user_id = ?
+      `,
+      [
+        analysisRunId,
+        userId,
+      ],
+    )
+
+  return result.affectedRows > 0
+}
+
+export interface AnalysisJobSummary {
+  id: number;
+  title: string;
+  company: string | null;
+  location: string | null;
+  source: string | null;
+  sourceUrl: string | null;
+}
+

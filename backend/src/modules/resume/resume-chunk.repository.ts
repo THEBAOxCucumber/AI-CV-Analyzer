@@ -312,10 +312,6 @@ export async function resetProcessingChunksToPending(
       `,
       [resumeId, userId],
     );
-    await resetProcessingChunksToPending(
-  resumeId,
-  userId,
-);
 
   return result.affectedRows;
 }
@@ -376,3 +372,4 @@ export async function findCompletedChunksByResumeId(
     content: row.content,
   }));
 }
+

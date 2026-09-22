@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BASE_RESUME_SCORE_LIMITS } from "./resume-analysis-rubric.js";
 
 const scoreSchema = z
   .number()
@@ -22,25 +23,46 @@ export const resumeAnalysisResultSchema =
     scores: z
       .object({
         contactInformation:
-          baseScorePartSchema.max(10),
+          baseScorePartSchema.max(
+            BASE_RESUME_SCORE_LIMITS
+              .contactInformation,
+          ),
 
         professionalSummary:
-          baseScorePartSchema.max(15),
+          baseScorePartSchema.max(
+            BASE_RESUME_SCORE_LIMITS
+              .professionalSummary,
+          ),
 
         skills:
-          baseScorePartSchema.max(20),
+          baseScorePartSchema.max(
+            BASE_RESUME_SCORE_LIMITS
+              .skills,
+          ),
 
         experience:
-          baseScorePartSchema.max(25),
+          baseScorePartSchema.max(
+            BASE_RESUME_SCORE_LIMITS
+              .experience,
+          ),
 
         projects:
-          baseScorePartSchema.max(10),
+          baseScorePartSchema.max(
+            BASE_RESUME_SCORE_LIMITS
+              .projects,
+          ),
 
         education:
-          baseScorePartSchema.max(10),
+          baseScorePartSchema.max(
+            BASE_RESUME_SCORE_LIMITS
+              .education,
+          ),
 
         readability:
-          baseScorePartSchema.max(10),
+          baseScorePartSchema.max(
+            BASE_RESUME_SCORE_LIMITS
+              .readability,
+          ),
       })
       .strict(),
 

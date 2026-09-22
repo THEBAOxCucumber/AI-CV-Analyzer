@@ -24,6 +24,22 @@ import {
   UploadResumePage,
 } from "./pages/UploadResumePage"
 
+import {
+  AnalysisResultPage,
+} from "./pages/AnalysisResultPage"
+
+import {
+  HistoryPage,
+} from "./pages/HistoryPage"
+
+// import {
+//   JobMatchPage,
+// } from "./pages/JobMatchPage"
+
+import {
+  JobMatchesPage,
+} from "./pages/JobMatchesPage"
+
 function ComingSoonPage({
   title,
 }: {
@@ -67,9 +83,17 @@ function App() {
 
         <Route
           path="/history"
-          element={
-            <ComingSoonPage title="History" />
-          }
+          element={<HistoryPage />}
+        />
+
+        {/* <Route
+          path="/job-match"
+          element={<JobMatchPage />}
+        /> */}
+
+        <Route
+          path="/jobs"
+          element={<JobMatchesPage />}
         />
 
         <Route
@@ -78,6 +102,14 @@ function App() {
             <ComingSoonPage title="Insights" />
           }
         />
+
+
+        <Route
+          path="/analyses/:analysisRunId"
+          element={<AnalysisResultPage />}
+        />
+
+
       </Route>
 
       <Route
@@ -98,8 +130,11 @@ function App() {
             replace
           />
         }
+
       />
     </Routes>
+
+
   )
 }
 

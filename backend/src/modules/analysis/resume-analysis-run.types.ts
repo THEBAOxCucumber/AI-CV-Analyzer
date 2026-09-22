@@ -54,27 +54,54 @@ export interface ResumeAnalysisResult {
   recommendations: string[];
 }
 
-export interface ResumeAnalysisRunRecord {
+export interface AnalysisJobSummary {
   id: number;
-  resumeId: number;
-  userId: number;
+  title: string;
+  company: string | null;
+  location: string | null;
+  source: string | null;
+  sourceUrl: string | null;
+}
+
+export interface ResumeAnalysisRunRecord {
+  id: number
+  resumeId: number
+  userId: number
+
   jobDescriptionId:
     | number
-    | null;
+    | null
 
-  analysisType: ResumeAnalysisType;
-  status: ResumeAnalysisStatus;
+  analysisType: ResumeAnalysisType
+  status: ResumeAnalysisStatus
 
-  baseResumeScore: number | null;
-  jobMatchScore: number | null;
+  baseResumeScore: number | null
+  jobMatchScore: number | null
 
-  promptVersion: string;
-  model: string | null;
-  attemptCount: number;
+  scores:
+    | ResumeAnalysisScores
+    | null
 
-  errorCode: string | null;
-  errorMessage: string | null;
+  jobMatch:
+    | ResumeJobMatchResult
+    | null
 
-  createdAt: Date;
-  updatedAt: Date;
+  job: AnalysisJobSummary | null;
+
+  summary: string | null
+  strengths: string[]
+  weaknesses: string[]
+  recommendations: string[]
+
+  
+
+  promptVersion: string
+  model: string | null
+  attemptCount: number
+
+  errorCode: string | null
+  errorMessage: string | null
+
+  createdAt: Date
+  updatedAt: Date
 }

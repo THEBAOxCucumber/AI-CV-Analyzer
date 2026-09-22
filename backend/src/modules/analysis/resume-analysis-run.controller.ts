@@ -9,6 +9,7 @@ import {
 } from "../../shared/async-handler.js";
 
 import {
+  deleteAnalysisRun,
   getAnalysisRun,
   getResumeAnalysisHistory,
   startAnalysisRun,
@@ -168,6 +169,34 @@ export const getAnalysisRunController =
         data: {
           analysisRun,
         },
+      });
+    },
+  );
+
+export const deleteAnalysisRunController =
+  asyncHandler(
+    async (
+      req: Request,
+      res: Response,
+    ) => {
+      const userId =
+        requireUserId(req);
+
+      const analysisRunId =
+        parsePositiveInteger(
+          req.params.analysisRunId,
+          "analysisRunId",
+        );
+
+      await deleteAnalysisRun(
+        analysisRunId,
+        userId,
+      );
+
+      res.status(200).json({
+        success: true,
+        message:
+          "ลบประวัติการวิเคราะห์สำเร็จ",
       });
     },
   );
