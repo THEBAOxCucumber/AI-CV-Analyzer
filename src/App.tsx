@@ -40,21 +40,29 @@ import {
   JobMatchesPage,
 } from "./pages/JobMatchesPage"
 
-function ComingSoonPage({
-  title,
-}: {
-  title: string
-}) {
-  return (
-    <main
-      style={{
-        padding: "2rem",
-      }}
-    >
-      <h1>{title}</h1>
-    </main>
-  )
-}
+import {
+  InsightsPage,
+} from "./pages/InsightsPage"
+
+import {
+  SettingsPage,
+} from "./pages/SettingsPage"
+
+// function ComingSoonPage({
+//   title,
+// }: {
+//   title: string
+// }) {
+//   return (
+//     <main
+//       style={{
+//         padding: "2rem",
+//       }}
+//     >
+//       <h1>{title}</h1>
+//     </main>
+//   )
+// }
 
 function App() {
   return (
@@ -98,9 +106,12 @@ function App() {
 
         <Route
           path="/insights"
-          element={
-            <ComingSoonPage title="Insights" />
-          }
+          element={<InsightsPage />}
+        />
+
+        <Route
+          path="/settings"
+          element={<SettingsPage />}
         />
 
 

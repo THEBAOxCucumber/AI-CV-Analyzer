@@ -89,3 +89,25 @@ export function formatThaiTime(
     },
   ).format(date)
 }
+
+export function formatThaiShortDate(
+  value: string | number | Date,
+): string {
+  const date =
+    value instanceof Date
+      ? value
+      : new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return "-"
+  }
+
+  return new Intl.DateTimeFormat(
+    "th-TH",
+    {
+      timeZone: "Asia/Bangkok",
+      day: "2-digit",
+      month: "short",
+    },
+  ).format(date)
+}

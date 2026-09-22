@@ -5,6 +5,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Settings,
   Upload,
 } from "lucide-react"
 
@@ -44,6 +45,12 @@ const navigation = [
     to: "/jobs",
     label: "Job Matches",
     icon: BaggageClaimIcon,
+  },
+
+  {
+    to: "/settings",
+    label: "Settings",
+    icon: Settings,
   },
 ]
 
@@ -149,16 +156,16 @@ export function Sidebar() {
 
       <div className="sidebar__footer">
         <div className="sidebar__session">
-  <span>
-    เวลาการเข้าสู่ระบบ
-  </span>
+          <span>
+            เวลาการเข้าสู่ระบบ
+          </span>
 
-  <strong>
-    {formatSessionTime(
-      sessionRemainingSeconds,
-    )}
-  </strong>
-</div>
+          <strong>
+            {formatSessionTime(
+              sessionRemainingSeconds,
+            )}
+          </strong>
+        </div>
         <div className="sidebar__user">
           <div className="sidebar__avatar">
             {initials || "U"}
