@@ -28,11 +28,53 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+interface JwtPayload {
+  exp?: number
+}
+
+function getTokenExpirationMs(
+  token: string,
+): number | null {
+  try {
+    const payloadPart =
+      token.split(".")[1]
+
+    if (!payloadPart) {
+      return null
+    }
+
+    const normalized =
+      payloadPart
+        .replace(/-/g, "+")
+        .replace(/_/g, "/")
+
+    const payload =
+      JSON.parse(
+        atob(normalized),
+      ) as JwtPayload
+
+    if (
+      typeof payload.exp !== "number"
+    ) {
+      return null
+    }
+
+    return payload.exp * 1000
+  } catch {
+    return null
+  }
+}
+
 export function AuthProvider({
   children,
 }: AuthProviderProps) {
   const [user, setUser] =
     useState<User | null>(null)
+
+  const [
+    sessionRemainingSeconds,
+    setSessionRemainingSeconds,
+  ] = useState(0)
 
   const [isLoading, setIsLoading] =
     useState(
@@ -78,6 +120,67 @@ export function AuthProvider({
     }
   }, [])
 
+  /*
+   * นับถอยหลังตาม exp ใน JWT จริง
+   */
+  useEffect(() => {
+    if (!user) {
+      setSessionRemainingSeconds(0)
+      return
+    }
+
+    const token = getAccessToken()
+
+    if (!token) {
+      logout()
+      return
+    }
+
+    const expirationMs =
+  getTokenExpirationMs(token)
+
+if (expirationMs === null) {
+  logout()
+  return
+}
+
+const expiresAt: number =
+  expirationMs
+
+    function updateCountdown() {
+      const remaining =
+        Math.max(
+          0,
+          Math.ceil(
+            (expiresAt - Date.now()) /
+              1000,
+          ),
+        )
+
+      setSessionRemainingSeconds(
+        remaining,
+      )
+
+      if (remaining <= 0) {
+        logout()
+      }
+    }
+
+    updateCountdown()
+
+    const intervalId =
+      window.setInterval(
+        updateCountdown,
+        1000,
+      )
+
+    return () => {
+      window.clearInterval(
+        intervalId,
+      )
+    }
+  }, [user])
+
   async function login(
     input: LoginInput,
   ): Promise<void> {
@@ -105,6 +208,7 @@ export function AuthProvider({
   function logout(): void {
     clearAccessToken()
     setUser(null)
+    setSessionRemainingSeconds(0)
   }
 
   return (
@@ -114,6 +218,7 @@ export function AuthProvider({
         isAuthenticated:
           user !== null,
         isLoading,
+        sessionRemainingSeconds,
         login,
         logout,
       }}

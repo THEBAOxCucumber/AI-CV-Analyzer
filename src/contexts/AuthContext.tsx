@@ -11,6 +11,7 @@ export interface AuthContextValue {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
+  sessionRemainingSeconds: number
   login: (
     input: LoginInput,
   ) => Promise<void>

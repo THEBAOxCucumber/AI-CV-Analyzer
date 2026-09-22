@@ -17,6 +17,10 @@ import {
 } from "react-router-dom"
 
 import {
+  formatThaiDateTime,
+} from "../utils/date-time"
+
+import {
   deleteAnalysisRun,
   getResumeAnalysisHistory,
 } from "../services/analysis.service"
@@ -44,23 +48,6 @@ interface HistoryItem {
   resume: Resume
 }
 
-function formatDate(
-  value: string,
-): string {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return "—"
-  }
-
-  return new Intl.DateTimeFormat(
-    "th-TH",
-    {
-      dateStyle: "medium",
-      timeStyle: "short",
-    },
-  ).format(date)
-}
 
 function getAnalysisTypeLabel(
   type: ResumeAnalysisRun["analysisType"],
@@ -474,9 +461,11 @@ export function HistoryPage() {
                       </td>
 
                       <td>
-                        {formatDate(
-                          analysis.createdAt,
-                        )}
+                        {resume.createdAt
+  ? formatThaiDateTime(
+      resume.createdAt,
+    )
+  : "-"}
                       </td>
 
                       <td className="history-actions">

@@ -22,6 +22,8 @@ export const database = mysql.createPool({
   queueLimit: 0,
 
   charset: "utf8mb4",
+
+  timezone: "Z",
 });
 
 export async function testDatabaseConnection(): Promise<void> {

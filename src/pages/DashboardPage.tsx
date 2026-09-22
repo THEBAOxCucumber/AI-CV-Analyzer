@@ -36,6 +36,10 @@ import type {
   ResumeAnalysisRun,
 } from "../types/analysis"
 
+import {
+  formatThaiDateTime,
+} from "../utils/date-time"
+
 import "../styles/pages/DashboardPage.css"
 
 
@@ -59,31 +63,7 @@ function formatFileSize(
   ).toFixed(1)} MB`
 }
 
-function formatDate(
-  value?: string,
-): string {
-  if (!value) {
-    return "-"
-  }
 
-  const date =
-    new Date(value)
-
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
-    return "-"
-  }
-
-  return new Intl.DateTimeFormat(
-    "th-TH",
-    {
-      dateStyle: "medium",
-    },
-  ).format(date)
-}
 
 function getStatusLabel(
   status: Resume["status"],
@@ -435,9 +415,11 @@ export function DashboardPage() {
                         resume.fileSize,
                       )}
                       {" • "}
-                      {formatDate(
-                        resume.createdAt,
-                      )}
+                      {resume.createdAt
+                        ? formatThaiDateTime(
+                          resume.createdAt,
+                        )
+                        : "-"}
                     </span>
                   </div>
 

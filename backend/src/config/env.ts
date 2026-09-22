@@ -91,7 +91,7 @@ export const env = {
 
     expiresIn:
       process.env.JWT_EXPIRES_IN ??
-      "1d",
+      "15m",
   },
 
   upload: {

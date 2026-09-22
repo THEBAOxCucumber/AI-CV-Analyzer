@@ -47,10 +47,29 @@ const navigation = [
   },
 ]
 
+function formatSessionTime(
+  totalSeconds: number,
+): string {
+  const minutes =
+    Math.floor(totalSeconds / 60)
+
+  const seconds =
+    totalSeconds % 60
+
+  return `${String(minutes).padStart(
+    2,
+    "0",
+  )}:${String(seconds).padStart(
+    2,
+    "0",
+  )}`
+}
+
 export function Sidebar() {
   const {
     user,
     logout,
+    sessionRemainingSeconds,
   } = useAuth()
 
   const navigate = useNavigate()
@@ -129,6 +148,17 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar__footer">
+        <div className="sidebar__session">
+  <span>
+    เวลาการเข้าสู่ระบบ
+  </span>
+
+  <strong>
+    {formatSessionTime(
+      sessionRemainingSeconds,
+    )}
+  </strong>
+</div>
         <div className="sidebar__user">
           <div className="sidebar__avatar">
             {initials || "U"}
