@@ -137,7 +137,7 @@ export const env = {
     generationModel:
       process.env
         .GEMINI_GENERATION_MODEL ??
-      "gemini-3.6-flash",
+      "gemini-3.7-flash",
   },
 
   jooble: {

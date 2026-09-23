@@ -119,8 +119,6 @@ if (!started) {
     jobDescription =
       job.description;
 
-      jobDescription =
-  job.description;
 
 console.log("Job description size:", {
   analysisRunId: jobData.analysisRunId,
@@ -168,6 +166,13 @@ let usedModel =
 const fallbackModel =
   "gemini-3.8-flash";
 
+
+
+  const maxOutputTokens =
+  jobData.analysisType === "JOB_MATCH"
+    ? 1500
+    : 2500;
+
 const generateContent = (
   model: string,
 ) =>
@@ -181,7 +186,7 @@ const generateContent = (
       temperature: 0.1,
 
       maxOutputTokens:
-        2500,
+        maxOutputTokens,
 
       responseMimeType:
         "application/json",
@@ -205,6 +210,8 @@ try {
 } catch (error) {
   const status =
     getGeminiStatus(error);
+
+
 
   /*
    * Primary model มี high demand
