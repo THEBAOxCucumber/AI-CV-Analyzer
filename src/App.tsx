@@ -32,6 +32,14 @@ import {
   HistoryPage,
 } from "./pages/HistoryPage"
 
+import {
+  RegisterPage,
+} from "./pages/RegisterPage"
+
+import {
+  ForgotPasswordPage,
+} from "./pages/ForgotPasswordPage"
+
 // import {
 //   JobMatchPage,
 // } from "./pages/JobMatchPage"
@@ -70,6 +78,14 @@ function App() {
       <Route
         path="/sign-in"
         element={<SignInPage />}
+      />
+      <Route
+        path="/register"
+        element={<RegisterPage />}
+      />
+      <Route
+        path="/forgot-password"
+        element={<ForgotPasswordPage />}
       />
 
       <Route

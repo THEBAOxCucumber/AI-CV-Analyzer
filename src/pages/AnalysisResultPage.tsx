@@ -1,5 +1,6 @@
 import {
     CheckCircle2,
+    CircleAlert,
     Clock3,
     Lightbulb,
     LoaderCircle,
@@ -32,6 +33,18 @@ import type {
     ResumeAnalysisRun,
 } from "../types/analysis"
 
+import {
+    SectionScoresPanel,
+} from "../components/analysis/SectionScoresPanel"
+
+import {
+    ScoreRing,
+} from "../components/analysis/ScoreRing"
+
+import {
+    buildSectionScores,
+} from "../utils/section-scores"
+
 import "../styles/pages/AnalysisResultPage.css"
 
 const POLL_INTERVAL_MS = 2000
@@ -46,6 +59,73 @@ function isPending(
         status === "PROCESSING"
     )
 }
+function getAnalysisFailureMessage(
+    analysis: ResumeAnalysisRun,
+): {
+    title: string
+    message: string
+} {
+    switch (analysis.errorCode) {
+        case "LLM_UNAVAILABLE":
+            return {
+                title: "ระบบ AI ไม่พร้อมให้บริการชั่วคราว",
+                message:
+                    analysis.errorMessage ||
+                    "กรุณาลองวิเคราะห์อีกครั้งในภายหลัง",
+            }
+
+        case "LLM_TIMEOUT":
+            return {
+                title: "การวิเคราะห์ใช้เวลานานเกินไป",
+                message:
+                    analysis.errorMessage ||
+                    "กรุณาลองวิเคราะห์อีกครั้ง",
+            }
+
+        /*
+         * run เก่าก่อนย้ายไป Ollama
+         */
+        case "GEMINI_UNAVAILABLE":
+    return {
+        title: "ระบบ AI ไม่พร้อมให้บริการชั่วคราว",
+        message:
+            "ผู้ให้บริการ AI กำลังมีคำขอจำนวนมาก กรุณารอสักครู่แล้วลองวิเคราะห์อีกครั้ง",
+    }
+
+        case "GEMINI_RATE_LIMITED":
+            return {
+                title: "มีคำขอวิเคราะห์จำนวนมาก",
+                message:
+                    analysis.errorMessage ||
+                    "กรุณารอสักครู่แล้วลองใหม่อีกครั้ง",
+            }
+
+        case "ANALYSIS_RETRY_EXHAUSTED":
+            return {
+                title: "การวิเคราะห์ยังไม่สำเร็จ",
+                message:
+                    analysis.errorMessage ||
+                    "เกิดปัญหาชั่วคราวระหว่างการวิเคราะห์ กรุณาลองใหม่อีกครั้ง",
+            }
+
+        case "NON_RETRYABLE_ANALYSIS_ERROR":
+            return {
+                title: "ไม่สามารถวิเคราะห์ Resume ได้",
+                message:
+                    analysis.errorMessage ||
+                    "กรุณาตรวจสอบข้อมูลแล้วลองใหม่อีกครั้ง",
+            }
+
+        default:
+            return {
+                title: "วิเคราะห์ไม่สำเร็จ",
+                message:
+                    analysis.errorMessage ||
+                    "ระบบไม่สามารถวิเคราะห์ได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง",
+            }
+    }
+}
+
 
 export function AnalysisResultPage() {
     const navigate = useNavigate()
@@ -298,6 +378,11 @@ export function AnalysisResultPage() {
     }
 
     if (analysis.status === "FAILED") {
+        const failure =
+            getAnalysisFailureMessage(
+                analysis,
+            )
+
         return (
             <main className="analysis-page">
                 <header className="analysis-header">
@@ -320,12 +405,11 @@ export function AnalysisResultPage() {
                     <XCircle size={38} />
 
                     <h2>
-                        วิเคราะห์ไม่สำเร็จ
+                        {failure.title}
                     </h2>
 
                     <p>
-                        ระบบไม่สามารถวิเคราะห์ได้ในขณะนี้
-                        กรุณาลองใหม่อีกครั้ง
+                        {failure.message}
                     </p>
 
                     {retryError && (
@@ -347,7 +431,7 @@ export function AnalysisResultPage() {
                     >
                         {isRetrying
                             ? "กำลังเริ่มวิเคราะห์..."
-                            : "Retry Analysis"}
+                            : "ลองวิเคราะห์อีกครั้ง"}
                     </button>
                 </section>
             </main>
@@ -355,325 +439,288 @@ export function AnalysisResultPage() {
     }
 
     if (
-    analysis.status === "COMPLETED" &&
-    analysis.analysisType === "JOB_MATCH"
-) {
-    const jobMatch =
-        analysis.jobMatch
+        analysis.status === "COMPLETED" &&
+        analysis.analysisType === "JOB_MATCH"
+    ) {
+        const jobMatch =
+            analysis.jobMatch
 
-    const matchScore =
-        analysis.jobMatchScore ??
-        jobMatch?.score ??
-        null
+        const matchScore =
+            analysis.jobMatchScore ??
+            jobMatch?.score ??
+            null
 
-    return (
-        <main className="analysis-page">
-            <header className="analysis-header">
-                <div>
-                    <p className="analysis-eyebrow">
-                        Job Match Analysis
-                    </p>
-
-                    <h1>
-                        {analysis.job?.title ??
-                            "Job Match Result"}
-                    </h1>
-
-                    <p className="analysis-header__description">
-                        {analysis.job?.company ??
-                            "ไม่ระบุบริษัท"}
-
-                        {analysis.job?.location
-                            ? ` · ${analysis.job.location}`
-                            : ""}
-                    </p>
-                </div>
-
-                <span className="analysis-status analysis-status--completed">
-                    <CheckCircle2 size={15} />
-                    COMPLETED
-                </span>
-            </header>
-
-            <section className="job-match-overview">
-                <div className="job-match-score-card">
-                    <div className="job-match-score-card__top">
-                        <div>
-                            <p>
-                                Match Score
-                            </p>
-
-                            <strong>
-                                {matchScore ??
-                                    "—"}
-
-                                {matchScore !==
-                                    null && (
-                                    <span>
-                                        /100
-                                    </span>
-                                )}
-                            </strong>
-                        </div>
-
-                        <Sparkles size={26} />
-                    </div>
-
-                    {matchScore !== null && (
-                        <div
-                            className="job-match-progress"
-                            role="progressbar"
-                            aria-label="Job Match Score"
-                            aria-valuenow={
-                                matchScore
-                            }
-                            aria-valuemin={0}
-                            aria-valuemax={100}
-                        >
-                            <div
-                                className="job-match-progress__bar"
-                                style={{
-                                    width: `${Math.min(
-                                        100,
-                                        Math.max(
-                                            0,
-                                            matchScore,
-                                        ),
-                                    )}%`,
-                                }}
-                            />
-                        </div>
-                    )}
-                </div>
-
-                <div className="analysis-summary-card">
-                    <h2>
-                        Why this job matches you
-                    </h2>
-
-                    <p>
-                        {analysis.summary ||
-                            "ไม่มี Summary สำหรับการวิเคราะห์นี้"}
-                    </p>
-                </div>
-            </section>
-
-            <section className="analysis-section">
-                <div className="analysis-section__heading">
-                    <h2>
-                        Skills Match
-                    </h2>
-
-                    <p>
-                        เปรียบเทียบทักษะใน Resume
-                        กับตำแหน่งงานนี้
-                    </p>
-                </div>
-
-                <div className="job-match-skills-grid">
-                    <article className="job-match-skills-card">
-                        <div className="job-match-skills-card__heading">
-                            <ThumbsUp size={20} />
-
-                            <h3>
-                                Matching Skills
-                            </h3>
-                        </div>
-
-                        {jobMatch &&
-                        jobMatch.matchedSkills
-                            .length > 0 ? (
-                            <div className="job-match-tags">
-                                {jobMatch.matchedSkills.map(
-                                    (skill) => (
-                                        <span
-                                            className="job-match-tag job-match-tag--matched"
-                                            key={skill}
-                                        >
-                                            {skill}
-                                        </span>
-                                    ),
-                                )}
-                            </div>
-                        ) : (
-                            <p className="analysis-empty">
-                                ไม่พบ Matching Skills
-                            </p>
-                        )}
-                    </article>
-
-                    <article className="job-match-skills-card">
-                        <div className="job-match-skills-card__heading">
-                            <ThumbsDown size={20} />
-
-                            <h3>
-                                Missing Skills
-                            </h3>
-                        </div>
-
-                        {jobMatch &&
-                        jobMatch.missingSkills
-                            .length > 0 ? (
-                            <div className="job-match-tags">
-                                {jobMatch.missingSkills.map(
-                                    (skill) => (
-                                        <span
-                                            className="job-match-tag job-match-tag--missing"
-                                            key={skill}
-                                        >
-                                            {skill}
-                                        </span>
-                                    ),
-                                )}
-                            </div>
-                        ) : (
-                            <p className="analysis-empty">
-                                ไม่พบ Missing Skills
-                            </p>
-                        )}
-                    </article>
-                </div>
-            </section>
-
-            <section className="analysis-section">
-                <div className="analysis-section__heading">
-                    <h2>
-                        Keyword Matches
-                    </h2>
-
-                    <p>
-                        Keywords ที่พบทั้งใน Resume
-                        และ Job Description
-                    </p>
-                </div>
-
-                {jobMatch &&
-                jobMatch.keywordMatches.length >
-                    0 ? (
-                    <div className="job-match-tags">
-                        {jobMatch.keywordMatches.map(
-                            (keyword) => (
-                                <span
-                                    className="job-match-tag"
-                                    key={keyword}
-                                >
-                                    {keyword}
-                                </span>
-                            ),
-                        )}
-                    </div>
-                ) : (
-                    <p className="analysis-empty">
-                        ไม่พบ Keyword Matches
-                    </p>
-                )}
-            </section>
-
-            <section className="recommendations-card">
-                <div className="recommendations-card__heading">
-                    <Lightbulb size={23} />
-
+        return (
+            <main className="analysis-page">
+                <header className="analysis-header">
                     <div>
+                        <p className="analysis-eyebrow">
+                            Job Match Analysis
+                        </p>
+
+                        <h1>
+                            {analysis.job?.title ??
+                                "Job Match Result"}
+                        </h1>
+
+                        <p className="analysis-header__description">
+                            {analysis.job?.company ??
+                                "ไม่ระบุบริษัท"}
+
+                            {analysis.job?.location
+                                ? ` · ${analysis.job.location}`
+                                : ""}
+                        </p>
+                    </div>
+
+                    <span className="analysis-status analysis-status--completed">
+                        <CheckCircle2 size={15} />
+                        COMPLETED
+                    </span>
+                </header>
+
+                <section className="job-match-overview">
+                    <div className="job-match-score-card">
+                        <div className="job-match-score-card__top">
+                            <div>
+                                <p>
+                                    Match Score
+                                </p>
+
+                                <strong>
+                                    {matchScore ??
+                                        "—"}
+
+                                    {matchScore !==
+                                        null && (
+                                            <span>
+                                                /100
+                                            </span>
+                                        )}
+                                </strong>
+                            </div>
+
+                            <Sparkles size={26} />
+                        </div>
+
+                        {matchScore !== null && (
+                            <div
+                                className="job-match-progress"
+                                role="progressbar"
+                                aria-label="Job Match Score"
+                                aria-valuenow={
+                                    matchScore
+                                }
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                            >
+                                <div
+                                    className="job-match-progress__bar"
+                                    style={{
+                                        width: `${Math.min(
+                                            100,
+                                            Math.max(
+                                                0,
+                                                matchScore,
+                                            ),
+                                        )}%`,
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="analysis-summary-card">
                         <h2>
-                            Recommendations
+                            Why this job matches you
                         </h2>
 
                         <p>
-                            แนวทางเพิ่มความเหมาะสม
+                            {analysis.summary ||
+                                "ไม่มี Summary สำหรับการวิเคราะห์นี้"}
+                        </p>
+                    </div>
+                </section>
+
+                <section className="analysis-section">
+                    <div className="analysis-section__heading">
+                        <h2>
+                            Skills Match
+                        </h2>
+
+                        <p>
+                            เปรียบเทียบทักษะใน Resume
                             กับตำแหน่งงานนี้
                         </p>
                     </div>
-                </div>
 
-                {analysis.recommendations
-                    .length > 0 ? (
-                    <ol>
-                        {analysis.recommendations.map(
-                            (
-                                recommendation,
-                                index,
-                            ) => (
-                                <li
-                                    key={`${index}-${recommendation}`}
-                                >
-                                    <span>
-                                        {index +
-                                            1}
+                    <div className="job-match-skills-grid">
+                        <article className="job-match-skills-card">
+                            <div className="job-match-skills-card__heading">
+                                <ThumbsUp size={20} />
+
+                                <h3>
+                                    Matching Skills
+                                </h3>
+                            </div>
+
+                            {jobMatch &&
+                                jobMatch.matchedSkills
+                                    .length > 0 ? (
+                                <div className="job-match-tags">
+                                    {jobMatch.matchedSkills.map(
+                                        (skill) => (
+                                            <span
+                                                className="job-match-tag job-match-tag--matched"
+                                                key={skill}
+                                            >
+                                                {skill}
+                                            </span>
+                                        ),
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="analysis-empty">
+                                    ไม่พบ Matching Skills
+                                </p>
+                            )}
+                        </article>
+
+                        <article className="job-match-skills-card">
+                            <div className="job-match-skills-card__heading">
+                                <ThumbsDown size={20} />
+
+                                <h3>
+                                    Missing Skills
+                                </h3>
+                            </div>
+
+                            {jobMatch &&
+                                jobMatch.missingSkills
+                                    .length > 0 ? (
+                                <div className="job-match-tags">
+                                    {jobMatch.missingSkills.map(
+                                        (skill) => (
+                                            <span
+                                                className="job-match-tag job-match-tag--missing"
+                                                key={skill}
+                                            >
+                                                {skill}
+                                            </span>
+                                        ),
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="analysis-empty">
+                                    ไม่พบ Missing Skills
+                                </p>
+                            )}
+                        </article>
+                    </div>
+                </section>
+
+                <section className="analysis-section">
+                    <div className="analysis-section__heading">
+                        <h2>
+                            Keyword Matches
+                        </h2>
+
+                        <p>
+                            Keywords ที่พบทั้งใน Resume
+                            และ Job Description
+                        </p>
+                    </div>
+
+                    {jobMatch &&
+                        jobMatch.keywordMatches.length >
+                        0 ? (
+                        <div className="job-match-tags">
+                            {jobMatch.keywordMatches.map(
+                                (keyword) => (
+                                    <span
+                                        className="job-match-tag"
+                                        key={keyword}
+                                    >
+                                        {keyword}
                                     </span>
+                                ),
+                            )}
+                        </div>
+                    ) : (
+                        <p className="analysis-empty">
+                            ไม่พบ Keyword Matches
+                        </p>
+                    )}
+                </section>
 
-                                    <p>
-                                        {
-                                            recommendation
-                                        }
-                                    </p>
-                                </li>
-                            ),
-                        )}
-                    </ol>
-                ) : (
-                    <p className="analysis-empty">
-                        ไม่มี Recommendations
-                    </p>
+                <section className="recommendations-card">
+                    <div className="recommendations-card__heading">
+                        <Lightbulb size={23} />
+
+                        <div>
+                            <h2>
+                                Recommendations
+                            </h2>
+
+                            <p>
+                                แนวทางเพิ่มความเหมาะสม
+                                กับตำแหน่งงานนี้
+                            </p>
+                        </div>
+                    </div>
+
+                    {analysis.recommendations
+                        .length > 0 ? (
+                        <ol>
+                            {analysis.recommendations.map(
+                                (
+                                    recommendation,
+                                    index,
+                                ) => (
+                                    <li
+                                        key={`${index}-${recommendation}`}
+                                    >
+                                        <span>
+                                            {index +
+                                                1}
+                                        </span>
+
+                                        <p>
+                                            {
+                                                recommendation
+                                            }
+                                        </p>
+                                    </li>
+                                ),
+                            )}
+                        </ol>
+                    ) : (
+                        <p className="analysis-empty">
+                            ไม่มี Recommendations
+                        </p>
+                    )}
+                </section>
+
+                {analysis.job?.sourceUrl && (
+                    <div className="job-match-source">
+                        <a
+                            href={
+                                analysis.job
+                                    .sourceUrl
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            View Original Job
+                        </a>
+                    </div>
                 )}
-            </section>
+            </main>
+        )
+    }
 
-            {analysis.job?.sourceUrl && (
-                <div className="job-match-source">
-                    <a
-                        href={
-                            analysis.job
-                                .sourceUrl
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        View Original Job
-                    </a>
-                </div>
-            )}
-        </main>
-    )
-}
-    
-    const sectionScores = analysis.scores
-        ? [
-            {
-                label: "Contact Information",
-                score: analysis.scores.contactInformation,
-                maxScore: 10,
-            },
-            {
-                label: "Professional Summary",
-                score: analysis.scores.professionalSummary,
-                maxScore: 15,
-            },
-            {
-                label: "Skills",
-                score: analysis.scores.skills,
-                maxScore: 20,
-            },
-            {
-                label: "Experience",
-                score: analysis.scores.experience,
-                maxScore: 25,
-            },
-            {
-                label: "Projects",
-                score: analysis.scores.projects,
-                maxScore: 10,
-            },
-            {
-                label: "Education",
-                score: analysis.scores.education,
-                maxScore: 10,
-            },
-            {
-                label: "Readability",
-                score: analysis.scores.readability,
-                maxScore: 10,
-            },
-        ]
-        : []
+    const sectionScores =
+        buildSectionScores(analysis.scores)
 
 
     return (
@@ -711,13 +758,11 @@ export function AnalysisResultPage() {
                     </div>
 
                     <div className="base-score-card__score">
-                        <strong>
-                            {analysis.baseResumeScore ??
-                                "—"}
-                        </strong>
-
-                        {analysis.baseResumeScore !==
-                            null && <span>/100</span>}
+                        <ScoreRing
+                            score={
+                                analysis.baseResumeScore
+                            }
+                        />
                     </div>
 
                     <p>
@@ -738,7 +783,8 @@ export function AnalysisResultPage() {
                 </div>
             </section>
 
-            <section className="analysis-section">
+            <div className="analysis-insights-grid">
+            <section className="analysis-section analysis-section--scores">
                 <div className="analysis-section__heading">
                     <h2>
                         Section Scores
@@ -750,58 +796,9 @@ export function AnalysisResultPage() {
                 </div>
 
                 {sectionScores.length > 0 ? (
-                    <div className="section-scores">
-                        {sectionScores.map(
-                            ({
-                                label,
-                                score,
-                                maxScore,
-                            }) => {
-                                const percentage =
-                                    Math.min(
-                                        100,
-                                        Math.max(
-                                            0,
-                                            (score / maxScore) * 100,
-                                        ),
-                                    )
-
-                                return (
-                                    <div
-                                        className="section-score-card"
-                                        key={label}
-                                    >
-                                        <div className="section-score-card__top">
-                                            <span>{label}</span>
-
-                                            <strong>
-                                                {score}
-                                                <span className="section-score-card__max">
-                                                    /{maxScore}
-                                                </span>
-                                            </strong>
-                                        </div>
-
-                                        <div
-                                            className="score-progress"
-                                            role="progressbar"
-                                            aria-label={label}
-                                            aria-valuenow={score}
-                                            aria-valuemin={0}
-                                            aria-valuemax={maxScore}
-                                        >
-                                            <div
-                                                className="score-progress__bar"
-                                                style={{
-                                                    width: `${percentage}%`,
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                )
-                            },
-                        )}
-                    </div>
+                    <SectionScoresPanel
+                        sections={sectionScores}
+                    />
                 ) : (
                     <p className="analysis-empty">
                         ไม่มีข้อมูล Section Scores
@@ -809,10 +806,12 @@ export function AnalysisResultPage() {
                 )}
             </section>
 
-            <section className="analysis-feedback-grid">
+            <div className="analysis-feedback-stack">
                 <article className="feedback-card">
                     <div className="feedback-card__heading feedback-card__heading--strength">
-                        <ThumbsUp size={21} />
+                        <span className="feedback-card__icon">
+                            <ThumbsUp size={19} />
+                        </span>
 
                         <h2>
                             Strengths
@@ -821,13 +820,20 @@ export function AnalysisResultPage() {
 
                     {analysis.strengths.length >
                         0 ? (
-                        <ul>
+                        <ul className="feedback-list feedback-list--strength">
                             {analysis.strengths.map(
                                 (strength, index) => (
                                     <li
                                         key={`${index}-${strength}`}
                                     >
-                                        {strength}
+                                        <CheckCircle2
+                                            size={18}
+                                            aria-hidden="true"
+                                        />
+
+                                        <span>
+                                            {strength}
+                                        </span>
                                     </li>
                                 ),
                             )}
@@ -841,7 +847,9 @@ export function AnalysisResultPage() {
 
                 <article className="feedback-card">
                     <div className="feedback-card__heading feedback-card__heading--weakness">
-                        <ThumbsDown size={21} />
+                        <span className="feedback-card__icon">
+                            <ThumbsDown size={19} />
+                        </span>
 
                         <h2>
                             Weaknesses
@@ -850,13 +858,20 @@ export function AnalysisResultPage() {
 
                     {analysis.weaknesses.length >
                         0 ? (
-                        <ul>
+                        <ul className="feedback-list feedback-list--weakness">
                             {analysis.weaknesses.map(
                                 (weakness, index) => (
                                     <li
                                         key={`${index}-${weakness}`}
                                     >
-                                        {weakness}
+                                        <CircleAlert
+                                            size={18}
+                                            aria-hidden="true"
+                                        />
+
+                                        <span>
+                                            {weakness}
+                                        </span>
                                     </li>
                                 ),
                             )}
@@ -867,7 +882,8 @@ export function AnalysisResultPage() {
                         </p>
                     )}
                 </article>
-            </section>
+            </div>
+            </div>
 
             <section className="recommendations-card">
                 <div className="recommendations-card__heading">

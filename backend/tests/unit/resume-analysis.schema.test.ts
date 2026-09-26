@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import {
+  createResumeAnalysisResultSchemaFor,
   resumeAnalysisResultSchema,
 } from "../../src/modules/analysis/resume-analysis.schema.js";
 
@@ -151,6 +153,92 @@ describe(
           });
 
         expect(result.success).toBe(true);
+      },
+    );
+  },
+);
+
+describe(
+  "createResumeAnalysisResultSchemaFor",
+  () => {
+    it(
+      "rejects JOB_MATCH result with jobMatch null",
+      () => {
+        const result =
+          createResumeAnalysisResultSchemaFor(
+            "JOB_MATCH",
+          ).safeParse(
+            createValidResult(),
+          );
+
+        expect(result.success).toBe(false);
+      },
+    );
+
+    it(
+      "rejects BASE result with jobMatch",
+      () => {
+        const result =
+          createResumeAnalysisResultSchemaFor(
+            "BASE",
+          ).safeParse({
+            ...createValidResult(),
+            jobMatchScore: 85,
+            jobMatch: {
+              score: 85,
+              matchedSkills: [
+                "Node.js",
+              ],
+              missingSkills: [],
+              keywordMatches: [],
+            },
+          });
+
+        expect(result.success).toBe(false);
+      },
+    );
+
+    it(
+      "rejects empty recommendations",
+      () => {
+        const result =
+          createResumeAnalysisResultSchemaFor(
+            "BASE",
+          ).safeParse({
+            ...createValidResult(),
+            recommendations: [],
+          });
+
+        expect(result.success).toBe(false);
+      },
+    );
+
+    it(
+      "does not allow null jobMatch in JOB_MATCH JSON Schema",
+      () => {
+        const jsonSchema =
+          z.toJSONSchema(
+            createResumeAnalysisResultSchemaFor(
+              "JOB_MATCH",
+            ),
+            {
+              target: "draft-07",
+            },
+          ) as {
+            properties: Record<string, unknown>;
+          };
+
+        expect(
+          JSON.stringify(
+            jsonSchema.properties.jobMatch,
+          ),
+        ).not.toContain("null");
+
+        expect(
+          jsonSchema.properties.jobMatch,
+        ).toMatchObject({
+          type: "object",
+        });
       },
     );
   },

@@ -18,8 +18,9 @@ import {
 } from "../modules/analysis/resume-analysis-processor.service.js";
 
 import {
-  isRetryableGeminiError,
-} from "../modules/analysis/gemini-retry.util.js";
+  getRetryableLlmReason,
+  type RetryableLlmReason,
+} from "../modules/analysis/llm-retry.util.js";
 
 import type {
   ResumeAnalysisJobData,
@@ -46,38 +47,39 @@ export const resumeAnalysisWorker =
             job.attemptsMade + 1,
         },
       );
-    
+
       const startedAt = Date.now()
-      
+
       try {
         await processResumeAnalysis(
-  job.data,
-  String(job.id),
-);
-     console.log(
-      "Resume analysis attempt completed:",
-      {
-        jobId: job.id,
-        analysisRunId:
-          job.data.analysisRunId,
-        attempt:
-          job.attemptsMade + 1,
-        durationMs:
-          Date.now() - startedAt,
-      },
-    );
-  } catch (error) {
+          job.data,
+          String(job.id),
+        );
+        console.log(
+          "Resume analysis attempt completed:",
+          {
+            jobId: job.id,
+            analysisRunId:
+              job.data.analysisRunId,
+            attempt:
+              job.attemptsMade + 1,
+            durationMs:
+              Date.now() - startedAt,
+          },
+        );
+      } catch (error) {
         /*
-         * เฉพาะ Gemini 429 / 503
+         * เฉพาะ LLM ติดต่อไม่ได้ / 5xx / timeout
          * ให้ BullMQ retry
          */
-        if (
-          isRetryableGeminiError(
+        const retryableReason =
+          getRetryableLlmReason(
             error,
-          )
-        ) {
+          );
+
+        if (retryableReason) {
           console.warn(
-            "Retryable Gemini error:",
+            "Retryable LLM error:",
             {
               jobId:
                 job.id,
@@ -85,8 +87,11 @@ export const resumeAnalysisWorker =
               attempt:
                 job.attemptsMade + 1,
 
-                 durationMs:
-            Date.now() - startedAt,
+              durationMs:
+                Date.now() - startedAt,
+
+              reason:
+                retryableReason,
 
               error:
                 error instanceof Error
@@ -95,7 +100,17 @@ export const resumeAnalysisWorker =
             },
           );
 
-          throw error;
+          const retryError =
+            new Error(
+              error instanceof Error
+                ? error.message
+                : "LLM request failed",
+            );
+
+          retryError.name =
+            `LlmRetryableError:${retryableReason}`;
+
+          throw retryError;
         }
 
         /*
@@ -105,19 +120,19 @@ export const resumeAnalysisWorker =
         console.error(
           "Non-retryable analysis error:",
           {
-             jobId: job.id,
-        analysisRunId:
-          job.data.analysisRunId,
-        attempt:
-          job.attemptsMade + 1,
+            jobId: job.id,
+            analysisRunId:
+              job.data.analysisRunId,
+            attempt:
+              job.attemptsMade + 1,
 
-        durationMs:
-          Date.now() - startedAt,
+            durationMs:
+              Date.now() - startedAt,
 
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+            error:
+              error instanceof Error
+                ? error.message
+                : String(error),
           },
         );
 
@@ -138,6 +153,19 @@ export const resumeAnalysisWorker =
     },
   );
 
+function getRetryableLlmReasonFromName(
+  error: Error,
+): RetryableLlmReason | null {
+  const match =
+    /^LlmRetryableError:(UNAVAILABLE|TIMEOUT)$/.exec(
+      error.name,
+    );
+
+  return match
+    ? match[1] as RetryableLlmReason
+    : null;
+}
+
 resumeAnalysisWorker.on(
   "completed",
   (job) => {
@@ -145,9 +173,9 @@ resumeAnalysisWorker.on(
       "Analysis completed:",
       job.id,
     );
-    
+
   },
-  
+
 );
 
 resumeAnalysisWorker.on(
@@ -171,11 +199,16 @@ resumeAnalysisWorker.on(
       job.attemptsMade >=
       maxAttempts;
 
+    const retryableReason =
+      getRetryableLlmReasonFromName(
+        error,
+      );
+
     console.error(
       "Resume analysis job failed:",
-      
+
       {
-        
+
         jobId: job.id,
         analysisRunId:
           job.data.analysisRunId,
@@ -186,11 +219,11 @@ resumeAnalysisWorker.on(
         attemptsExhausted,
         error:
           error.message,
-          
+
       },
-      
+
     );
-    
+
 
     /*
      * Retryable error และยังเหลือ attempt
@@ -203,15 +236,39 @@ resumeAnalysisWorker.on(
       return;
     }
 
-    await markAnalysisRunFailed(
-      job.data.analysisRunId,
+    let errorCode =
+  "ANALYSIS_RETRY_EXHAUSTED";
 
-      isUnrecoverable
-        ? "NON_RETRYABLE_ANALYSIS_ERROR"
-        : "GEMINI_RETRY_EXHAUSTED",
+let errorMessage =
+  "ไม่สามารถวิเคราะห์ Resume ได้ กรุณาลองใหม่อีกครั้ง";
 
-      error.message,
-    );
+if (retryableReason === "UNAVAILABLE") {
+  errorCode =
+    "LLM_UNAVAILABLE";
+
+  errorMessage =
+    "ระบบ AI ไม่พร้อมให้บริการชั่วคราว กรุณาลองใหม่อีกครั้งในภายหลัง";
+} else if (retryableReason === "TIMEOUT") {
+  errorCode =
+    "LLM_TIMEOUT";
+
+  errorMessage =
+    "ระบบ AI ใช้เวลาวิเคราะห์นานเกินกำหนด กรุณาลองใหม่อีกครั้ง";
+}
+
+if (isUnrecoverable) {
+  errorCode =
+    "NON_RETRYABLE_ANALYSIS_ERROR";
+
+  errorMessage =
+    "ไม่สามารถวิเคราะห์ Resume ได้ กรุณาตรวจสอบข้อมูลแล้วลองใหม่อีกครั้ง";
+}
+
+await markAnalysisRunFailed(
+  job.data.analysisRunId,
+  errorCode,
+  errorMessage,
+);
   },
 );
 

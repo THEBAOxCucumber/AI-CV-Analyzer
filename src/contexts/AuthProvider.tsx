@@ -65,6 +65,25 @@ function getTokenExpirationMs(
   }
 }
 
+function getRemainingSeconds(
+  token: string,
+): number {
+  const expirationMs =
+    getTokenExpirationMs(token)
+
+  if (expirationMs === null) {
+    return 0
+  }
+
+  return Math.max(
+    0,
+    Math.ceil(
+      (expirationMs - Date.now()) /
+        1000,
+    ),
+  )
+}
+
 export function AuthProvider({
   children,
 }: AuthProviderProps) {
@@ -74,13 +93,22 @@ export function AuthProvider({
   const [
     sessionRemainingSeconds,
     setSessionRemainingSeconds,
-  ] = useState(0)
+  ] = useState(() => {
+    const token = getAccessToken()
+
+    return token
+      ? getRemainingSeconds(token)
+      : 0
+  })
 
   const [isLoading, setIsLoading] =
     useState(
       () => getAccessToken() !== null,
     )
 
+  /*
+   * Restore session หลัง refresh
+   */
   useEffect(() => {
     const token = getAccessToken()
 
@@ -105,6 +133,7 @@ export function AuthProvider({
 
         if (!cancelled) {
           setUser(null)
+          setSessionRemainingSeconds(0)
         }
       } finally {
         if (!cancelled) {
@@ -125,54 +154,48 @@ export function AuthProvider({
    */
   useEffect(() => {
     if (!user) {
-      setSessionRemainingSeconds(0)
       return
     }
 
     const token = getAccessToken()
 
     if (!token) {
-      logout()
       return
     }
 
     const expirationMs =
-  getTokenExpirationMs(token)
+      getTokenExpirationMs(token)
 
-if (expirationMs === null) {
-  logout()
-  return
-}
-
-const expiresAt: number =
-  expirationMs
-
-    function updateCountdown() {
-      const remaining =
-        Math.max(
-          0,
-          Math.ceil(
-            (expiresAt - Date.now()) /
-              1000,
-          ),
-        )
-
-      setSessionRemainingSeconds(
-        remaining,
-      )
-
-      if (remaining <= 0) {
-        logout()
-      }
+    if (expirationMs === null) {
+      return
     }
 
-    updateCountdown()
-
     const intervalId =
-      window.setInterval(
-        updateCountdown,
-        1000,
-      )
+      window.setInterval(() => {
+        const remaining =
+          Math.max(
+            0,
+            Math.ceil(
+              (
+                expirationMs -
+                Date.now()
+              ) / 1000,
+            ),
+          )
+
+        setSessionRemainingSeconds(
+          remaining,
+        )
+
+        if (remaining <= 0) {
+          clearAccessToken()
+          setUser(null)
+
+          window.clearInterval(
+            intervalId,
+          )
+        }
+      }, 1000)
 
     return () => {
       window.clearInterval(
@@ -187,28 +210,35 @@ const expiresAt: number =
     const response =
       await loginRequest(input)
 
-    setAccessToken(
-      response.data.token,
-    )
+    const token =
+      response.data.token
+
+    setAccessToken(token)
 
     try {
       const meResponse =
         await getMe()
+
+      setSessionRemainingSeconds(
+        getRemainingSeconds(token),
+      )
 
       setUser(
         meResponse.data.user,
       )
     } catch (error) {
       clearAccessToken()
+      setSessionRemainingSeconds(0)
       setUser(null)
+
       throw error
     }
   }
 
   function logout(): void {
     clearAccessToken()
-    setUser(null)
     setSessionRemainingSeconds(0)
+    setUser(null)
   }
 
   return (

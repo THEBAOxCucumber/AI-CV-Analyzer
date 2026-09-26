@@ -23,6 +23,9 @@ export default defineConfig({
 
       ANALYSIS_QUEUE_NAME:
         "resume-analysis-test",
+
+      ANALYSIS_RETRY_DELAY_MS:
+        "50",
     },
   },
 });

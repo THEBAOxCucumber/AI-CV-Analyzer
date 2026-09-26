@@ -42,23 +42,28 @@ export function getGeminiErrorDetails(
 export function isRetryableGeminiError(
   error: unknown,
 ): boolean {
-  if (
-    typeof error !== "object" ||
-    error === null
-  ) {
-    return false;
-  }
+  const {
+    status,
+    code,
+  } = getGeminiErrorDetails(error);
 
-  const candidate =
-    error as {
-      status?: unknown;
-      code?: unknown;
-    };
+  const numericCode =
+    typeof code === "number"
+      ? code
+      : typeof code === "string" &&
+          /^\d+$/.test(code)
+        ? Number(code)
+        : undefined;
+
+  const httpStatus =
+    status ?? numericCode;
 
   return (
-    candidate.status === 429 ||
-    candidate.status === 503 ||
-    candidate.code === 429 ||
-    candidate.code === 503
+    httpStatus === 408 ||
+    httpStatus === 429 ||
+    httpStatus === 500 ||
+    httpStatus === 502 ||
+    httpStatus === 503 ||
+    httpStatus === 504
   );
 }

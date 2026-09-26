@@ -19,6 +19,8 @@ export async function findProfileByUserId(
         id,
         user_id,
         phone,
+        location,
+        headline,
         university,
         faculty,
         major,
@@ -51,6 +53,8 @@ export async function createProfile(
       INSERT INTO user_profiles (
         user_id,
         phone,
+        location,
+        headline,
         university,
         faculty,
         major,
@@ -60,11 +64,13 @@ export async function createProfile(
         experience_level,
         bio
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       userId,
       input.phone,
+      input.location,
+      input.headline,
       input.university,
       input.faculty,
       input.major,
@@ -80,6 +86,8 @@ export async function createProfile(
     id: result.insertId,
     userId,
     phone: input.phone,
+    location: input.location,
+    headline: input.headline,
     university: input.university,
     faculty: input.faculty,
     major: input.major,
@@ -103,6 +111,8 @@ export async function updateProfile(
       UPDATE user_profiles
       SET
         phone = ?,
+        location = ?,
+        headline = ?,
         university = ?,
         faculty = ?,
         major = ?,
@@ -115,6 +125,8 @@ export async function updateProfile(
     `,
     [
       input.phone,
+      input.location,
+      input.headline,
       input.university,
       input.faculty,
       input.major,
@@ -134,6 +146,8 @@ export async function updateProfile(
   return {
     userId,
     phone: input.phone,
+    location: input.location,
+    headline: input.headline,
     university: input.university,
     faculty: input.faculty,
     major: input.major,

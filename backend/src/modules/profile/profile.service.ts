@@ -17,6 +17,8 @@ function mapProfile(row: UserProfileRow): UserProfile {
     id: row.id,
     userId: row.user_id,
     phone: row.phone,
+    location: row.location,
+    headline: row.headline,
     university: row.university,
     faculty: row.faculty,
     major: row.major,
@@ -34,11 +36,25 @@ export async function getProfile(
   const profile = await findProfileByUserId(userId);
 
   if (!profile) {
-    throw new AppError(
-      "ยังไม่มีข้อมูลโปรไฟล์",
-      404,
-      "PROFILE_NOT_FOUND",
-    );
+    /*
+     * User ใหม่ยังไม่มีแถวใน user_profiles
+     * คืน Profile ว่าง แทน 404
+     * (สร้างแถวจริงตอน PUT ครั้งแรก)
+     */
+    return {
+      userId,
+      phone: null,
+      location: null,
+      headline: null,
+      university: null,
+      faculty: null,
+      major: null,
+      educationLevel: null,
+      graduationYear: null,
+      interestedPosition: null,
+      experienceLevel: null,
+      bio: null,
+    };
   }
 
   return mapProfile(profile);

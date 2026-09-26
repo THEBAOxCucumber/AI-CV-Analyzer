@@ -15,7 +15,14 @@ import {
   AuthProvider,
 } from "./contexts/AuthProvider"
 
+import {
+  applyFontSize,
+  getFontSize,
+} from "./utils/appearance"
+
 import "./index.css"
+
+applyFontSize(getFontSize())
 
 createRoot(
   document.getElementById("root")!,

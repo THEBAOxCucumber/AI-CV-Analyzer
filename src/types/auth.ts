@@ -8,6 +8,8 @@ export interface User {
   lastName: string
   email: string
   role: UserRole
+  createdAt: string
+  lastLoginAt: string | null
 }
 
 export interface LoginInput {

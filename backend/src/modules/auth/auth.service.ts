@@ -6,16 +6,37 @@ import {
   createUser,
   findUserByEmail,
   findUserById,
+  updateLastLoginAt,
+  updatePasswordHash,
 } from "./auth.repository.js";
+import type {
+  ChangePasswordBody,
+} from "./auth.validation.js";
+import {
+  notifyPasswordChanged,
+} from "../password-reset/password-reset.service.js";
 import type {
   LoginInput,
   PublicUser,
   RegisterInput,
+  UserRow,
 } from "./auth.types.js";
 
 interface AuthResult {
   user: PublicUser;
   token: string;
+}
+
+function toPublicUser(row: UserRow): PublicUser {
+  return {
+    id: row.id,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    email: row.email,
+    role: row.role,
+    createdAt: row.created_at,
+    lastLoginAt: row.last_login_at,
+  };
 }
 
 function createToken(user: PublicUser): string {
@@ -116,12 +137,12 @@ export async function login(
   );
 }
 
+  const lastLoginAt =
+    await updateLastLoginAt(userRow.id);
+
   const user: PublicUser = {
-    id: userRow.id,
-    firstName: userRow.first_name,
-    lastName: userRow.last_name,
-    email: userRow.email,
-    role: userRow.role,
+    ...toPublicUser(userRow),
+    lastLoginAt,
   };
 
   const token = createToken(user);
@@ -141,11 +162,53 @@ export async function getCurrentUser(
     "USER_NOT_FOUND",
   );
 }
-  return {
-    id: userRow.id,
-    firstName: userRow.first_name,
-    lastName: userRow.last_name,
+  return toPublicUser(userRow);
+}
+
+export async function changePassword(
+  userId: number,
+  input: ChangePasswordBody,
+): Promise<void> {
+  const userRow = await findUserById(userId);
+
+  if (!userRow) {
+    throw new AppError(
+      "ไม่พบบัญชีผู้ใช้",
+      404,
+      "USER_NOT_FOUND",
+    );
+  }
+
+  const currentPasswordMatches =
+    await bcrypt.compare(
+      input.currentPassword,
+      userRow.password_hash,
+    );
+
+  /*
+   * 400 ไม่ใช่ 401
+   * frontend จะได้ไม่มองว่า session หมดอายุ
+   */
+  if (!currentPasswordMatches) {
+    throw new AppError(
+      "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+      400,
+      "INVALID_CURRENT_PASSWORD",
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(
+    input.newPassword,
+    12,
+  );
+
+  await updatePasswordHash(
+    userId,
+    passwordHash,
+  );
+
+  await notifyPasswordChanged({
     email: userRow.email,
-    role: userRow.role,
-  };
+    firstName: userRow.first_name,
+  });
 }

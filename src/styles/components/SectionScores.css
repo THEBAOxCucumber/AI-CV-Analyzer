@@ -1,0 +1,171 @@
+/*
+ * Section Scores: Radar chart
+ */
+.section-scores-chart {
+  margin: 0;
+}
+
+.section-scores-chart figcaption {
+  margin-top: var(--space-3);
+
+  text-align: center;
+
+  color:
+    var(--color-text-secondary);
+
+  font-size:
+    var(--font-size-xs);
+
+  line-height: 1.6;
+}
+
+.radar-chart {
+  position: relative;
+
+  width: 100%;
+  max-width: 480px;
+
+  margin-inline: auto;
+}
+
+.radar-chart__svg {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  overflow: visible;
+}
+
+/*
+ * grid/แกน: จาง ไม่แย่งความสนใจจากข้อมูล
+ */
+.radar-chart__ring {
+  fill: none;
+
+  stroke:
+    var(--color-border);
+
+  stroke-width: 1;
+}
+
+.radar-chart__spoke {
+  stroke:
+    var(--color-border);
+
+  stroke-width: 1;
+}
+
+.radar-chart__ring-label {
+  fill:
+    var(--color-text-muted);
+
+  font-size: 10px;
+}
+
+.radar-chart__area {
+  fill:
+    var(--color-navy);
+
+  fill-opacity: 0.15;
+
+  stroke:
+    var(--color-navy);
+
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/*
+ * วงรอบสีพื้น 2px แยกจุดจากเส้น
+ */
+.radar-chart__dot {
+  fill:
+    var(--color-navy);
+
+  stroke:
+    var(--color-surface);
+
+  stroke-width: 2;
+
+  transition:
+    r var(--transition-fast);
+}
+
+.radar-chart__dot--active {
+  r: 6.5;
+}
+
+.radar-chart__label {
+  fill:
+    var(--color-text-primary);
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.radar-chart__sublabel {
+  fill:
+    var(--color-text-secondary);
+
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.radar-chart__hit {
+  fill: transparent;
+
+  cursor: pointer;
+  outline: none;
+}
+
+.radar-chart__hit:focus-visible {
+  stroke:
+    var(--color-steel-blue);
+
+  stroke-width: 2;
+}
+
+.radar-chart__tooltip {
+  position: absolute;
+  z-index: 5;
+
+  width: max-content;
+  max-width: 240px;
+
+  padding:
+    var(--space-2) var(--space-3);
+
+  display: grid;
+  gap: 2px;
+
+  transform:
+    translate(-50%, calc(-100% - 14px));
+
+  border-radius:
+    var(--radius-md);
+
+  color: #ffffff;
+
+  background:
+    var(--color-navy);
+
+  box-shadow:
+    0 8px 20px rgba(30, 49, 86, 0.2);
+
+  font-size:
+    var(--font-size-xs);
+
+  line-height: 1.5;
+
+  pointer-events: none;
+}
+
+.radar-chart__tooltip strong {
+  font-weight: 600;
+}
+
+.radar-chart__tooltip span {
+  color:
+    rgba(255, 255, 255, 0.78);
+}

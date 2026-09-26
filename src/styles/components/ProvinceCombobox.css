@@ -1,0 +1,77 @@
+.province-combobox {
+  position: relative;
+}
+
+.province-combobox__list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  left: 0;
+
+  max-height: 260px;
+  overflow-y: auto;
+
+  margin: 0;
+  padding: var(--space-1);
+
+  list-style: none;
+
+  border:
+    1px solid var(--color-border);
+
+  border-radius:
+    var(--radius-md);
+
+  background:
+    var(--color-surface);
+
+  box-shadow:
+    0 12px 28px rgba(30, 49, 86, 0.14);
+}
+
+.province-combobox__option {
+  padding:
+    var(--space-2) var(--space-3);
+
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  border-radius:
+    var(--radius-sm, 6px);
+
+  color:
+    var(--color-navy);
+
+  cursor: pointer;
+}
+
+.province-combobox__option small {
+  color:
+    var(--color-text-secondary);
+
+  font-size:
+    var(--font-size-xs);
+}
+
+.province-combobox__option--active {
+  background:
+    var(--color-surface-muted);
+}
+
+.province-combobox__option[aria-selected="true"] {
+  font-weight: 600;
+}
+
+.province-combobox__empty {
+  padding:
+    var(--space-3);
+
+  color:
+    var(--color-text-secondary);
+
+  font-size:
+    var(--font-size-sm);
+}

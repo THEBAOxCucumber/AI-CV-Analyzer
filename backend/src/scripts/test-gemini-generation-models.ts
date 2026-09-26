@@ -2,7 +2,14 @@ import "dotenv/config";
 
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.GEMINI_API_KEY;
+import { z } from "zod";
+
+import {
+  resumeAnalysisResultSchema,
+} from "../modules/analysis/resume-analysis.schema.js";
+
+const apiKey =
+  process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
   throw new Error(
@@ -10,117 +17,216 @@ if (!apiKey) {
   );
 }
 
-const gemini = new GoogleGenAI({
-  apiKey,
-});
+const gemini =
+  new GoogleGenAI({
+    apiKey,
+  });
 
-const models = [
-  "gemini-3.5-flash",
-  "gemini-3.6-flash",
-  "gemini-3.7-flash",
-  "gemini-3.8-flash",
-  "gemini-flash-latest",
-];
+const model =
+  process.env.GEMINI_GENERATION_MODEL ??
+  "gemini-3.6-flash";
 
-interface GeminiErrorDetails {
-  status?: number;
-  message?: string;
-}
-
-function getErrorDetails(
-  error: unknown,
-): GeminiErrorDetails {
-  if (
-    typeof error === "object" &&
-    error !== null
-  ) {
-    const candidate =
-      error as {
-        status?: unknown;
-        message?: unknown;
-      };
-
-    return {
-      status:
-        typeof candidate.status === "number"
-          ? candidate.status
-          : undefined,
-
-      message:
-        typeof candidate.message === "string"
-          ? candidate.message
-          : undefined,
-    };
-  }
-
-  return {};
-}
-
-async function testModel(
-  model: string,
+async function runTest(
+  name: string,
+  contents: string,
+  config?: any,
 ): Promise<void> {
-  const startedAt = Date.now();
-
   console.log(
-    `\n========== ${model} ==========`,
+    `\n========== ${name} ==========`,
   );
+
+  console.log({
+    model,
+    promptCharacters:
+      contents.length,
+  });
+
+  const startedAt =
+    Date.now();
 
   try {
     const response =
       await gemini.models.generateContent({
         model,
-
-        contents:
-          "Reply with exactly: OK",
+        contents,
+        config,
       });
 
     console.log({
-      model,
       success: true,
       durationMs:
         Date.now() - startedAt,
       response:
-        response.text,
+        response.text?.slice(
+          0,
+          300,
+        ),
     });
   } catch (error) {
-    const details =
-      getErrorDetails(error);
+    const candidate =
+      error as {
+        status?: number;
+        message?: string;
+      };
 
     console.log({
-      model,
       success: false,
       durationMs:
         Date.now() - startedAt,
       status:
-        details.status ?? "unknown",
+        candidate.status,
       error:
-        details.message ??
-        (error instanceof Error
-          ? error.message
-          : String(error)),
+        candidate.message ??
+        String(error),
     });
   }
 }
 
 async function main(): Promise<void> {
   console.log(
-    "Testing Gemini generation models...",
+    "========== GEMINI 3.6 DIAGNOSTIC ==========",
   );
 
-  for (const model of models) {
-    await testModel(model);
-  }
+  console.log({
+    model,
+  });
+
+  // TEST 1: tiny request
+  await runTest(
+    "TEST 1 - tiny",
+    "Reply only with OK",
+    {
+      temperature: 0.1,
+      maxOutputTokens: 50,
+    },
+  );
+
+  // TEST 2: prompt ~5,000 characters
+  const largePrompt =
+    "Analyze this resume carefully. ".repeat(
+      180,
+    );
+
+  await runTest(
+    "TEST 2 - large prompt",
+    largePrompt,
+    {
+      temperature: 0.1,
+      maxOutputTokens: 2500,
+    },
+  );
+
+  // TEST 3: JSON mode
+  const jsonPrompt = `
+Return JSON only.
+
+The JSON must contain:
+- summary: string
+- score: number
+
+Resume:
+${"Software engineer with TypeScript, React, Node.js and SQL experience. ".repeat(
+  70,
+)}
+`;
+
+  await runTest(
+    "TEST 3 - JSON mode",
+    jsonPrompt,
+    {
+      temperature: 0.1,
+      maxOutputTokens: 2500,
+
+      responseMimeType:
+        "application/json",
+    },
+  );
+
+  // TEST 4: JSON mode + simple schema
+  await runTest(
+    "TEST 4 - simple JSON schema",
+    jsonPrompt,
+    {
+      temperature: 0.1,
+      maxOutputTokens: 2500,
+
+      responseMimeType:
+        "application/json",
+
+      responseJsonSchema: {
+        type: "object",
+
+        properties: {
+          summary: {
+            type: "string",
+          },
+
+          score: {
+            type: "number",
+          },
+        },
+
+        required: [
+          "summary",
+          "score",
+        ],
+
+        additionalProperties:
+          false,
+      },
+    },
+  );
+
+  // TEST 5:
+// JSON mode + production Resume Analysis schema
+await runTest(
+  "TEST 5 - production resume schema",
+  `
+Analyze the following resume.
+
+Return a complete resume analysis
+that matches the required JSON schema.
+
+Resume:
+${"Software engineer with TypeScript, React, Node.js, MySQL, REST API, Git and Docker experience. ".repeat(
+  55,
+)}
+`,
+  {
+    temperature: 0.1,
+    maxOutputTokens: 2500,
+
+    responseMimeType:
+      "application/json",
+
+    responseJsonSchema:
+      z.toJSONSchema(
+        resumeAnalysisResultSchema,
+        {
+          target: "draft-07",
+        },
+      ),
+  },
+);
 
   console.log(
     "\n========== TEST FINISHED ==========",
   );
 }
 
-main().catch((error: unknown) => {
-  console.error(
-    "Unexpected test error:",
-    error,
-  );
+main().catch(
+  (error: unknown) => {
+    console.error(
+      "========== TEST ERROR ==========",
+    );
 
-  process.exit(1);
-});
+    console.dir(
+      error,
+      {
+        depth: null,
+      },
+    );
+
+    process.exit(1);
+  },
+);

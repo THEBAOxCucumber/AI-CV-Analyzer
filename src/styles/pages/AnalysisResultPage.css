@@ -149,7 +149,7 @@
 
 .base-score-card,
 .analysis-summary-card,
-.analysis-section-score,
+.analysis-section,
 .feedback-card,
 .recommendations-card {
   border: 1px solid var(--color-border);
@@ -176,28 +176,62 @@
 }
 
 .base-score-card__score {
-  margin-top: var(--space-4);
+  margin-top: var(--space-5);
 
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
+  justify-content: center;
 }
 
-.base-score-card__score strong {
+/*
+ * วงแหวนคะแนน (ScoreRing)
+ */
+.score-ring-gauge {
+  position: relative;
+
+  width: 136px;
+  height: 136px;
+}
+
+.score-ring-gauge svg {
+  width: 100%;
+  height: 100%;
+}
+
+.score-ring-gauge__track {
+  fill: none;
+  stroke: var(--color-surface-muted);
+}
+
+.score-ring-gauge__value {
+  fill: none;
+  stroke: var(--color-navy);
+  stroke-linecap: round;
+
+  transition: stroke-dashoffset 600ms ease;
+}
+
+.score-ring-gauge__label {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-ring-gauge__label strong {
   color: var(--color-navy);
 
-  font-size: clamp(
-    2.8rem,
-    6vw,
-    4rem
-  );
-
+  font-size: 2.5rem;
   line-height: 1;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.base-score-card__score span {
+.score-ring-gauge__label span {
   color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
 }
 
 .base-score-card > p {
@@ -213,7 +247,7 @@
 }
 
 .analysis-summary-card h2,
-.analysis-section-score h2,
+.analysis-section h2,
 .feedback-card h2,
 .recommendations-card h2 {
   color: var(--color-navy);
@@ -230,16 +264,16 @@
   line-height: 1.8;
 }
 
-.analysis-section-score {
+.analysis-section {
   margin-top: var(--space-5);
   padding: var(--space-6);
 }
 
-.analysis-section-score__heading {
+.analysis-section__heading {
   margin-bottom: var(--space-5);
 }
 
-.analysis-section-score__heading > p {
+.analysis-section__heading > p {
   margin-top: var(--space-1);
 
   color: var(--color-text-secondary);
@@ -247,83 +281,33 @@
   font-size: var(--font-size-sm);
 }
 
-.section-scores {
-  display: grid;
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  gap: var(--space-4);
-}
-
-.section-score-card {
-  padding: var(--space-4);
-
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-
-  background: var(--color-background);
-}
-
-.section-score-card__top {
-  margin-bottom: var(--space-3);
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.section-score-card__top span {
-  color: var(--color-text-secondary);
-
-  font-size: var(--font-size-sm);
-}
-
-.section-score-card__top strong {
-  color: var(--color-navy);
-
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-}
-
-.section-score-card__max {
-    margin-left: 2px;
-
-    color: var(--color-text-secondary);
-
-    font-size: 0.75em;
-    font-weight: 500;
-}
-
-.score-progress {
-  width: 100%;
-  height: 8px;
-
-  overflow: hidden;
-
-  border-radius: var(--radius-full);
-
-  background: var(--color-light-blue);
-}
-
-.score-progress__bar {
-  height: 100%;
-
-  border-radius: inherit;
-
-  background: var(--color-steel-blue);
-
-  transition: width 300ms ease;
-}
-
-.analysis-feedback-grid {
+/*
+ * Section Scores | Strengths + Weaknesses
+ */
+.analysis-insights-grid {
   margin-top: var(--space-5);
 
   display: grid;
   grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+    minmax(0, 1.15fr)
+    minmax(0, 1fr);
 
   gap: var(--space-5);
+  align-items: stretch;
+}
+
+.analysis-insights-grid > .analysis-section {
+  margin-top: 0;
+}
+
+.analysis-feedback-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.analysis-feedback-stack > .feedback-card {
+  flex: 1;
 }
 
 .feedback-card {
@@ -336,28 +320,70 @@
   gap: var(--space-2);
 }
 
-.feedback-card__heading--strength {
+.feedback-card__icon {
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border-radius: var(--radius-full);
+}
+
+.feedback-card__heading--strength .feedback-card__icon {
+  color: var(--color-success);
+  background: rgba(46, 125, 91, 0.1);
+}
+
+.feedback-card__heading--weakness .feedback-card__icon {
+  color: var(--color-danger);
+  background: rgba(201, 76, 76, 0.1);
+}
+
+.feedback-list {
+  margin:
+    var(--space-4)
+    0 0;
+
+  padding: 0;
+
+  list-style: none;
+}
+
+.feedback-list li {
+  padding:
+    var(--space-3) 0;
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+
+  border-bottom: 1px solid var(--color-border);
+
+  color: var(--color-text-primary);
+
+  line-height: 1.65;
+}
+
+.feedback-list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.feedback-list svg {
+  flex: 0 0 auto;
+
+  margin-top: 4px;
+}
+
+.feedback-list--strength svg {
   color: var(--color-success);
 }
 
-.feedback-card__heading--weakness {
+.feedback-list--weakness svg {
   color: var(--color-danger);
-}
-
-.feedback-card ul {
-  margin:
-    var(--space-5)
-    0 0;
-
-  padding-left: 1.25rem;
-}
-
-.feedback-card li {
-  margin-top: var(--space-3);
-
-  color: var(--color-text-secondary);
-
-  line-height: 1.65;
 }
 
 .recommendations-card {
@@ -627,9 +653,14 @@
 }
 
 
+@media (max-width: 1100px) {
+  .analysis-insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 820px) {
-  .analysis-overview,
-  .analysis-feedback-grid {
+  .analysis-overview {
     grid-template-columns: 1fr;
   }
 }
@@ -643,10 +674,6 @@
 
   .analysis-header {
     flex-direction: column;
-  }
-
-  .section-scores {
-    grid-template-columns: 1fr;
   }
 
   .base-score-card,

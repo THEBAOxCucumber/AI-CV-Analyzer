@@ -19,19 +19,16 @@ import {
 } from "../../src/modules/analysis/analysis-outbox-dispatcher.service.js";
 
 const {
-    mockGenerateContent,
+    mockChat,
 } = vi.hoisted(() => ({
-    mockGenerateContent: vi.fn(),
+    mockChat: vi.fn(),
 }));
 
 vi.mock(
-    "../../src/config/gemini.js",
+    "ollama",
     () => ({
-        gemini: {
-            models: {
-                generateContent:
-                    mockGenerateContent,
-            },
+        Ollama: class {
+            chat = mockChat;
         },
     }),
 );
@@ -61,24 +58,31 @@ import {
 } from "../../src/workers/resume-analysis.worker.js";
 
 
-function createGeminiBadRequestError() {
-    const error =
+/*
+ * รูปร่างเดียวกับ ResponseError ของ ollama
+ */
+function createOllamaModelNotFoundError() {
+    return Object.assign(
         new Error(
-            "Gemini bad request",
-        ) as Error & {
-            status?: number;
-        };
-
-    error.status = 400;
-
-    return error;
+            "model 'qwen3:4b-instruct' not found",
+        ),
+        {
+            name: "ResponseError",
+            status_code: 404,
+        },
+    );
 }
 
 
-function createSuccessfulGeminiResponse() {
+function createSuccessfulOllamaResponse() {
     return {
-        text: JSON.stringify({
-            baseResumeScore: 80,
+        message: {
+            content: JSON.stringify({
+            /*
+             * LLM บวกผิด (section รวม = 80)
+             * backend ต้อง normalize เป็น 80
+             */
+            baseResumeScore: 75,
 
             jobMatchScore: null,
 
@@ -109,13 +113,15 @@ function createSuccessfulGeminiResponse() {
             recommendations: [
                 "เพิ่มตัวเลขผลลัพธ์ของโครงการและประสบการณ์",
             ],
-        }),
+            }),
+        },
     };
 }
 
-function createSuccessfulJobMatchGeminiResponse() {
+function createSuccessfulJobMatchOllamaResponse() {
     return {
-        text: JSON.stringify({
+        message: {
+            content: JSON.stringify({
             baseResumeScore: 80,
             jobMatchScore: 86,
             scores: {
@@ -155,34 +161,47 @@ function createSuccessfulJobMatchGeminiResponse() {
             recommendations: [
                 "เพิ่มประสบการณ์ Docker หากมี",
             ],
-        }),
+            }),
+        },
     };
 }
 
-function createGeminiRateLimitError() {
-    const error =
-        new Error(
-            "Gemini rate limit exceeded",
-        ) as Error & {
-            status?: number;
-        };
-
-    error.status = 429;
-
-    return error;
+/*
+ * Ollama server ไม่ได้เปิด
+ */
+function createOllamaUnreachableError() {
+    return new TypeError(
+        "fetch failed",
+        {
+            cause: Object.assign(
+                new Error(
+                    "connect ECONNREFUSED 127.0.0.1:11434",
+                ),
+                {
+                    code: "ECONNREFUSED",
+                },
+            ),
+        },
+    );
 }
 
-function createGeminiServiceUnavailableError() {
-    const error =
-        new Error(
-            "Gemini service unavailable",
-        ) as Error & {
-            status?: number;
-        };
+/*
+ * AbortSignal.timeout()
+ */
+function createOllamaTimeoutError() {
+    return new DOMException(
+        "The operation was aborted due to timeout",
+        "TimeoutError",
+    );
+}
 
-    error.status = 503;
-
-    return error;
+function createInvalidJsonOllamaResponse() {
+    return {
+        message: {
+            content:
+                "ขออภัย ไม่สามารถวิเคราะห์ได้",
+        },
+    };
 }
 
 async function createTestUserAndToken() {
@@ -450,7 +469,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-    mockGenerateContent.mockReset();
+    mockChat.mockReset();
 
     await resumeAnalysisQueue.drain(
         true,
@@ -483,11 +502,11 @@ describe(
             "processes POST → QUEUED → Worker → COMPLETED",
             async () => {
                 /*
-                 * Gemini mock
+                 * Ollama mock
                  */
-                mockGenerateContent
+                mockChat
                     .mockResolvedValue(
-                        createSuccessfulGeminiResponse(),
+                        createSuccessfulOllamaResponse(),
                     );
 
                 /*
@@ -612,10 +631,10 @@ describe(
                 ).toBe(1);
 
                 /*
-                 * Gemini ต้องถูกเรียก 1 ครั้ง
+                 * Ollama ต้องถูกเรียก 1 ครั้ง
                  */
                 expect(
-                    mockGenerateContent,
+                    mockChat,
                 ).toHaveBeenCalledTimes(1);
             },
         );
@@ -623,9 +642,9 @@ describe(
         it(
             "skips a stale duplicate job after the analysis is already completed",
             async () => {
-                mockGenerateContent
+                mockChat
                     .mockResolvedValue(
-                        createSuccessfulGeminiResponse(),
+                        createSuccessfulOllamaResponse(),
                     );
 
                 /*
@@ -780,7 +799,7 @@ describe(
                         "COMPLETED",
                     );
                 expect(
-                    
+
                     completed.status,
                 ).toBe("COMPLETED");
 
@@ -789,7 +808,7 @@ describe(
                 ).toBe(1);
 
                 expect(
-                    mockGenerateContent,
+                    mockChat,
                 ).toHaveBeenCalledTimes(1);
 
                 /*
@@ -860,10 +879,10 @@ describe(
 
                 /*
                  * สำคัญ:
-                 * duplicate job ต้องไม่เรียก Gemini
+                 * duplicate job ต้องไม่เรียก Ollama
                  */
                 expect(
-                    mockGenerateContent,
+                    mockChat,
                 ).toHaveBeenCalledTimes(1);
 
                 /*
@@ -904,14 +923,14 @@ describe(
 
 
         it(
-            "retries Gemini 429 and completes on the second attempt",
+            "retries when Ollama is unreachable and completes on the second attempt",
             async () => {
-                mockGenerateContent
+                mockChat
                     .mockRejectedValueOnce(
-                        createGeminiRateLimitError(),
+                        createOllamaUnreachableError(),
                     )
                     .mockResolvedValueOnce(
-                        createSuccessfulGeminiResponse(),
+                        createSuccessfulOllamaResponse(),
                     );
 
                 const {
@@ -980,21 +999,17 @@ describe(
                 ).toBe(2);
 
                 expect(
-                    mockGenerateContent,
+                    mockChat,
                 ).toHaveBeenCalledTimes(2);
             },
         );
 
         it(
-            "falls back after Gemini 503 and completes on the first attempt",
+            "fails immediately without retry when Ollama returns invalid JSON",
             async () => {
-                mockGenerateContent
-                    .mockRejectedValueOnce(
-                        createGeminiServiceUnavailableError(),
-                    )
-                    .mockResolvedValueOnce(
-                        createSuccessfulGeminiResponse(),
-                    );
+                mockChat.mockResolvedValue(
+                    createInvalidJsonOllamaResponse(),
+                );
 
                 const {
                     userId,
@@ -1041,35 +1056,33 @@ describe(
 
                 await dispatchAnalysisOutboxBatch();
 
-                const completed =
+                const failed =
                     await waitForAnalysisStatus(
                         analysisRunId,
-                        "COMPLETED",
+                        "FAILED",
                     );
 
                 expect(
-                    completed.status,
-                ).toBe("COMPLETED");
-
-                expect(
-                    completed.base_resume_score,
-                ).toBe(80);
-
-                expect(
-                    completed.attempt_count,
+                    failed.attempt_count,
                 ).toBe(1);
 
                 expect(
-                    mockGenerateContent,
-                ).toHaveBeenCalledTimes(2);
+                    failed.error_code,
+                ).toBe(
+                    "NON_RETRYABLE_ANALYSIS_ERROR",
+                );
+
+                expect(
+                    mockChat,
+                ).toHaveBeenCalledTimes(1);
             },
         );
 
         it(
-            "fails immediately for non-retryable Gemini 400 error",
+            "fails immediately when the Ollama model is not found",
             async () => {
-                mockGenerateContent.mockRejectedValue(
-                    createGeminiBadRequestError(),
+                mockChat.mockRejectedValue(
+                    createOllamaModelNotFoundError(),
                 );
 
                 const {
@@ -1138,21 +1151,21 @@ describe(
 
                 expect(
                     failed.error_message,
-                ).toContain(
-                    "Gemini bad request",
+                ).toBe(
+                    "ไม่สามารถวิเคราะห์ Resume ได้ กรุณาตรวจสอบข้อมูลแล้วลองใหม่อีกครั้ง",
                 );
 
                 expect(
-                    mockGenerateContent,
+                    mockChat,
                 ).toHaveBeenCalledTimes(1);
             },
         );
 
         it(
-            "marks analysis as failed after Gemini 429 retries are exhausted",
+            "marks analysis as unavailable after Ollama unreachable retries are exhausted",
             async () => {
-                mockGenerateContent.mockRejectedValue(
-                    createGeminiRateLimitError(),
+                mockChat.mockRejectedValue(
+                    createOllamaUnreachableError(),
                 );
 
                 const {
@@ -1216,26 +1229,109 @@ describe(
                 expect(
                     failed.error_code,
                 ).toBe(
-                    "GEMINI_RETRY_EXHAUSTED",
+                    "LLM_UNAVAILABLE",
                 );
 
                 expect(
                     failed.error_message,
-                ).toContain(
-                    "Gemini rate limit exceeded",
+                ).toBe(
+                    "ระบบ AI ไม่พร้อมให้บริการชั่วคราว กรุณาลองใหม่อีกครั้งในภายหลัง",
                 );
 
                 expect(
-                    mockGenerateContent,
+                    mockChat,
                 ).toHaveBeenCalledTimes(3);
             },
         );
 
         it(
+  "marks analysis as timed out after Ollama timeout retries are exhausted",
+  async () => {
+    mockChat.mockRejectedValue(
+      createOllamaTimeoutError(),
+    );
+
+    const {
+      userId,
+      token,
+    } =
+      await createTestUserAndToken();
+
+    const resumeId =
+      await createCompletedResume(
+        userId,
+      );
+
+    await createCompletedResumeChunk(
+      resumeId,
+      userId,
+    );
+
+    const response =
+      await request(app)
+        .post(
+          `/api/resumes/${resumeId}/analyses`,
+        )
+        .set(
+          "Authorization",
+          `Bearer ${token}`,
+        )
+        .send({
+          analysisType: "BASE",
+        });
+
+    expect(
+      response.status,
+    ).toBe(202);
+
+    const analysisRun =
+      response.body.data
+        .analysisRun;
+
+    const analysisRunId =
+      Number(
+        analysisRun.id,
+      );
+
+    await dispatchAnalysisOutboxBatch();
+
+    const failed =
+      await waitForAnalysisStatus(
+        analysisRunId,
+        "FAILED",
+      );
+
+    expect(
+      failed.status,
+    ).toBe("FAILED");
+
+    expect(
+      failed.attempt_count,
+    ).toBe(3);
+
+    expect(
+      failed.error_code,
+    ).toBe(
+      "LLM_TIMEOUT",
+    );
+
+    expect(
+      failed.error_message,
+    ).toBe(
+      "ระบบ AI ใช้เวลาวิเคราะห์นานเกินกำหนด กรุณาลองใหม่อีกครั้ง",
+    );
+
+    expect(
+      mockChat,
+    ).toHaveBeenCalledTimes(3);
+  },
+);
+
+        it(
             "processes JOB_MATCH analysis and stores job match score",
             async () => {
-                mockGenerateContent.mockResolvedValueOnce(
-                    createSuccessfulJobMatchGeminiResponse(),
+                mockChat.mockResolvedValueOnce(
+                    createSuccessfulJobMatchOllamaResponse(),
                 );
 
                 const {
@@ -1323,7 +1419,7 @@ describe(
                 ).toBe(1);
 
                 expect(
-                    mockGenerateContent,
+                    mockChat,
                 ).toHaveBeenCalledTimes(1);
             },
         );
@@ -1331,8 +1427,8 @@ describe(
         it(
             "processes COMBINED analysis and stores both scores",
             async () => {
-                mockGenerateContent.mockResolvedValueOnce(
-                    createSuccessfulJobMatchGeminiResponse(),
+                mockChat.mockResolvedValueOnce(
+                    createSuccessfulJobMatchOllamaResponse(),
                 );
 
                 const {
@@ -1416,7 +1512,7 @@ describe(
                 ).toBe(1);
 
                 expect(
-                    mockGenerateContent,
+                    mockChat,
                 ).toHaveBeenCalledTimes(1);
             },
         );
@@ -1432,23 +1528,23 @@ afterAll(async () => {
 it(
     "skips a concurrent duplicate job while the original analysis is processing",
     async () => {
-        let releaseGemini:
+        let releaseOllama:
             (() => void) | undefined;
 
-        const geminiBlocked =
+        const ollamaBlocked =
             new Promise<void>(
                 (resolve) => {
-                    releaseGemini =
+                    releaseOllama =
                         resolve;
                 },
             );
 
-        mockGenerateContent
+        mockChat
             .mockImplementation(
                 async () => {
-                    await geminiBlocked;
+                    await ollamaBlocked;
 
-                    return createSuccessfulGeminiResponse();
+                    return createSuccessfulOllamaResponse();
                 },
             );
 
@@ -1494,13 +1590,13 @@ it(
 
         /*
          * รอจน job แรก claim DB
-         * และเข้า Gemini แล้ว
+         * และเข้า Ollama แล้ว
          */
         const startedAt =
             Date.now();
 
         while (
-            mockGenerateContent.mock.calls
+            mockChat.mock.calls
                 .length === 0 &&
             Date.now() - startedAt <
             10_000
@@ -1515,7 +1611,7 @@ it(
         }
 
         expect(
-            mockGenerateContent,
+            mockChat,
         ).toHaveBeenCalledTimes(1);
 
         /*
@@ -1563,7 +1659,7 @@ it(
         );
 
         /*
-         * original job ยังติดอยู่ที่ Gemini
+         * original job ยังติดอยู่ที่ Ollama
          * สร้าง duplicate คนละ BullMQ job
          */
         const originalJob =
@@ -1630,10 +1726,10 @@ it(
 
         /*
          * duplicate ต้องถูก ownership guard
-         * หยุดก่อน Gemini
+         * หยุดก่อน Ollama
          */
         expect(
-            mockGenerateContent,
+            mockChat,
         ).toHaveBeenCalledTimes(1);
 
         /*
@@ -1672,9 +1768,9 @@ it(
         ).toBe(1);
 
         /*
-         * ปล่อย original Gemini
+         * ปล่อย original Ollama
          */
-        releaseGemini?.();
+        releaseOllama?.();
 
         const completed =
             await waitForAnalysisStatus(
@@ -1691,7 +1787,7 @@ it(
         ).toBe(1);
 
         expect(
-            mockGenerateContent,
+            mockChat,
         ).toHaveBeenCalledTimes(1);
     },
 );

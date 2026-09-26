@@ -4,6 +4,7 @@ import {
 } from "react"
 
 import {
+  Link,
   Navigate,
   useLocation,
   useNavigate,
@@ -104,12 +105,12 @@ export function SignInPage() {
 
       const state =
         location.state as
-          | LocationState
-          | null
+        | LocationState
+        | null
 
       navigate(
         state?.from ??
-          "/dashboard",
+        "/dashboard",
         {
           replace: true,
         },
@@ -223,6 +224,13 @@ export function SignInPage() {
               }}
             />
 
+            <Link
+              className="sign-in__forgot"
+              to="/forgot-password"
+            >
+              ลืมรหัสผ่าน?
+            </Link>
+
             {error && (
               <div
                 className="sign-in__error"
@@ -243,9 +251,12 @@ export function SignInPage() {
 
           <p className="sign-in__register">
             ยังไม่มีบัญชี?{" "}
-            <span>
+            <Link
+              className="sign-in__register-link"
+              to="/register"
+            >
               สมัครสมาชิก
-            </span>
+            </Link>
           </p>
 
           <p className="sign-in__oauth-note">

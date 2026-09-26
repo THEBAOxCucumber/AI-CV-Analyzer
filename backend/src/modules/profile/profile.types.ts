@@ -17,6 +17,8 @@ export interface UserProfileRow extends RowDataPacket {
   id: number;
   user_id: number;
   phone: string | null;
+  location: string | null;
+  headline: string | null;
   university: string | null;
   faculty: string | null;
   major: string | null;
@@ -31,6 +33,8 @@ export interface UserProfileRow extends RowDataPacket {
 
 export interface UpdateProfileInput {
   phone: string | null;
+  location: string | null;
+  headline: string | null;
   university: string | null;
   faculty: string | null;
   major: string | null;
@@ -45,6 +49,8 @@ export interface UserProfile {
   id?: number;
   userId: number;
   phone: string | null;
+  location: string | null;
+  headline: string | null;
   university: string | null;
   faculty: string | null;
   major: string | null;

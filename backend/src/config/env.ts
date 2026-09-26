@@ -138,6 +138,81 @@ export const env = {
       process.env
         .GEMINI_GENERATION_MODEL ??
       "gemini-3.7-flash",
+
+
+  fallbackModel:
+    process.env
+      .GEMINI_FALLBACK_MODEL ??
+    "gemini-3.8-flash",
+
+      
+  },
+
+  ollama: {
+  host:
+    process.env.OLLAMA_HOST ??
+    "http://127.0.0.1:11434",
+
+  model:
+    process.env.OLLAMA_MODEL ??
+    "qwen3:4b-instruct",
+
+  /*
+   * ต้องน้อยกว่า headersTimeout
+   * ของ Node fetch (300s)
+   */
+  timeoutMs:
+    getNumberEnv(
+      "OLLAMA_TIMEOUT_MS",
+      240_000,
+    ),
+},
+
+  /*
+   * SMTP — Gmail: smtp.gmail.com:465 + App Password
+   * ไม่ตั้ง SMTP_USER/SMTP_PASSWORD = ส่งอีเมลไม่ได้
+   */
+  mail: {
+    host:
+      process.env.SMTP_HOST ??
+      "smtp.gmail.com",
+
+    port:
+      getNumberEnv(
+        "SMTP_PORT",
+        465,
+      ),
+
+    user:
+      process.env.SMTP_USER ?? "",
+
+    password:
+      process.env.SMTP_PASSWORD ?? "",
+
+    from:
+      process.env.MAIL_FROM ??
+      process.env.SMTP_USER ??
+      "",
+  },
+
+  passwordReset: {
+    otpTtlMinutes:
+      getNumberEnv(
+        "PASSWORD_RESET_OTP_TTL_MINUTES",
+        10,
+      ),
+
+    maxAttempts:
+      getNumberEnv(
+        "PASSWORD_RESET_MAX_ATTEMPTS",
+        5,
+      ),
+
+    resendCooldownSeconds:
+      getNumberEnv(
+        "PASSWORD_RESET_RESEND_COOLDOWN_SECONDS",
+        60,
+      ),
   },
 
   jooble: {

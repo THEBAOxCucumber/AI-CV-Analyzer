@@ -1,4 +1,5 @@
 import type { ResultSetHeader } from "mysql2";
+import type { PoolConnection } from "mysql2/promise";
 
 import { database } from "../../config/database.js";
 import type {
@@ -19,6 +20,7 @@ export async function findUserByEmail(
         email,
         password_hash,
         role,
+        last_login_at,
         created_at,
         updated_at
       FROM users
@@ -59,7 +61,49 @@ export async function createUser(
     lastName: input.lastName,
     email: input.email,
     role: "USER",
+    createdAt: new Date(),
+    lastLoginAt: null,
   };
+}
+
+export async function updatePasswordHash(
+  userId: number,
+  passwordHash: string,
+  connection?: PoolConnection,
+): Promise<void> {
+  const executor = connection ?? database;
+
+  await executor.execute<ResultSetHeader>(
+    `
+      UPDATE users
+      SET password_hash = ?
+      WHERE id = ?
+    `,
+    [passwordHash, userId],
+  );
+}
+
+/**
+ * บันทึกเวลา login ล่าสุด
+ * คง updated_at เดิม (ไม่นับเป็นการแก้ข้อมูลบัญชี)
+ */
+export async function updateLastLoginAt(
+  userId: number,
+): Promise<Date> {
+  const loggedInAt = new Date();
+
+  await database.execute<ResultSetHeader>(
+    `
+      UPDATE users
+      SET
+        last_login_at = ?,
+        updated_at = updated_at
+      WHERE id = ?
+    `,
+    [loggedInAt, userId],
+  );
+
+  return loggedInAt;
 }
 
 export async function findUserById(
@@ -74,6 +118,7 @@ export async function findUserById(
         email,
         password_hash,
         role,
+        last_login_at,
         created_at,
         updated_at
       FROM users

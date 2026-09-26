@@ -1,9 +1,11 @@
 import {
-  FileCheck2,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ChartLine,
   FileText,
-  Plus,
-  Sparkles,
   Trash2,
+  Upload,
 } from "lucide-react"
 
 import {
@@ -37,31 +39,29 @@ import type {
 } from "../types/analysis"
 
 import {
+  formatThaiDate,
   formatThaiDateTime,
 } from "../utils/date-time"
+
+import {
+  getAnalysisScore,
+  getAnalysisTypeLabel,
+} from "../utils/analysis"
+
+import {
+  formatFileSize,
+} from "../utils/file-size"
+
+import {
+  getDashboardStats,
+  getScoreTone,
+  getTopSkills,
+} from "../utils/dashboard-stats"
 
 import "../styles/pages/DashboardPage.css"
 
 
 
-function formatFileSize(
-  bytes: number,
-): string {
-  if (bytes < 1024) {
-    return `${bytes} B`
-  }
-
-  if (bytes < 1024 * 1024) {
-    return `${(
-      bytes / 1024
-    ).toFixed(1)} KB`
-  }
-
-  return `${(
-    bytes /
-    (1024 * 1024)
-  ).toFixed(1)} MB`
-}
 
 
 
@@ -81,6 +81,35 @@ function getStatusLabel(
     default:
       return "อัปโหลดแล้ว"
   }
+}
+
+function TrendText({
+  value,
+  suffix,
+}: {
+  value: number
+  suffix: string
+}) {
+  const isDown = value < 0
+
+  return (
+    <p
+      className={
+        isDown
+          ? "stat-card__trend stat-card__trend--down"
+          : "stat-card__trend"
+      }
+    >
+      {isDown ? (
+        <ArrowDown size={18} />
+      ) : (
+        <ArrowUp size={18} />
+      )}
+
+      {Math.abs(value)}
+      {suffix}
+    </p>
+  )
 }
 
 export function DashboardPage() {
@@ -171,18 +200,31 @@ export function DashboardPage() {
   const recentResumes =
     resumes.slice(0, 5)
 
-  const latestCompletedAnalysis =
-    analyses
-      .filter((analysis) => analysis.status === "COMPLETED")
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime(),
-      )[0] ?? null
+  const stats =
+    getDashboardStats(analyses)
 
-  const latestBaseScore =
-    latestCompletedAnalysis
-      ?.baseResumeScore ?? null
+  const topSkills =
+    getTopSkills(analyses)
+
+  /*
+   * analyses เรียงใหม่สุดก่อนแล้ว
+   * (loadDashboard)
+   */
+  const recentAnalyses =
+    analyses
+      .filter(
+        (analysis) =>
+          analysis.status === "COMPLETED",
+      )
+      .slice(0, 3)
+
+  const resumeNameById =
+    new Map(
+      resumes.map((resume) => [
+        resume.id,
+        resume.originalName,
+      ]),
+    )
 
 
 
@@ -220,18 +262,13 @@ export function DashboardPage() {
     <main className="dashboard">
       <header className="dashboard__header">
         <div>
-          <p className="dashboard__eyebrow">
-            Dashboard
-          </p>
-
           <h1>
-            สวัสดี,{" "}
-            {user?.firstName}
+            Hello, {user?.firstName} !
           </h1>
 
           <p className="dashboard__subtitle">
-            ภาพรวม Resume
-            และการวิเคราะห์ของคุณ
+            Let's improve your resume
+            and get you hired
           </p>
         </div>
 
@@ -239,7 +276,7 @@ export function DashboardPage() {
           className="dashboard__upload-button"
           to="/resumes/upload"
         >
-          <Plus size={19} />
+          <Upload size={20} />
           Upload Resume
         </Link>
       </header>
@@ -258,93 +295,221 @@ export function DashboardPage() {
         aria-label="Dashboard statistics"
       >
         <article className="stat-card">
-          <div className="stat-card__icon">
-            <FileText size={23} />
-          </div>
+          <span className="stat-card__label">
+            Resumes Analyzed
+          </span>
 
-          <div>
-            <span>
-              Resume ทั้งหมด
-            </span>
+          <strong className="stat-card__value">
+            {isLoading
+              ? "..."
+              : stats.analyzedCount}
+          </strong>
 
-            <strong>
-              {isLoading
-                ? "..."
-                : resumes.length}
-            </strong>
-          </div>
+          {!isLoading &&
+            (stats.analyzedChangePercent !== null ? (
+              <TrendText
+                value={
+                  stats.analyzedChangePercent
+                }
+                suffix="% this month"
+              />
+            ) : (
+              <p className="stat-card__trend stat-card__trend--muted">
+                {stats.analyzedThisMonth} this month
+              </p>
+            ))}
         </article>
 
         <article className="stat-card">
-          <div className="stat-card__icon">
-            <Sparkles size={23} />
-          </div>
+          <span className="stat-card__label">
+            Avg. Resume Score
+          </span>
 
-          <div>
-            <span>
-              AI Analysis
-            </span>
+          <strong className="stat-card__value">
+            {isLoading
+              ? "..."
+              : stats.averageScore !== null
+                ? `${stats.averageScore} / 100`
+                : "—"}
+          </strong>
 
-            <strong>
-              {isLoading
-                ? "..."
-                : analyses.length}
-            </strong>
-          </div>
+          {!isLoading &&
+            stats.averageScoreChange !== null && (
+              <TrendText
+                value={
+                  stats.averageScoreChange
+                }
+                suffix=" points"
+              />
+            )}
         </article>
 
         <article className="stat-card">
-          <div className="stat-card__icon">
-            <FileCheck2 size={23} />
-          </div>
+          <span className="stat-card__label">
+            Job Matches
+          </span>
 
-          <div>
-            <span>
-              คะแนนล่าสุด
-            </span>
+          <strong className="stat-card__value">
+            {isLoading
+              ? "..."
+              : stats.jobMatchCount}
+          </strong>
 
-            <strong>
-              {isLoading
-                ? "..."
-                : latestBaseScore !== null
-                  ? `${latestBaseScore}/100`
-                  : "—"}
-            </strong>
-          </div>
+          {!isLoading &&
+            (stats.jobMatchesThisMonth > 0 ? (
+              <p className="stat-card__trend">
+                <span
+                  className="stat-card__dot"
+                  aria-hidden="true"
+                />
+                {stats.jobMatchesThisMonth} new
+                matches this month
+              </p>
+            ) : (
+              <p className="stat-card__trend stat-card__trend--muted">
+                No new matches this month
+              </p>
+            ))}
         </article>
       </section>
-      {latestCompletedAnalysis && (
-        <section className="latest-analysis">
-          <div className="latest-analysis__content">
-            <div className="latest-analysis__icon">
-              <Sparkles size={22} />
+
+      <div className="dashboard__grid">
+        <section className="dashboard-card recent-analysis">
+          <h2>
+            Recent Analysis
+          </h2>
+
+          {isLoading ? (
+            <div className="dashboard__state">
+              กำลังโหลดข้อมูล...
             </div>
+          ) : recentAnalyses.length === 0 ? (
+            <p className="dashboard-card__empty">
+              ยังไม่มีผลการวิเคราะห์
+            </p>
+          ) : (
+            <ul className="recent-analysis__list">
+              {recentAnalyses.map(
+                (analysis) => {
+                  const score =
+                    getAnalysisScore(
+                      analysis,
+                    )
 
+                  return (
+                    <li key={analysis.id}>
+                      <Link
+                        className="recent-analysis__item"
+                        to={`/analyses/${analysis.id}`}
+                      >
+                        <div className="recent-analysis__details">
+                          <strong>
+                            {resumeNameById.get(
+                              analysis.resumeId,
+                            ) ?? "Resume"}
+                          </strong>
+
+                          <span>
+                            {getAnalysisTypeLabel(
+                              analysis.analysisType,
+                            )}
+                            {" · "}
+                            {formatThaiDate(
+                              analysis.createdAt,
+                            )}
+                          </span>
+                        </div>
+
+                        {score !== null && (
+                          <span
+                            className={`score-ring score-ring--${getScoreTone(score)}`}
+                            aria-label={`คะแนน ${score}`}
+                          >
+                            {score}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  )
+                },
+              )}
+            </ul>
+          )}
+
+          <Link
+            className="dashboard-card__link"
+            to="/history"
+          >
+            View all history
+            <ArrowRight size={20} />
+          </Link>
+        </section>
+
+        <div className="dashboard__side">
+          <section className="dashboard-card top-skills">
+            <h2>
+              Top Skills
+            </h2>
+
+            {topSkills.length === 0 ? (
+              <p className="dashboard-card__empty">
+                วิเคราะห์แบบ Job Match
+                เพื่อดูทักษะที่ตรงกับงาน
+              </p>
+            ) : (
+              <ul className="top-skills__list">
+                {topSkills.map((item) => (
+                  <li key={item.skill}>
+                    <span>
+                      {item.skill}
+                    </span>
+
+                    <div
+                      className="top-skills__bar"
+                      role="img"
+                      aria-label={`${item.skill} ตรงกับงาน ${item.count} ครั้ง`}
+                    >
+                      <div
+                        style={{
+                          width: `${Math.round(item.ratio * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="dashboard-card improve-card">
             <div>
-              <span className="latest-analysis__label">
-                Latest Analysis
-              </span>
-
               <h2>
-                {latestCompletedAnalysis.baseResumeScore !== null
-                  ? `${latestCompletedAnalysis.baseResumeScore}/100`
-                  : "Analysis completed"}
+                Improve your score
               </h2>
 
               <p>
-                การวิเคราะห์ Resume ล่าสุดของคุณเสร็จเรียบร้อยแล้ว
+                Get personalized tips
+                to boost your resume.
               </p>
-            </div>
-          </div>
 
-          <Link
-            className="latest-analysis__button"
-            to={`/analyses/${latestCompletedAnalysis.id}`}
-          >
-            View Analysis
-          </Link>
-        </section>
-      )}
+              <Link
+                className="dashboard-card__link"
+                to="/insights"
+              >
+                View Recommendations
+                <ArrowRight size={20} />
+              </Link>
+            </div>
+
+            <ChartLine
+              className="improve-card__icon"
+              size={72}
+              strokeWidth={1.25}
+              aria-hidden="true"
+            />
+          </section>
+        </div>
+      </div>
 
       <section className="dashboard__panel">
         <div className="dashboard__panel-header">
@@ -448,7 +613,7 @@ export function DashboardPage() {
                   >
                     <Trash2 size={18} />
                   </button>
-                  {resumeToDelete && (
+                  {resumeToDelete?.id === resume.id && (
                     <div
                       className="delete-modal"
                       role="presentation"

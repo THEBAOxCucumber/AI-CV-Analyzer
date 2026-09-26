@@ -15,6 +15,8 @@ export interface UserProfile {
   id?: number
   userId: number
   phone: string | null
+  location: string | null
+  headline: string | null
   university: string | null
   faculty: string | null
   major: string | null
@@ -27,6 +29,8 @@ export interface UserProfile {
 
 export interface UpdateProfileInput {
   phone: string | null
+  location: string | null
+  headline: string | null
   university: string | null
   faculty: string | null
   major: string | null

@@ -9,6 +9,7 @@ export interface UserRow extends RowDataPacket {
   email: string;
   password_hash: string;
   role: UserRole;
+  last_login_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -31,4 +32,6 @@ export interface PublicUser {
   lastName: string;
   email: string;
   role: UserRole;
+  createdAt: Date;
+  lastLoginAt: Date | null;
 }

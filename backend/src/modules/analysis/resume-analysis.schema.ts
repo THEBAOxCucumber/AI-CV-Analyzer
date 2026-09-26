@@ -13,7 +13,7 @@ const baseScorePartSchema = z
   .min(0);
 
 
-export const resumeAnalysisResultSchema =
+const resumeAnalysisResultObjectSchema =
   z.object({
     baseResumeScore: scoreSchema,
 
@@ -98,8 +98,14 @@ export const resumeAnalysisResultSchema =
       z.string().min(1),
     ),
   })
-    .strict()
-    .superRefine((result, context) => {
+    .strict();
+
+function validateResultConsistency(
+  result: z.infer<
+    typeof resumeAnalysisResultObjectSchema
+  >,
+  context: z.RefinementCtx,
+): void {
       const total = Object.values(
         result.scores,
       ).reduce(
@@ -142,7 +148,51 @@ export const resumeAnalysisResultSchema =
             "jobMatchScore must equal jobMatch.score",
         });
       }
-    });
+}
+
+export const resumeAnalysisResultSchema =
+  resumeAnalysisResultObjectSchema.superRefine(
+    validateResultConsistency,
+  );
+
+/*
+ * Schema เฉพาะประเภท analysis
+ * ใช้ทั้งเป็น JSON Schema ให้ LLM (บังคับ output)
+ * และ validate ผลลัพธ์
+ *
+ * BASE             → jobMatch ต้องเป็น null
+ * JOB_MATCH/COMBINED → jobMatch ต้องมี
+ */
+export function createResumeAnalysisResultSchemaFor(
+  analysisType:
+    | "BASE"
+    | "JOB_MATCH"
+    | "COMBINED",
+): z.ZodType<ResumeAnalysisResult> {
+  const requiresJobMatch =
+    analysisType !== "BASE";
+
+  return resumeAnalysisResultObjectSchema
+    .extend({
+      jobMatchScore:
+        requiresJobMatch
+          ? scoreSchema
+          : z.null(),
+
+      jobMatch:
+        requiresJobMatch
+          ? resumeAnalysisResultObjectSchema
+            .shape.jobMatch.unwrap()
+          : z.null(),
+
+      recommendations: z
+        .array(z.string().min(1))
+        .min(1),
+    })
+    .superRefine(
+      validateResultConsistency,
+    );
+}
 
 export type ResumeAnalysisResult =
   z.infer<typeof resumeAnalysisResultSchema>;

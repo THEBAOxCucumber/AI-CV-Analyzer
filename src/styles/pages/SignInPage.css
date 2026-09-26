@@ -148,6 +148,65 @@
   font-size: var(--font-size-xs);
 }
 
+.sign-in__register-link {
+  color: var(--color-steel-blue);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.sign-in__register-link:hover {
+  text-decoration: underline;
+}
+
+.sign-in__password-hint {
+  margin-top: calc(var(--space-2) * -1);
+
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.6;
+}
+
+.sign-in__forgot {
+  margin-top: calc(var(--space-3) * -1);
+
+  align-self: flex-end;
+
+  color: var(--color-steel-blue);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.sign-in__forgot:hover {
+  text-decoration: underline;
+}
+
+.sign-in__success {
+  color: var(--color-success);
+}
+
+.sign-in__text-button {
+  padding: 0;
+
+  border: 0;
+  background: none;
+
+  color: var(--color-steel-blue);
+  font: inherit;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.sign-in__text-button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.sign-in__text-button:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
 @media (max-width: 820px) {
   .sign-in {
     grid-template-columns: 1fr;

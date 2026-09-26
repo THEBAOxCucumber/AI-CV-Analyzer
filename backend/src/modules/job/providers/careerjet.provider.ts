@@ -1,8 +1,11 @@
 import { env } from "../../../config/env.js";
+import { AppError } from "../../../errors/app-error.js";
 
 import {
   createHash,
 } from "node:crypto";
+
+const CAREERJET_TIMEOUT_MS = 15_000;
 
 interface CareerjetApiJob {
   title?: string;
@@ -91,29 +94,74 @@ export async function searchCareerjetJobs(
       `${env.careerjet.apiKey}:`,
     ).toString("base64");
 
-  const response =
-    await fetch(
-      `${env.careerjet.baseUrl}/v4/query?${params.toString()}`,
-      {
-        method: "GET",
+  let response: Response;
 
-        headers: {
-          Authorization:
-            `Basic ${credentials}`,
+  try {
+    response =
+      await fetch(
+        `${env.careerjet.baseUrl}/v4/query?${params.toString()}`,
+        {
+          method: "GET",
 
-          Referer:
-            input.referer,
+          headers: {
+            Authorization:
+              `Basic ${credentials}`,
+
+            Referer:
+              input.referer,
+          },
+
+          signal: AbortSignal.timeout(
+            CAREERJET_TIMEOUT_MS,
+          ),
         },
+      );
+  } catch (error) {
+    /*
+     * ต่อไม่ติด / timeout
+     * log ดิบไว้ฝั่ง server เท่านั้น
+     */
+    console.error(
+      "Careerjet request failed:",
+      error,
+    );
+
+    throw new AppError(
+      "ไม่สามารถเชื่อมต่อบริการค้นหางานได้ กรุณาลองใหม่อีกครั้ง",
+      503,
+      "CAREERJET_UNAVAILABLE",
+    );
+  }
+
+  let data: CareerjetApiResponse | null =
+    null;
+
+  try {
+    data =
+      (await response.json()) as CareerjetApiResponse;
+  } catch {
+    /*
+     * เช่น HTML error page
+     */
+  }
+
+  if (!response.ok || !data) {
+    console.error(
+      "Careerjet API error:",
+      {
+        status:
+          response.status,
+        error:
+          data?.error,
       },
     );
 
-  const data =
-    (await response.json()) as CareerjetApiResponse;
-
-  if (!response.ok) {
-    throw new Error(
-      data.error ??
-        `Careerjet API request failed: ${response.status}`,
+    throw new AppError(
+      "บริการค้นหางานไม่พร้อมใช้งานชั่วคราว กรุณาลองใหม่อีกครั้ง",
+      response.status >= 500 || !data
+        ? 503
+        : 502,
+      "CAREERJET_REQUEST_FAILED",
     );
   }
 

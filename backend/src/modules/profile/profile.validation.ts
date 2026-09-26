@@ -27,6 +27,18 @@ export const updateProfileSchema = z.object({
     )
     .nullable(),
 
+  location: z
+    .string()
+    .trim()
+    .max(255, "ที่อยู่ต้องไม่เกิน 255 ตัวอักษร")
+    .nullable(),
+
+  headline: z
+    .string()
+    .trim()
+    .max(255, "Headline ต้องไม่เกิน 255 ตัวอักษร")
+    .nullable(),
+
   university: z
     .string()
     .trim()

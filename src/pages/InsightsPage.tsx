@@ -1,12 +1,15 @@
 import {
+    ArrowDown,
+    ArrowUp,
     Award,
     BarChart3,
     CheckCircle2,
+    CircleAlert,
     Lightbulb,
+    Minus,
     Sparkles,
     Target,
     TrendingUp,
-    TriangleAlert,
 } from "lucide-react"
 
 import {
@@ -29,57 +32,30 @@ import {
 
 import type {
     ResumeAnalysisRun,
-    ResumeAnalysisScores,
 } from "../types/analysis"
 
 import {
+    formatThaiDate,
     formatThaiDateTime,
     formatThaiShortDate,
 } from "../utils/date-time"
 
+import {
+    getAnalysisTypeLabel,
+} from "../utils/analysis"
+
+import {
+    buildSectionScores,
+} from "../utils/section-scores"
+
+import {
+    ScoreTrendChart,
+    type TrendPoint,
+} from "../components/charts/ScoreTrendChart"
+
 import "../styles/pages/InsightsPage.css"
 
-const scoreLabels: Array<{
-    key: keyof ResumeAnalysisScores
-    label: string
-    maxScore: number
-}> = [
-        {
-            key: "contactInformation",
-            label: "ข้อมูลติดต่อ",
-            maxScore: 10,
-        },
-        {
-            key: "professionalSummary",
-            label: "Professional Summary",
-            maxScore: 15,
-        },
-        {
-            key: "skills",
-            label: "Skills",
-            maxScore: 20,
-        },
-        {
-            key: "experience",
-            label: "Experience",
-            maxScore: 25,
-        },
-        {
-            key: "projects",
-            label: "Projects",
-            maxScore: 10,
-        },
-        {
-            key: "education",
-            label: "Education",
-            maxScore: 10,
-        },
-        {
-            key: "readability",
-            label: "Readability",
-            maxScore: 10,
-        },
-    ]
+const TREND_LIMIT = 10
 
 function getTopItems(
     items: string[],
@@ -117,6 +93,62 @@ function getTopItems(
                 b.count - a.count,
         )
         .slice(0, limit)
+}
+
+function average(
+    values: number[],
+): number | null {
+    return values.length > 0
+        ? Math.round(
+            values.reduce(
+                (sum, value) => sum + value,
+                0,
+            ) / values.length,
+        )
+        : null
+}
+
+/*
+ * ลูกศร + ตัวเลข (ไม่สื่อด้วยสีอย่างเดียว)
+ */
+function DeltaBadge({
+    value,
+    suffix = "",
+}: {
+    value: number | null
+    suffix?: string
+}) {
+    if (value === null) {
+        return null
+    }
+
+    const tone =
+        value > 0
+            ? "up"
+            : value < 0
+                ? "down"
+                : "flat"
+
+    const Icon =
+        tone === "up"
+            ? ArrowUp
+            : tone === "down"
+                ? ArrowDown
+                : Minus
+
+    return (
+        <span
+            className={`delta-badge delta-badge--${tone}`}
+        >
+            <Icon
+                size={14}
+                aria-hidden="true"
+            />
+            {value === 0
+                ? `เท่าเดิม${suffix}`
+                : `${Math.abs(value)}${suffix}`}
+        </span>
+    )
 }
 
 export function InsightsPage() {
@@ -199,6 +231,9 @@ export function InsightsPage() {
         }
     }, [])
 
+    /*
+     * เรียงใหม่สุดก่อน
+     */
     const baseAnalyses =
         useMemo(
             () =>
@@ -224,66 +259,93 @@ export function InsightsPage() {
             [analyses],
         )
 
-    const latestBaseAnalysis =
+    const latestBase =
         baseAnalyses[0] ?? null
 
+    const previousBase =
+        baseAnalyses[1] ?? null
+
     const latestScore =
-        latestBaseAnalysis
-            ?.baseResumeScore ?? null
+        latestBase?.baseResumeScore ?? null
+
+    const latestDelta =
+        latestScore !== null &&
+            previousBase?.baseResumeScore != null
+            ? latestScore -
+            previousBase.baseResumeScore
+            : null
 
     const averageScore =
-        baseAnalyses.length > 0
-            ? Math.round(
-                baseAnalyses.reduce(
-                    (sum, analysis) =>
-                        sum +
-                        (analysis.baseResumeScore ??
-                            0),
-                    0,
-                ) / baseAnalyses.length,
-            )
-            : null
+        average(
+            baseAnalyses.map(
+                (analysis) =>
+                    analysis.baseResumeScore ?? 0,
+            ),
+        )
 
-    const highestScore =
-        baseAnalyses.length > 0
-            ? Math.max(
-                ...baseAnalyses.map(
-                    (analysis) =>
-                        analysis.baseResumeScore ??
-                        0,
-                ),
-            )
-            : null
+    const highestAnalysis =
+        baseAnalyses.reduce<ResumeAnalysisRun | null>(
+            (best, analysis) =>
+                best === null ||
+                    (analysis.baseResumeScore ?? 0) >
+                    (best.baseResumeScore ?? 0)
+                    ? analysis
+                    : best,
+            null,
+        )
 
     const averageJobMatch =
-        jobMatchAnalyses.length > 0
-            ? Math.round(
-                jobMatchAnalyses.reduce(
-                    (sum, analysis) =>
-                        sum +
-                        (analysis.jobMatchScore ??
-                            0),
-                    0,
-                ) /
-                jobMatchAnalyses.length,
-            )
-            : null
+        average(
+            jobMatchAnalyses.map(
+                (analysis) =>
+                    analysis.jobMatchScore ?? 0,
+            ),
+        )
 
-    const scoreTrend =
+    const resumeCount =
+        new Set(
+            analyses.map(
+                (analysis) => analysis.resumeId,
+            ),
+        ).size
+
+    /*
+     * เก่า → ใหม่ สำหรับกราฟ
+     */
+    const trendAnalyses =
         useMemo(
             () =>
                 [...baseAnalyses]
-                    .sort(
-                        (a, b) =>
-                            new Date(
-                                a.createdAt,
-                            ).getTime() -
-                            new Date(
-                                b.createdAt,
-                            ).getTime(),
-                    )
-                    .slice(-8),
+                    .reverse()
+                    .slice(-TREND_LIMIT),
             [baseAnalyses],
+        )
+
+    const trendPoints: TrendPoint[] =
+        trendAnalyses.map((analysis) => ({
+            id: analysis.id,
+            label: formatThaiShortDate(
+                analysis.createdAt,
+            ),
+            value:
+                analysis.baseResumeScore ?? 0,
+            tooltip: `${analysis.baseResumeScore}/100 · ${getAnalysisTypeLabel(analysis.analysisType)} · ${formatThaiDate(analysis.createdAt)}`,
+        }))
+
+    const trendChange =
+        trendPoints.length > 1
+            ? trendPoints[trendPoints.length - 1].value -
+            trendPoints[0].value
+            : null
+
+    const latestSections =
+        buildSectionScores(
+            latestBase?.scores ?? null,
+        )
+
+    const previousSections =
+        buildSectionScores(
+            previousBase?.scores ?? null,
         )
 
     const strengths =
@@ -396,80 +458,107 @@ export function InsightsPage() {
                     <Sparkles size={18} />
 
                     <span>
-                        {analyses.length} Analyses
-                        {" • "}
-                        {baseAnalyses.length} Resume
+                        {analyses.length} การวิเคราะห์
+                        {" · "}
+                        {resumeCount} Resume
                     </span>
                 </div>
             </header>
 
-            <section className="insights__stats">
+            <section
+                className="insights__stats"
+                aria-label="สรุปคะแนน"
+            >
                 <article className="insight-stat">
-                    <div className="insight-stat__icon">
-                        <TrendingUp size={22} />
-                    </div>
-
-                    <span>
+                    <span className="insight-stat__label">
+                        <TrendingUp size={18} />
                         คะแนนล่าสุด
                     </span>
 
                     <strong>
-                        {latestScore !== null
-                            ? `${latestScore}/100`
-                            : "—"}
+                        {latestScore ?? "—"}
+                        {latestScore !== null && (
+                            <small>/100</small>
+                        )}
                     </strong>
+
+                    <span className="insight-stat__meta">
+                        {latestDelta !== null ? (
+                            <>
+                                <DeltaBadge
+                                    value={latestDelta}
+                                />
+                                จากครั้งก่อน
+                            </>
+                        ) : (
+                            "ครั้งแรก"
+                        )}
+                    </span>
                 </article>
 
                 <article className="insight-stat">
-                    <div className="insight-stat__icon">
-                        <BarChart3 size={22} />
-                    </div>
-
-                    <span>
+                    <span className="insight-stat__label">
+                        <BarChart3 size={18} />
                         คะแนนเฉลี่ย
                     </span>
 
                     <strong>
-                        {averageScore !== null
-                            ? `${averageScore}/100`
-                            : "—"}
+                        {averageScore ?? "—"}
+                        {averageScore !== null && (
+                            <small>/100</small>
+                        )}
                     </strong>
+
+                    <span className="insight-stat__meta">
+                        จาก {baseAnalyses.length} ครั้ง
+                    </span>
                 </article>
 
                 <article className="insight-stat">
-                    <div className="insight-stat__icon">
-                        <Award size={22} />
-                    </div>
-
-                    <span>
+                    <span className="insight-stat__label">
+                        <Award size={18} />
                         คะแนนสูงสุด
                     </span>
 
                     <strong>
-                        {highestScore !== null
-                            ? `${highestScore}/100`
-                            : "—"}
+                        {highestAnalysis?.baseResumeScore ??
+                            "—"}
+                        {highestAnalysis && (
+                            <small>/100</small>
+                        )}
                     </strong>
+
+                    <span className="insight-stat__meta">
+                        {highestAnalysis
+                            ? formatThaiDate(
+                                highestAnalysis.createdAt,
+                            )
+                            : "—"}
+                    </span>
                 </article>
 
                 <article className="insight-stat">
-                    <div className="insight-stat__icon">
-                        <Target size={22} />
-                    </div>
-
-                    <span>
+                    <span className="insight-stat__label">
+                        <Target size={18} />
                         Job Match เฉลี่ย
                     </span>
 
                     <strong>
-                        {averageJobMatch !== null
-                            ? `${averageJobMatch}/100`
-                            : "—"}
+                        {averageJobMatch ?? "—"}
+                        {averageJobMatch !== null && (
+                            <small>/100</small>
+                        )}
                     </strong>
+
+                    <span className="insight-stat__meta">
+                        {jobMatchAnalyses.length > 0
+                            ? `จาก ${jobMatchAnalyses.length} ครั้ง`
+                            : "ยังไม่มี Job Match"}
+                    </span>
                 </article>
             </section>
 
-            {scoreTrend.length > 0 && (
+            {trendPoints.length > 0 && (
                 <section className="insights__panel">
                     <div className="insights__panel-header">
                         <div>
@@ -478,66 +567,49 @@ export function InsightsPage() {
                             </h2>
 
                             <p>
-                                คะแนนจากการวิเคราะห์ล่าสุด
+                                คะแนนภาพรวม
+                                {trendPoints.length > 1
+                                    ? ` ${trendPoints.length} ครั้งล่าสุด`
+                                    : ""}{" "}
                                 เรียงตามเวลา
                             </p>
-
-                            {scoreTrend.length < 3 && (
-                                <p className="score-trend__hint">
-                                    วิเคราะห์ Resume เพิ่มอีกอย่างน้อย{" "}
-                                    {3 - scoreTrend.length} ครั้ง
-                                    เพื่อดูแนวโน้มคะแนนได้ชัดเจนขึ้น
-                                </p>
-                            )}
                         </div>
 
-                        <TrendingUp size={21} />
-                    </div>
-
-                    <div className="score-trend">
-                        {scoreTrend.map(
-                            (analysis) => {
-                                const score =
-                                    analysis.baseResumeScore ?? 0
-
-                                return (
-                                    <div
-                                        key={analysis.id}
-                                        className="score-trend__item"
-                                        title={`${score}/100 • ${formatThaiDateTime(
-                                            analysis.createdAt,
-                                        )}`}
-                                    >
-                                        <div className="score-trend__value">
-                                            {score}
-                                        </div>
-
-                                        <div className="score-trend__chart">
-                                            <div
-                                                className="score-trend__bar"
-                                                style={{
-                                                    height: `${Math.max(
-                                                        4,
-                                                        score,
-                                                    )}%`,
-                                                }}
-                                            />
-                                        </div>
-
-                                        <span className="score-trend__date">
-                                            {formatThaiShortDate(
-                                                analysis.createdAt,
-                                            )}
-                                        </span>
-                                    </div>
-                                )
-                            },
+                        {trendChange !== null && (
+                            <span className="insights__panel-chip">
+                                <DeltaBadge
+                                    value={trendChange}
+                                    suffix=" คะแนน"
+                                />
+                                จากครั้งแรก
+                            </span>
                         )}
                     </div>
+
+                    <ScoreTrendChart
+                        points={trendPoints}
+                        ariaLabel={
+                            "แนวโน้มคะแนน Resume: " +
+                            trendPoints
+                                .map(
+                                    (point) =>
+                                        `${point.label} ${point.value}`,
+                                )
+                                .join(", ")
+                        }
+                    />
+
+                    {trendPoints.length < 3 && (
+                        <p className="insights__hint">
+                            วิเคราะห์ Resume เพิ่มอีกอย่างน้อย{" "}
+                            {3 - trendPoints.length} ครั้ง
+                            เพื่อดูแนวโน้มได้ชัดเจนขึ้น
+                        </p>
+                    )}
                 </section>
             )}
 
-            {latestBaseAnalysis?.scores && (
+            {latestBase && latestSections.length > 0 && (
                 <section className="insights__panel">
                     <div className="insights__panel-header">
                         <div>
@@ -546,70 +618,79 @@ export function InsightsPage() {
                             </h2>
 
                             <p>
-                                ผลจาก Resume Analysis
-                                ล่าสุด
+                                ผลล่าสุด
+                                {previousSections.length > 0
+                                    ? " เทียบกับครั้งก่อน"
+                                    : ""}
                             </p>
                         </div>
 
-                        <span>
+                        <span className="insights__panel-date">
                             {formatThaiDateTime(
-                                latestBaseAnalysis.createdAt,
+                                latestBase.createdAt,
                             )}
                         </span>
                     </div>
 
-                    <div className="score-breakdown">
-                        {scoreLabels.map(
-                            ({
-                                key,
-                                label,
-                                maxScore,
-                            }) => {
-                                const score =
-                                    latestBaseAnalysis
-                                        .scores?.[key] ?? 0
+                    <ul className="section-progress">
+                        {latestSections.map(
+                            (section, index) => {
+                                const previous =
+                                    previousSections[index]
 
                                 return (
-                                    <div
-                                        key={key}
-                                        className="score-breakdown__item"
+                                    <li
+                                        key={section.key}
+                                        className="section-progress__item"
                                     >
-                                        <div className="score-breakdown__header">
+                                        <div className="section-progress__header">
                                             <span>
-                                                {label}
+                                                {section.labelTh}
                                             </span>
 
-                                            <strong>
-                                                {score}/{maxScore}
-                                            </strong>
+                                            <span className="section-progress__value">
+                                                <strong>
+                                                    {section.score}/
+                                                    {section.maxScore}
+                                                </strong>
+
+                                                <DeltaBadge
+                                                    value={
+                                                        previous
+                                                            ? section.score -
+                                                            previous.score
+                                                            : null
+                                                    }
+                                                />
+                                            </span>
                                         </div>
 
-                                        <div className="score-breakdown__track">
+                                        <div
+                                            className="section-progress__track"
+                                            role="img"
+                                            aria-label={`${section.labelTh} ${section.score} จาก ${section.maxScore}`}
+                                        >
                                             <div
-                                                className="score-breakdown__fill"
+                                                className="section-progress__fill"
                                                 style={{
-                                                    width: `${Math.min(
-                                                        100,
-                                                        Math.max(
-                                                            0,
-                                                            (score / maxScore) * 100,
-                                                        ),
-                                                    )}%`,
+                                                    width: `${section.percent}%`,
                                                 }}
                                             />
                                         </div>
-                                    </div>
+                                    </li>
                                 )
                             },
                         )}
-                    </div>
+                    </ul>
                 </section>
             )}
 
             <section className="insights__grid">
                 <article className="insights__panel">
-                    <div className="insights__panel-title">
-                        <CheckCircle2 size={21} />
+                    <div className="insights__panel-title insights__panel-title--strength">
+                        <span className="insights__panel-icon">
+                            <CheckCircle2 size={19} />
+                        </span>
 
                         <h2>
                             จุดแข็งที่พบบ่อย
@@ -617,26 +698,28 @@ export function InsightsPage() {
                     </div>
 
                     {strengths.length > 0 ? (
-                        <div className="insights__list">
+                        <ul className="insights__list insights__list--strength">
                             {strengths.map(
                                 (item) => (
-                                    <div
-                                        key={item.text}
-                                        className="insights__list-item"
-                                    >
+                                    <li key={item.text}>
+                                        <CheckCircle2
+                                            size={18}
+                                            aria-hidden="true"
+                                        />
+
                                         <span>
                                             {item.text}
                                         </span>
 
                                         {item.count > 1 && (
-                                            <small>
+                                            <small className="count-badge">
                                                 {item.count} ครั้ง
                                             </small>
                                         )}
-                                    </div>
+                                    </li>
                                 ),
                             )}
-                        </div>
+                        </ul>
                     ) : (
                         <p className="insights__muted">
                             ยังไม่มีข้อมูล
@@ -645,8 +728,10 @@ export function InsightsPage() {
                 </article>
 
                 <article className="insights__panel">
-                    <div className="insights__panel-title">
-                        <TriangleAlert size={21} />
+                    <div className="insights__panel-title insights__panel-title--weakness">
+                        <span className="insights__panel-icon">
+                            <CircleAlert size={19} />
+                        </span>
 
                         <h2>
                             จุดที่ควรปรับปรุง
@@ -654,26 +739,28 @@ export function InsightsPage() {
                     </div>
 
                     {weaknesses.length > 0 ? (
-                        <div className="insights__list">
+                        <ul className="insights__list insights__list--weakness">
                             {weaknesses.map(
                                 (item) => (
-                                    <div
-                                        key={item.text}
-                                        className="insights__list-item"
-                                    >
+                                    <li key={item.text}>
+                                        <CircleAlert
+                                            size={18}
+                                            aria-hidden="true"
+                                        />
+
                                         <span>
                                             {item.text}
                                         </span>
 
                                         {item.count > 1 && (
-                                            <small>
+                                            <small className="count-badge">
                                                 {item.count} ครั้ง
                                             </small>
                                         )}
-                                    </div>
+                                    </li>
                                 ),
                             )}
-                        </div>
+                        </ul>
                     ) : (
                         <p className="insights__muted">
                             ยังไม่มีข้อมูล
@@ -683,8 +770,10 @@ export function InsightsPage() {
             </section>
 
             <section className="insights__panel">
-                <div className="insights__panel-title">
-                    <Lightbulb size={21} />
+                <div className="insights__panel-title insights__panel-title--tip">
+                    <span className="insights__panel-icon">
+                        <Lightbulb size={19} />
+                    </span>
 
                     <h2>
                         คำแนะนำที่ควรให้ความสำคัญ
@@ -692,10 +781,10 @@ export function InsightsPage() {
                 </div>
 
                 {recommendations.length > 0 ? (
-                    <div className="insights__recommendations">
+                    <ol className="insights__recommendations">
                         {recommendations.map(
                             (item, index) => (
-                                <div
+                                <li
                                     key={item.text}
                                     className="recommendation-item"
                                 >
@@ -703,21 +792,19 @@ export function InsightsPage() {
                                         {index + 1}
                                     </span>
 
-                                    <div>
-                                        <p>
-                                            {item.text}
-                                        </p>
+                                    <p>
+                                        {item.text}
+                                    </p>
 
-                                        {item.count > 1 && (
-                                            <small>
-                                                พบใน {item.count} analyses
-                                            </small>
-                                        )}
-                                    </div>
-                                </div>
+                                    {item.count > 1 && (
+                                        <small className="count-badge">
+                                            พบ {item.count} ครั้ง
+                                        </small>
+                                    )}
+                                </li>
                             ),
                         )}
-                    </div>
+                    </ol>
                 ) : (
                     <p className="insights__muted">
                         ยังไม่มีคำแนะนำ

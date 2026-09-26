@@ -93,3 +93,31 @@ export function formatThaiShortDate(
     },
   ).format(date)
 }
+
+/*
+ * "YYYY-MM" ตามเวลาไทย
+ * ใช้เทียบข้อมูลรายเดือน
+ */
+export function getThaiMonthKey(
+  value: string | number | Date,
+): string {
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone: THAI_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+      },
+    ).formatToParts(
+      parseDate(value),
+    )
+
+  const year =
+    parts.find((part) => part.type === "year")?.value
+
+  const month =
+    parts.find((part) => part.type === "month")?.value
+
+  return `${year}-${month}`
+}

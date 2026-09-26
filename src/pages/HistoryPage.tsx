@@ -21,6 +21,11 @@ import {
 } from "../utils/date-time"
 
 import {
+  getAnalysisScore,
+  getAnalysisTypeLabel,
+} from "../utils/analysis"
+
+import {
   deleteAnalysisRun,
   getResumeAnalysisHistory,
 } from "../services/analysis.service"
@@ -31,6 +36,7 @@ import {
 
 import {
   getResumes,
+  deleteResume,
 } from "../services/resume.service"
 
 import type {
@@ -48,37 +54,6 @@ interface HistoryItem {
   resume: Resume
 }
 
-
-function getAnalysisTypeLabel(
-  type: ResumeAnalysisRun["analysisType"],
-): string {
-  switch (type) {
-    case "BASE":
-      return "Resume Analysis"
-
-    case "JOB_MATCH":
-      return "Job Match"
-
-    case "COMBINED":
-      return "Combined"
-
-    default:
-      return type
-  }
-}
-
-function getAnalysisScore(
-  analysis: ResumeAnalysisRun,
-): number | null {
-  if (
-    analysis.analysisType ===
-    "JOB_MATCH"
-  ) {
-    return analysis.jobMatchScore
-  }
-
-  return analysis.baseResumeScore
-}
 
 export function HistoryPage() {
   const navigate = useNavigate()
@@ -203,21 +178,52 @@ export function HistoryPage() {
       return
     }
 
+    const {
+      analysis,
+      resume,
+    } = analysisToDelete
+
     try {
       setIsDeleting(true)
       setDeleteError("")
 
       await deleteAnalysisRun(
-        analysisToDelete.analysis.id,
+        analysis.id,
       )
 
       setItems((currentItems) =>
         currentItems.filter(
           (item) =>
             item.analysis.id !==
-            analysisToDelete.analysis.id,
+            analysis.id,
         ),
       )
+
+      /*
+       * ไม่เหลือ Analysis ของ Resume นี้แล้ว
+       * → ลบ Resume ด้วย
+       *
+       * เช็กจาก server ไม่ใช่ items บนหน้า
+       * กันกรณีมี Analysis ใหม่จากแท็บอื่น
+       */
+      try {
+        const remaining =
+          await getResumeAnalysisHistory(
+            resume.id,
+            1,
+          )
+
+        if (
+          remaining.data.analyses.length === 0
+        ) {
+          await deleteResume(resume.id)
+        }
+      } catch {
+        setDeleteError(
+          "ลบ Analysis แล้ว แต่ลบ Resume ไม่สำเร็จ กรุณาลบ Resume จากหน้า Dashboard",
+        )
+        return
+      }
 
       setAnalysisToDelete(null)
     } catch (deleteAnalysisError) {
@@ -237,6 +243,14 @@ export function HistoryPage() {
       setIsDeleting(false)
     }
   }
+
+  const isLastAnalysisOfResume =
+    analysisToDelete !== null &&
+    items.filter(
+      (item) =>
+        item.resume.id ===
+        analysisToDelete.resume.id,
+    ).length === 1
 
   if (isLoading) {
     return (
@@ -569,6 +583,13 @@ export function HistoryPage() {
               เมื่อลบแล้วจะไม่สามารถกู้คืน
               Analysis นี้ได้
             </p>
+
+            {isLastAnalysisOfResume && (
+              <p className="history-modal__warning">
+                นี่คือ Analysis สุดท้ายของ Resume นี้
+                — Resume จะถูกลบออกจากระบบด้วย
+              </p>
+            )}
 
             {deleteError && (
               <p

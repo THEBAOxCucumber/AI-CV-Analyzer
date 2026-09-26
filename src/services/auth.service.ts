@@ -34,6 +34,45 @@ export function register(
   )
 }
 
+export function changePassword(input: {
+  currentPassword: string
+  newPassword: string
+}): Promise<ApiResponse<unknown>> {
+  return apiRequest<ApiResponse<unknown>>(
+    "/auth/change-password",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  )
+}
+
+export function forgotPassword(
+  email: string,
+): Promise<ApiResponse<unknown>> {
+  return apiRequest<ApiResponse<unknown>>(
+    "/auth/forgot-password",
+    {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    },
+  )
+}
+
+export function resetPassword(input: {
+  email: string
+  otp: string
+  newPassword: string
+}): Promise<ApiResponse<unknown>> {
+  return apiRequest<ApiResponse<unknown>>(
+    "/auth/reset-password",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  )
+}
+
 export function getMe(): Promise<
   ApiResponse<{
     user: User
