@@ -145,10 +145,10 @@
   border-radius:
     var(--radius-md);
 
-  color: #ffffff;
+  color: var(--color-tooltip-text);
 
   background:
-    var(--color-navy);
+    var(--color-tooltip-bg);
 
   box-shadow:
     0 8px 20px rgba(30, 49, 86, 0.2);
@@ -168,4 +168,21 @@
 .radar-chart__tooltip span {
   color:
     rgba(255, 255, 255, 0.78);
+}
+
+/*
+ * จอเล็ก: SVG ถูกย่อ → ขยายตัวอักษรในกราฟชดเชย
+ */
+@media (max-width: 600px) {
+  .radar-chart__label {
+    font-size: 17px;
+  }
+
+  .radar-chart__sublabel {
+    font-size: 15px;
+  }
+
+  .radar-chart__ring-label {
+    display: none;
+  }
 }

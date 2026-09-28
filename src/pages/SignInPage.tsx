@@ -11,9 +11,12 @@ import {
 } from "react-router-dom"
 
 import {
-  FileText,
   LockKeyhole,
 } from "lucide-react"
+
+import {
+  AuthShowcase,
+} from "../components/auth/AuthShowcase"
 
 import {
   Button,
@@ -143,35 +146,18 @@ export function SignInPage() {
 
   return (
     <main className="sign-in">
-      <section className="sign-in__brand">
-        <div className="sign-in__brand-content">
-          <div className="sign-in__logo">
-            <FileText
-              size={34}
-              strokeWidth={2}
-            />
-
-            <span>
-              AI Resume
-            </span>
-          </div>
-
-          <h1>
+      <AuthShowcase
+        title={
+          <>
             พัฒนา Resume
             <br />
             ให้พร้อมสำหรับงาน
             <br />
             ที่คุณต้องการ
-          </h1>
-
-          <p>
-            วิเคราะห์ Resume ด้วย AI
-            เพื่อค้นหาจุดแข็ง
-            จุดที่ควรปรับปรุง
-            และความเหมาะสมกับตำแหน่งงาน
-          </p>
-        </div>
-      </section>
+          </>
+        }
+        description="วิเคราะห์ Resume ด้วย AI เพื่อค้นหาจุดแข็ง จุดที่ควรปรับปรุง และความเหมาะสมกับตำแหน่งงาน"
+      />
 
       <section className="sign-in__form-side">
         <div className="sign-in__card">

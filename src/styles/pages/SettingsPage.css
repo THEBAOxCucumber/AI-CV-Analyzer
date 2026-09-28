@@ -5,9 +5,8 @@
   margin-inline: auto;
 
   padding:
-    var(--space-10) clamp(var(--space-5),
-      4vw,
-      var(--space-12));
+    var(--page-padding-y)
+    var(--page-padding-x);
 }
 
 .settings-page__header {
@@ -130,11 +129,13 @@
   font-weight: 500;
 }
 
+/*
+ * auto-fit: พื้นที่ไม่พอ 2 การ์ด → 1 คอลัมน์
+ */
 .settings-columns {
   display: grid;
   grid-template-columns:
-    repeat(2,
-      minmax(0, 1fr));
+    repeat(auto-fit, minmax(min(100%, 420px), 1fr));
 
   gap: var(--space-8);
 
@@ -148,25 +149,45 @@
 /*
  * Profile: avatar + account status | fields
  */
+/*
+ * flex-wrap: พื้นที่ไม่พอ → aside ขึ้นไปอยู่บนฟอร์ม
+ * aside แคบ (คอลัมน์) = avatar บน / status ล่าง
+ * aside กว้าง (อยู่บน) = avatar | status แนวนอน
+ */
 .profile-layout {
-  display: grid;
-  grid-template-columns:
-    minmax(200px, 260px)
-    minmax(0, 1fr);
-
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-8);
 }
 
 .profile-layout__aside {
+  flex: 1 1 220px;
+  max-width: 100%;
+
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: var(--space-6);
 }
 
+.profile-layout > .settings-grid {
+  flex: 999 1 420px;
+  min-width: 0;
+
+  /*
+   * ช่องกว้างขึ้น → 2 คอลัมน์เสมอ
+   * (220px ทำให้ได้ 3 คอลัมน์ที่ 1440)
+   */
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
 .profile-avatar {
-  width: 128px;
-  height: 128px;
+  width: clamp(96px, 10vw, 128px);
+  height: clamp(96px, 10vw, 128px);
+
+  flex: 0 0 auto;
 
   display: grid;
   place-items: center;
@@ -175,7 +196,7 @@
     var(--radius-full);
 
   color:
-    var(--color-navy);
+    var(--color-on-accent);
 
   background:
     var(--color-soft-peach);
@@ -187,7 +208,8 @@
 }
 
 .account-status {
-  width: 100%;
+  flex: 1 1 200px;
+  max-width: 320px;
 
   padding: var(--space-5);
 
@@ -241,8 +263,7 @@
 .settings-grid {
   display: grid;
   grid-template-columns:
-    repeat(2,
-      minmax(0, 1fr));
+    repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 
   gap: var(--space-5);
   align-content: start;
@@ -422,6 +443,9 @@
 }
 
 .settings-button--primary {
+  color:
+    var(--color-on-accent);
+
   background:
     var(--color-soft-peach);
 }
@@ -485,6 +509,11 @@
 
 .segmented__option {
   min-height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
 
   border: 0;
 
@@ -587,29 +616,29 @@
   font-weight: 500;
 }
 
-@media (max-width: 1100px) {
-  .settings-columns {
-    grid-template-columns: 1fr;
+/*
+ * Breakpoints มาตรฐาน: 900 / 620
+ */
+@media (max-width: 900px) {
+  .settings-card {
+    padding: var(--space-6);
   }
 }
 
-@media (max-width: 760px) {
-  .settings-page {
-    padding:
-      var(--space-6) var(--space-4) 100px;
-  }
-
+@media (max-width: 600px) {
   .settings-card {
     padding: var(--space-5);
   }
 
-  .profile-layout,
-  .settings-grid {
-    grid-template-columns: 1fr;
+  .settings-card__title > span {
+    width: 40px;
+    height: 40px;
+
+    font-size: var(--font-size-lg);
   }
 
-  .settings-field--full {
-    grid-column: auto;
+  .account-status {
+    max-width: none;
   }
 
   .data-list li {

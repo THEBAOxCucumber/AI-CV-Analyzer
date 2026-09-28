@@ -1,5 +1,6 @@
 import { env } from "../../../config/env.js";
 import { AppError } from "../../../errors/app-error.js";
+import { toPlainText } from "./html-text.js";
 
 import {
   createHash,
@@ -185,21 +186,21 @@ export async function searchCareerjetJobs(
         ),
 
       title:
-        job.title ??
+        toPlainText(job.title ?? "") ||
         "Untitled Job",
 
       company:
-        job.company?.trim() ||
+        toPlainText(job.company ?? "") ||
         null,
 
       description:
-        job.description ?? "",
+        toPlainText(job.description ?? ""),
 
       location:
-        job.locations ?? "",
+        toPlainText(job.locations ?? ""),
 
       salary:
-        job.salary?.trim() ||
+        toPlainText(job.salary ?? "") ||
         null,
 
       postedAt:

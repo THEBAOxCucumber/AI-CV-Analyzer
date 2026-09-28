@@ -17,17 +17,61 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/*
+ * 280px = หน้าจอนอก Galaxy Z Fold
+ */
 html,
 body,
 #root {
-  min-width: 320px;
+  min-width: 280px;
   min-height: 100%;
   margin: 0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/*
+ * พื้นหลังมีแสงไล่สีอ่อนๆ (peach ขวาบน / ฟ้าซ้ายบน)
+ * dvh: ไม่เพี้ยนตอนแถบ URL มือถือหด/ขยาย
+ */
 body {
   min-height: 100vh;
-  background: var(--color-background);
+  min-height: 100dvh;
+
+  background:
+    radial-gradient(1100px 560px at 100% -8%, var(--body-glow-peach), transparent 60%),
+    radial-gradient(900px 520px at 0% -10%, var(--body-glow-blue), transparent 60%),
+    var(--color-background);
+
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.01em;
+}
+
+/*
+ * scrollbar บาง
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong) padding-box;
 }
 
 button,
@@ -84,17 +128,18 @@ select {
 }
 
 ::selection {
-  color: var(--color-navy);
+  color: var(--color-on-accent);
   background: var(--color-soft-peach);
 }
 
 :focus-visible {
-  outline: 3px solid rgba(73, 105, 149, 0.3);
+  outline: 2px solid var(--color-steel-blue);
   outline-offset: 2px;
 }
 
 .auth-loading {
   min-height: 100vh;
+  min-height: 100dvh;
 
   display: grid;
   place-items: center;

@@ -110,10 +110,10 @@
   border-radius:
     var(--radius-md);
 
-  color: #ffffff;
+  color: var(--color-tooltip-text);
 
   background:
-    var(--color-navy);
+    var(--color-tooltip-bg);
 
   box-shadow:
     0 8px 20px rgba(30, 49, 86, 0.2);

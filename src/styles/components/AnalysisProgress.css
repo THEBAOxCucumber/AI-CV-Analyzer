@@ -1,0 +1,665 @@
+.analysis-progress {
+  display: grid;
+  gap: var(--space-5);
+}
+
+/*
+ * Hero: navy + วงแสงเต้น + แถบเคลื่อนไหว
+ */
+.analysis-progress__hero {
+  position: relative;
+
+  padding: clamp(var(--space-6), 3.5vw, var(--space-10));
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+
+  overflow: hidden;
+
+  border-radius: var(--radius-xl);
+
+  color: #ffffff;
+  background:
+    radial-gradient(420px 260px at 100% 0%, rgba(253, 214, 205, 0.25), transparent 70%),
+    var(--gradient-brand);
+
+  box-shadow: var(--shadow-md);
+}
+
+.analysis-progress__hero::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+
+  background-size: 20px 20px;
+
+  mask-image: linear-gradient(110deg, transparent 30%, #000 100%);
+
+  pointer-events: none;
+}
+
+.analysis-progress__orb {
+  position: relative;
+
+  width: 88px;
+  height: 88px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border-radius: var(--radius-full);
+
+  color: var(--color-on-accent);
+  background: var(--color-soft-peach);
+
+  box-shadow: 0 0 32px rgba(253, 214, 205, 0.45);
+}
+
+.analysis-progress__orb > span {
+  position: absolute;
+  inset: 0;
+
+  border: 2px solid rgba(253, 214, 205, 0.6);
+  border-radius: inherit;
+
+  animation: orb-ripple 2.4s ease-out infinite;
+}
+
+.analysis-progress__orb > span:nth-child(2) {
+  animation-delay: 1.2s;
+}
+
+.analysis-progress__orb > svg {
+  position: relative;
+
+  animation: orb-sparkle 2.4s ease-in-out infinite;
+}
+
+@keyframes orb-ripple {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes orb-sparkle {
+  50% {
+    transform: scale(1.12) rotate(8deg);
+  }
+}
+
+.analysis-progress__intro {
+  position: relative;
+
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.analysis-progress__eyebrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+
+  color: rgba(255, 255, 255, 0.7);
+
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.analysis-progress__status {
+  padding: 2px var(--space-2);
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.analysis-progress__intro h1 {
+  margin-top: var(--space-2);
+
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.analysis-progress__job {
+  margin-top: var(--space-3);
+
+  max-width: 100%;
+
+  padding: var(--space-1) var(--space-3);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  border-radius: var(--radius-full);
+
+  color: var(--color-on-accent);
+  background: var(--color-soft-peach);
+
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.analysis-progress__job span {
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analysis-progress__job svg {
+  flex: 0 0 auto;
+}
+
+.analysis-progress__time {
+  margin-top: var(--space-3);
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: var(--font-size-sm);
+}
+
+.analysis-progress__time strong {
+  color: #ffffff;
+
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * แถบ indeterminate (ไม่แสดง % ที่ไม่มีข้อมูลจริง)
+ */
+.analysis-progress__bar {
+  position: relative;
+
+  width: 100%;
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: var(--radius-full);
+
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.analysis-progress__bar span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+
+  width: 40%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(90deg, transparent, var(--color-soft-peach), transparent);
+
+  animation: progress-slide 1.6s ease-in-out infinite;
+}
+
+@keyframes progress-slide {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.analysis-progress__notice {
+  padding: var(--space-3) var(--space-4);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  border-radius: var(--radius-md);
+
+  color: var(--color-steel-blue);
+  background: rgba(73, 105, 149, 0.1);
+
+  font-size: var(--font-size-sm);
+}
+
+.analysis-progress__notice svg {
+  flex: 0 0 auto;
+}
+
+.analysis-progress__notice--slow {
+  color: var(--color-warning);
+  background: rgba(183, 121, 31, 0.1);
+}
+
+/*
+ * ขั้นตอน | ผลที่จะได้
+ */
+.analysis-progress__grid {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+
+  gap: var(--space-5);
+}
+
+.analysis-progress__card {
+  min-width: 0;
+
+  padding: var(--space-6);
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.analysis-progress__card h2 {
+  margin-bottom: var(--space-4);
+
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+
+  color: var(--color-navy);
+
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.analysis-progress__card h2 small {
+  color: var(--color-text-muted);
+
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+}
+
+.progress-steps {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.progress-steps__item {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  color: var(--color-text-muted);
+
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * เส้นเชื่อมระหว่างขั้น
+ */
+.progress-steps__item:not(:last-child)::after {
+  content: "";
+
+  position: absolute;
+  top: 30px;
+  bottom: calc(var(--space-4) * -1);
+  left: 13px;
+
+  width: 2px;
+
+  background: var(--color-border);
+}
+
+.progress-steps__item--done:not(:last-child)::after {
+  background: var(--color-success);
+}
+
+.progress-steps__marker {
+  position: relative;
+  z-index: 1;
+
+  width: 28px;
+  height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-full);
+
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.progress-steps__item--done {
+  color: var(--color-text-secondary);
+}
+
+.progress-steps__item--done .progress-steps__marker {
+  border-color: var(--color-success);
+
+  color: var(--color-on-status);
+  background: var(--color-success);
+}
+
+.progress-steps__item--active {
+  color: var(--color-navy);
+
+  font-weight: 600;
+}
+
+.progress-steps__item--active .progress-steps__marker {
+  border-color: var(--color-on-accent);
+
+  background: var(--color-soft-peach);
+}
+
+.progress-steps__pulse {
+  width: 8px;
+  height: 8px;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-on-accent);
+
+  animation: step-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes step-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+/*
+ * Skeleton ของผลลัพธ์
+ */
+.progress-skeleton {
+  padding: var(--space-4);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface-muted);
+}
+
+.progress-skeleton__ring {
+  width: 56px;
+  height: 56px;
+
+  flex: 0 0 auto;
+
+  border: 6px solid var(--color-border);
+  border-top-color: var(--color-soft-blue-gray);
+  border-radius: var(--radius-full);
+}
+
+.progress-skeleton__lines {
+  min-width: 0;
+  flex: 1;
+
+  display: grid;
+  gap: var(--space-2);
+}
+
+.progress-skeleton__lines span,
+.progress-skeleton__ring {
+  position: relative;
+
+  overflow: hidden;
+}
+
+.progress-skeleton__lines span {
+  height: 10px;
+
+  border-radius: var(--radius-full);
+
+  background: var(--color-border);
+}
+
+.progress-skeleton__lines span:nth-child(2) {
+  width: 75%;
+}
+
+.progress-skeleton__lines span:nth-child(3) {
+  width: 50%;
+}
+
+.progress-skeleton__lines span::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-surface) 80%, transparent), transparent);
+
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.progress-results {
+  margin-top: var(--space-4);
+
+  display: grid;
+  gap: var(--space-2);
+}
+
+.progress-results li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  color: var(--color-text-primary);
+
+  font-size: var(--font-size-sm);
+}
+
+.progress-results svg {
+  flex: 0 0 auto;
+
+  color: var(--color-success);
+}
+
+/*
+ * เคล็ดลับ + ปุ่ม
+ */
+.analysis-progress__tip {
+  padding: var(--space-4) var(--space-5);
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+
+  border-radius: var(--radius-lg);
+
+  color: var(--color-text-primary);
+  background:
+    var(--gradient-accent-soft);
+
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.analysis-progress__tip svg {
+  flex: 0 0 auto;
+
+  margin-top: 2px;
+
+  color: var(--color-navy);
+}
+
+.analysis-progress__tip span {
+  animation: tip-in 400ms var(--ease-out);
+}
+
+@keyframes tip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.analysis-progress__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+}
+
+.analysis-progress__actions > div {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.analysis-progress__link {
+  min-height: 42px;
+
+  padding: 0 var(--space-4);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  color: var(--color-navy);
+  background: var(--color-surface);
+
+  font-weight: 500;
+
+  transition: background var(--transition-fast);
+}
+
+.analysis-progress__link:hover {
+  background: var(--color-surface-muted);
+}
+
+.analysis-progress__link--primary {
+  border-color: transparent;
+
+  color: #ffffff;
+  background: var(--gradient-brand);
+}
+
+.analysis-progress__link--primary:hover {
+  background: var(--gradient-brand);
+  filter: brightness(1.1);
+}
+
+/*
+ * Breakpoints มาตรฐาน: 900 / 600 / 380
+ */
+@media (max-width: 600px) {
+  .analysis-progress__hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /*
+   * แนวตั้ง: flex-basis 320px จะกลายเป็นความสูง
+   */
+  .analysis-progress__intro {
+    flex: none;
+    width: 100%;
+  }
+
+  .analysis-progress__orb {
+    width: 64px;
+    height: 64px;
+  }
+
+  .analysis-progress__orb > svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .analysis-progress__card {
+    padding: var(--space-5);
+  }
+
+  .analysis-progress__actions,
+  .analysis-progress__actions > div {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 380px) {
+  .analysis-progress__hero {
+    padding: var(--space-5);
+  }
+
+  .analysis-progress__card {
+    padding: var(--space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-progress__orb > span,
+  .analysis-progress__orb > svg,
+  .analysis-progress__bar span,
+  .progress-steps__pulse,
+  .progress-skeleton__lines span::after,
+  .analysis-progress__tip span {
+    animation: none;
+  }
+
+  .analysis-progress__bar span {
+    width: 100%;
+    opacity: 0.5;
+  }
+}

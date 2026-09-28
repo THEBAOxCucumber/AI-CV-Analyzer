@@ -17,7 +17,8 @@ import {
 } from "react-router-dom"
 
 import {
-  formatThaiDateTime,
+  formatThaiDate,
+  formatThaiTime,
 } from "../utils/date-time"
 
 import {
@@ -343,146 +344,106 @@ export function HistoryPage() {
         </section>
       ) : (
         <section className="history-card">
-          <div className="history-table-wrapper">
-            <table className="history-table">
-              <thead>
-                <tr>
-                  <th>Resume</th>
-                  <th>Analysis</th>
-                  <th>Job</th>
-                  <th>Status</th>
-                  <th>Score</th>
-                  <th>Date</th>
-                  <th>
-                    <span className="history-sr-only">
-                      Open
-                    </span>
-                  </th>
-                </tr>
-              </thead>
+          <div
+            className="history-list__head"
+            aria-hidden="true"
+          >
+            <span>Resume / การวิเคราะห์</span>
+            <span>สถานะ</span>
+            <span>คะแนน</span>
+            <span>วันที่วิเคราะห์</span>
+            <span />
+          </div>
 
-              <tbody>
-                {items.map(
-                  ({
-                    analysis,
-                    resume,
-                  }) => (
-                    <tr
-                      key={
-                        analysis.id
-                      }
-                      className="history-table__row"
-                      tabIndex={0}
-                      onClick={() =>
+          <ul className="history-list">
+            {items.map(
+              ({
+                analysis,
+                resume,
+              }) => {
+                const score =
+                  getAnalysisScore(analysis)
+
+                return (
+                  <li
+                    key={analysis.id}
+                    className="history-row"
+                    tabIndex={0}
+                    aria-label={`เปิดผลวิเคราะห์ ${resume.originalName}`}
+                    onClick={() =>
+                      navigate(
+                        `/analyses/${analysis.id}`,
+                      )
+                    }
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "Enter" ||
+                        event.key === " "
+                      ) {
+                        event.preventDefault()
+
                         navigate(
                           `/analyses/${analysis.id}`,
                         )
                       }
-                      onKeyDown={(
-                        event,
-                      ) => {
-                        if (
-                          event.key ===
-                          "Enter" ||
-                          event.key ===
-                          " "
-                        ) {
-                          event.preventDefault()
+                    }}
+                  >
+                    <div className="history-row__main">
+                      <span className="history-row__icon">
+                        <FileSearch size={18} />
+                      </span>
 
-                          navigate(
-                            `/analyses/${analysis.id}`,
-                          )
-                        }
-                      }}
-                    >
-                      <td>
-                        <div className="history-resume">
-                          <div className="history-resume__icon">
-                            <FileSearch
-                              size={18}
-                            />
-                          </div>
+                      <div className="history-row__text">
+                        <strong>
+                          {resume.originalName}
+                        </strong>
 
-                          <div>
-                            <strong>
-                              {
-                                resume.originalName
-                              }
-                            </strong>
-
-                            <span>
-                              Resume #
-                              {resume.id}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td>
-                        {getAnalysisTypeLabel(
-                          analysis.analysisType,
-                        )}
-                      </td>
-
-                      <td>
-                        {analysis.job ? (
-                          <div className="history-job">
-                            <strong>
-                              {analysis.job.title}
-                            </strong>
-
-                            <span>
-                              {analysis.job.company ??
-                                "ไม่ระบุบริษัท"}
-                            </span>
-
-                            {analysis.job.location && (
-                              <small>
-                                {analysis.job.location}
-                              </small>
+                        <span className="history-row__meta">
+                          <span
+                            className={`history-type history-type--${analysis.analysisType.toLowerCase()}`}
+                          >
+                            {getAnalysisTypeLabel(
+                              analysis.analysisType,
                             )}
-                          </div>
-                        ) : (
-                          <span className="history-empty">
-                            —
                           </span>
-                        )}
-                      </td>
 
-                      <td>
-                        <span
-                          className={`history-status history-status--${analysis.status.toLowerCase()}`}
-                        >
-                          {
-                            analysis.status
-                          }
+                          {analysis.job && (
+                            <span className="history-row__job">
+                              {analysis.job.title}
+                              {analysis.job.company
+                                ? ` · ${analysis.job.company}`
+                                : ""}
+                            </span>
+                          )}
                         </span>
-                      </td>
+                      </div>
+                    </div>
 
-                      <td>
-                        {(() => {
-                          const score =
-                            getAnalysisScore(analysis)
+                    <span
+                      className={`history-status history-status--${analysis.status.toLowerCase()}`}
+                    >
+                      {analysis.status}
+                    </span>
 
-                          return (
-                            <strong className="history-score">
-                              {score !== null
-                                ? `${score}/100`
-                                : "—"}
-                            </strong>
-                          )
-                        })()}
-                      </td>
+                    <strong className="history-score">
+                      {score ?? "—"}
+                      {score !== null && (
+                        <small>/100</small>
+                      )}
+                    </strong>
 
-                      <td>
-                        {resume.createdAt
-  ? formatThaiDateTime(
-      resume.createdAt,
-    )
-  : "-"}
-                      </td>
+                    <span className="history-row__date">
+                      {formatThaiDate(
+                        analysis.createdAt,
+                      )}
+                      <small>
+                        {formatThaiTime(
+                          analysis.createdAt,
+                        )}
+                      </small>
+                    </span>
 
-                      <td className="history-actions">
+                    <div className="history-actions">
                         <button
                           type="button"
                           className="history-delete-button"
@@ -512,15 +473,16 @@ export function HistoryPage() {
                         </button>
 
                         <ChevronRight
+                          className="history-row__chevron"
                           size={19}
+                          aria-hidden="true"
                         />
-                      </td>
-                    </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </li>
+                )
+              },
+            )}
+          </ul>
         </section>
             )}
 

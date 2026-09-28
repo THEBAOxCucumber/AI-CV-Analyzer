@@ -1,26 +1,35 @@
 .app-layout {
   min-height: 100vh;
+  min-height: 100dvh;
 
   display: grid;
   grid-template-columns:
     var(--sidebar-width)
     minmax(0, 1fr);
 
-  background:
-    var(--color-background);
+  background: var(--color-background);
 }
 
 .app-layout__main {
   min-width: 0;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
+/*
+ * ≤900: sidebar เป็นแถบล่าง
+ * เว้นท้ายหน้า = ความสูงแถบ + safe area (แถบ Home ของ iPhone)
+ */
 @media (max-width: 900px) {
   .app-layout {
     display: block;
   }
 
+  /*
+   * แถบล่างลอยสูง --space-2 จากขอบ
+   */
   .app-layout__main {
-    padding-bottom: 76px;
+    padding-bottom:
+      calc(var(--bottom-nav-height) + var(--safe-bottom) + var(--space-2) + var(--space-4));
   }
 }

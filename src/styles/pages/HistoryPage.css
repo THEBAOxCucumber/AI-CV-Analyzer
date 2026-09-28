@@ -1,19 +1,16 @@
 .history-page {
-   max-width: 100%;
+  width: min(100%, var(--content-max-width));
   min-width: 0;
-  box-sizing: border-box;
+
+  margin-inline: auto;
 
   padding:
-    var(--space-10)
-    clamp(
-      var(--space-5),
-      4vw,
-      var(--space-12)
-    );
+    var(--page-padding-y)
+    var(--page-padding-x);
 }
 
 .history-header {
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
 
   display: flex;
   align-items: flex-start;
@@ -27,19 +24,16 @@
   color: var(--color-steel-blue);
 
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .history-header h1 {
   color: var(--color-navy);
 
-  font-size: clamp(
-    1.8rem,
-    3vw,
-    2.4rem
-  );
+  font-size: clamp(1.7rem, 2.8vw, 2.4rem);
 
-  font-weight: 600;
+  line-height: 1.25;
+  font-weight: 700;
 }
 
 .history-header > div > p:last-child {
@@ -49,9 +43,7 @@
 }
 
 .history-count {
-  padding:
-    var(--space-3)
-    var(--space-4);
+  padding: var(--space-2) var(--space-4);
 
   display: inline-flex;
   align-items: center;
@@ -60,15 +52,20 @@
   flex: 0 0 auto;
 
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
 
   color: var(--color-steel-blue);
   background: var(--color-surface);
+
+  box-shadow: var(--shadow-sm);
 
   font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
+/*
+ * รายการประวัติ (grid แทนตาราง)
+ */
 .history-card {
   overflow: hidden;
 
@@ -80,89 +77,66 @@
   box-shadow: var(--shadow-sm);
 }
 
-.history-table-wrapper {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.history-list__head,
+.history-row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    100px
+    72px
+    104px
+    80px;
+
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.history-table {
-  width: 100%;
+.history-list__head {
+  padding: var(--space-3) var(--space-6);
 
-  border-collapse: collapse;
-
-  text-align: left;
-}
-
-.history-table th {
-  padding:
-    var(--space-4)
-    var(--space-5);
-
-  border-bottom:
-    1px solid
-    var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 
   color: var(--color-text-secondary);
-  background: var(--color-background);
+  background: var(--color-surface-muted);
 
   font-size: var(--font-size-xs);
   font-weight: 500;
-
-  white-space: nowrap;
 }
 
-.history-table td {
-  padding:
-    var(--space-4)
-    var(--space-5);
+.history-row {
+  padding: var(--space-4) var(--space-6);
 
-  border-bottom:
-    1px solid
-    var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 
-  color: var(--color-text-secondary);
+  cursor: pointer;
 
-  font-size: var(--font-size-sm);
-  vertical-align: middle;
+  transition: background var(--transition-fast);
 }
 
-.history-table tbody tr:last-child td {
+.history-row:last-child {
   border-bottom: 0;
 }
 
-.history-table__row {
-  cursor: pointer;
-
-  transition:
-    background-color 150ms ease;
+.history-row:hover {
+  background: rgba(240, 243, 248, 0.7);
 }
 
-.history-table__row:hover {
-  background: var(--color-background);
-}
-
-.history-table__row:focus-visible {
-  outline:
-    2px solid
-    var(--color-steel-blue);
-
+.history-row:focus-visible {
+  outline: 2px solid var(--color-steel-blue);
   outline-offset: -2px;
 }
 
-.history-resume {
-  min-width: 230px;
+.history-row__main {
+  min-width: 0;
 
   display: flex;
   align-items: center;
   gap: var(--space-3);
 }
 
-.history-resume__icon {
-  width: 38px;
-  height: 38px;
+.history-row__icon {
+  width: 40px;
+  height: 40px;
 
   display: grid;
   place-items: center;
@@ -172,86 +146,200 @@
   border-radius: var(--radius-md);
 
   color: var(--color-steel-blue);
-  background: var(--color-light-blue);
+  background: var(--color-surface-muted);
 }
 
-.history-resume strong {
-  max-width: 280px;
+.history-row:hover .history-row__icon {
+  background: var(--color-surface);
+}
 
-  display: block;
+.history-row__text {
+  min-width: 0;
+}
+
+/*
+ * ชื่อยาว: ตัดคำได้ สูงสุด 2 บรรทัด
+ */
+.history-row__text strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 
   overflow: hidden;
+  overflow-wrap: anywhere;
 
   color: var(--color-navy);
 
   font-weight: 500;
-
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.history-resume span {
-  margin-top: 2px;
+.history-row__meta {
+  margin-top: var(--space-1);
 
-  display: block;
+  min-width: 0;
 
-  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 
   font-size: var(--font-size-xs);
 }
 
-.history-status {
-  padding:
-    5px
-    var(--space-2);
+.history-row__job {
+  min-width: 0;
 
-  display: inline-flex;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: var(--color-text-secondary);
+}
+
+.history-type {
+  padding: 1px var(--space-2);
+
+  flex: 0 0 auto;
 
   border-radius: var(--radius-full);
 
-  font-size: 0.72rem;
+  color: var(--color-steel-blue);
+  background: var(--color-surface-muted);
+
   font-weight: 500;
+
+  white-space: nowrap;
+}
+
+.history-type--job_match,
+.history-type--combined {
+  color: var(--color-on-accent);
+  background: var(--color-soft-peach);
+}
+
+.history-status {
+  padding: 3px var(--space-2);
+
+  justify-self: start;
+
+  border-radius: var(--radius-full);
+
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 
   white-space: nowrap;
 }
 
 .history-status--completed {
   color: var(--color-success);
-
-  background:
-    rgba(46, 125, 91, 0.1);
+  background: rgba(46, 125, 91, 0.1);
 }
 
 .history-status--failed {
   color: var(--color-danger);
-
-  background:
-    rgba(201, 76, 76, 0.08);
+  background: rgba(201, 76, 76, 0.1);
 }
 
 .history-status--pending,
 .history-status--queued,
 .history-status--processing {
   color: var(--color-steel-blue);
-
-  background:
-    rgba(73, 105, 149, 0.1);
+  background: rgba(73, 105, 149, 0.1);
 }
 
 .history-score {
   color: var(--color-navy);
 
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
 
   white-space: nowrap;
 }
 
-.history-open {
-  width: 48px;
+.history-score small {
+  margin-left: 1px;
 
-  color: var(--color-soft-blue-gray);
+  color: var(--color-text-muted);
+
+  font-size: var(--font-size-xs);
+  font-weight: 500;
 }
 
+.history-row__date {
+  color: var(--color-text-primary);
+
+  font-size: var(--font-size-sm);
+
+  white-space: nowrap;
+}
+
+.history-row__date small {
+  display: block;
+
+  color: var(--color-text-muted);
+
+  font-size: var(--font-size-xs);
+}
+
+.history-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.history-row__chevron {
+  color: var(--color-soft-blue-gray);
+
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.history-row:hover .history-row__chevron {
+  color: var(--color-navy);
+  transform: translateX(2px);
+}
+
+.history-delete-button {
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  display: inline-grid;
+  place-items: center;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+
+  cursor: pointer;
+
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.history-delete-button:hover:not(:disabled) {
+  border-color: rgba(201, 76, 76, 0.4);
+
+  color: var(--color-danger);
+  background: rgba(201, 76, 76, 0.06);
+}
+
+.history-delete-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/*
+ * loading / error / empty
+ */
 .history-state {
   min-height: 340px;
 
@@ -297,15 +385,17 @@
 .history-empty-button {
   margin-top: var(--space-5);
 
-  padding:
-    var(--space-3)
-    var(--space-5);
+  min-height: 44px;
+
+  padding: 0 var(--space-5);
 
   border: 0;
   border-radius: var(--radius-md);
 
   color: #ffffff;
-  background: var(--color-navy);
+  background: var(--gradient-brand);
+
+  box-shadow: 0 6px 16px rgba(30, 49, 86, 0.2);
 
   font: inherit;
   font-weight: 500;
@@ -314,13 +404,11 @@
 }
 
 .history-empty-button:hover {
-  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
 .history-spinner {
-  animation:
-    history-spin 0.9s linear
-    infinite;
+  animation: history-spin 0.9s linear infinite;
 }
 
 @keyframes history-spin {
@@ -329,164 +417,111 @@
   }
 }
 
-.history-sr-only {
-  position: absolute;
-
-  width: 1px;
-  height: 1px;
-
-  padding: 0;
-  margin: -1px;
-
-  overflow: hidden;
-
-  clip: rect(0, 0, 0, 0);
-
-  white-space: nowrap;
-
-  border: 0;
-}
-
-.history-job {
-  min-width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.history-job strong {
-  color: #1e3156;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.history-job span {
-  color: #667085;
-  font-size: 0.82rem;
-}
-
-.history-job small {
-  color: #98a2b3;
-  font-size: 0.76rem;
-}
-
-.history-empty {
-  color: #98a2b3;
-}
-
-.history-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-.history-delete-button {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e4e7ec;
-  border-radius: 9px;
-  background: #ffffff;
-  color: #98a2b3;
-  cursor: pointer;
-}
-
-.history-delete-button:hover:not(:disabled) {
-  border-color: #fda29b;
-  background: #fef3f2;
-  color: #b42318;
-}
-
-.history-delete-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
+/*
+ * Modal ยืนยันการลบ
+ */
 .history-modal-backdrop {
   position: fixed;
   z-index: 1000;
   inset: 0;
+
   padding: var(--space-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(30, 49, 86, 0.42);
+
+  display: grid;
+  place-items: center;
+
+  background: var(--color-overlay);
+  backdrop-filter: blur(4px);
 }
 
 .history-modal {
   width: min(100%, 460px);
+
   padding: var(--space-6);
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 24px 64px rgba(30, 49, 86, 0.2);
+
+  border-radius: var(--radius-xl);
+
+  background: var(--color-surface);
+
+  box-shadow: var(--shadow-lg);
 }
 
 .history-modal__icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
+
   margin-bottom: var(--space-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #fef3f2;
-  color: #b42318;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: var(--radius-full);
+
+  color: var(--color-danger);
+  background: rgba(201, 76, 76, 0.1);
 }
 
 .history-modal h2 {
-  margin: 0 0 var(--space-2);
-  color: #1e3156;
+  margin-bottom: var(--space-2);
+
+  color: var(--color-navy);
+
+  font-size: var(--font-size-lg);
 }
 
 .history-modal p {
-  margin: 0;
-  color: #667085;
+  color: var(--color-text-secondary);
 }
 
 .history-modal__job {
-  margin-top: var(--space-3) !important;
+  margin-top: var(--space-3);
 }
 
-.history-modal__warning {
-  margin-top: var(--space-4) !important;
-  color: #b42318 !important;
-}
-
+.history-modal__warning,
 .history-modal__error {
-  margin-top: var(--space-3) !important;
-  color: #b42318 !important;
+  margin-top: var(--space-3);
+
+  font-size: var(--font-size-sm);
+}
+
+.history-modal p.history-modal__warning,
+.history-modal p.history-modal__error {
+  color: var(--color-danger);
 }
 
 .history-modal__actions {
   margin-top: var(--space-6);
+
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
 }
 
 .history-modal__actions button {
-  min-height: 42px;
-  padding: 0 var(--space-4);
-  border-radius: 10px;
+  min-height: 44px;
+
+  padding: 0 var(--space-5);
+
+  border-radius: var(--radius-md);
+
   font: inherit;
   font-weight: 500;
+
   cursor: pointer;
 }
 
 .history-modal__cancel {
-  border: 1px solid #d0d5dd;
-  background: #ffffff;
-  color: #344054;
+  border: 1px solid var(--color-border);
+
+  color: var(--color-navy);
+  background: var(--color-surface);
 }
 
 .history-modal__delete {
   border: 0;
-  background: #b42318;
-  color: #ffffff;
+
+  color: var(--color-on-status);
+  background: var(--color-danger);
 }
 
 .history-modal__actions button:disabled {
@@ -494,53 +529,99 @@
   cursor: not-allowed;
 }
 
+/*
+ * Breakpoints มาตรฐาน: 900 / 620
+ * ≤900: แต่ละแถวเป็นการ์ด 2 บรรทัด
+ */
 @media (max-width: 900px) {
-  .history-page {
-    padding:
-      var(--space-6)
-      var(--space-4);
+  .history-list__head {
+    display: none;
   }
 
-  .history-stats {
+  .history-row {
+    padding: var(--space-4) var(--space-5);
+
     grid-template-columns:
-      repeat(
-        2,
-        minmax(0, 1fr)
-      );
+      auto
+      minmax(0, 1fr)
+      auto;
+
+    grid-template-areas:
+      "main   main   actions"
+      "status date   score";
+
+    row-gap: var(--space-3);
   }
-    .history-modal {
+
+  .history-row__main {
+    grid-area: main;
+  }
+
+  .history-actions {
+    grid-area: actions;
+  }
+
+  .history-status {
+    grid-area: status;
+  }
+
+  .history-row__date {
+    grid-area: date;
+
+    color: var(--color-text-secondary);
+
+    font-size: var(--font-size-xs);
+  }
+
+  .history-row__date small {
+    display: inline;
+    margin-left: var(--space-1);
+  }
+
+  .history-score {
+    grid-area: score;
+  }
+
+  .history-modal {
     padding: var(--space-5);
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 600px) {
   .history-header {
     flex-direction: column;
   }
 
-  .history-header__action {
-    width: 100%;
-  }
-
-  .history-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .history-panel-header {
+  .history-row {
     padding: var(--space-4);
   }
 
-  .history-table th,
-  .history-table td {
-    padding:
-      var(--space-3)
-      var(--space-4);
+  .history-row__icon {
+    display: none;
   }
-   .history-modal__actions {
+
+  .history-modal__actions {
     flex-direction: column-reverse;
   }
 
   .history-modal__actions button {
     width: 100%;
+  }
+}
+
+/*
+ * มือถือจอเล็ก: ป้ายประเภท/ชื่องานขึ้นบรรทัดใหม่ได้
+ */
+@media (max-width: 380px) {
+  .history-row {
+    padding: var(--space-3);
+  }
+
+  .history-row__meta {
+    flex-wrap: wrap;
+  }
+
+  .history-row__job {
+    white-space: normal;
   }
 }

@@ -1,6 +1,7 @@
 :root {
-  /* Brand colors */
+  /* Brand colors (Figma) */
   --color-navy: #1e3156;
+  --color-navy-deep: #15233f;
   --color-steel-blue: #496995;
   --color-soft-blue-gray: #a5b5d2;
   --color-light-blue: #b0cbe6;
@@ -9,22 +10,59 @@
   /* Semantic colors */
   --color-primary: var(--color-navy);
   --color-primary-hover: #172744;
+  --color-primary-soft: rgba(30, 49, 86, 0.06);
   --color-secondary: var(--color-steel-blue);
   --color-accent: var(--color-soft-peach);
+  --color-accent-strong: #f9bfb1;
 
-  --color-background: #f7f9fc;
+  --color-background: #f4f6fb;
   --color-surface: #ffffff;
-  --color-surface-muted: #eef3f8;
+  --color-surface-muted: #f0f3f8;
 
   --color-text-primary: #1e3156;
-  --color-text-secondary: #64748b;
+  --color-text-secondary: #5f6f87;
   --color-text-muted: #94a3b8;
 
-  --color-border: #dce4ee;
+  --color-border: #e4e9f1;
+  --color-border-strong: #cfd8e5;
 
   --color-success: #2e7d5b;
   --color-warning: #b7791f;
   --color-danger: #c94c4c;
+
+  /* Gradients */
+  --gradient-brand:
+    linear-gradient(135deg, #1e3156 0%, #2c4674 100%);
+
+  --gradient-brand-vertical:
+    linear-gradient(180deg, #1e3156 0%, #16243f 100%);
+
+  /*
+   * Semantic (ใช้แทน navy/peach ตรงๆ เพื่อให้สลับธีมได้)
+   * brand-solid : พื้นเข้มใต้ตัวอักษรขาว (ปุ่ม, จุด, แท่งกราฟ)
+   * on-accent   : ตัวอักษรบนพื้น peach (navy เสมอทั้ง 2 ธีม)
+   */
+  --color-brand-solid: #1e3156;
+  --color-brand-solid-hover: #172744;
+  --color-on-brand: #ffffff;
+  --color-on-accent: #1e3156;
+  --color-on-status: #ffffff;
+
+  --color-tooltip-bg: #1e3156;
+  --color-tooltip-text: #ffffff;
+
+  --color-overlay: rgba(21, 35, 63, 0.5);
+
+  --color-accent-soft: #fff4f1;
+  --gradient-accent:
+    linear-gradient(135deg, #fff1ec 0%, #fdd6cd 100%);
+  --gradient-accent-soft:
+    linear-gradient(135deg, #fff5f1 0%, #fde7e1 100%);
+
+  --body-glow-peach: rgba(253, 214, 205, 0.38);
+  --body-glow-blue: rgba(176, 203, 230, 0.28);
+
+  color-scheme: light;
 
   /* Typography */
   --font-family: "Mitr", sans-serif;
@@ -51,25 +89,226 @@
   /* Radius */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
   --radius-full: 9999px;
 
-  /* Shadow */
+  /* Shadow: นุ่ม 2 ชั้น */
   --shadow-sm:
-    0 1px 3px rgba(30, 49, 86, 0.08);
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 2px 8px rgba(30, 49, 86, 0.05);
 
   --shadow-md:
-    0 8px 24px rgba(30, 49, 86, 0.1);
+    0 4px 12px rgba(30, 49, 86, 0.06),
+    0 12px 32px rgba(30, 49, 86, 0.08);
 
   --shadow-lg:
-    0 16px 40px rgba(30, 49, 86, 0.12);
+    0 8px 20px rgba(30, 49, 86, 0.08),
+    0 24px 56px rgba(30, 49, 86, 0.14);
+
+  --focus-ring:
+    0 0 0 4px rgba(73, 105, 149, 0.18);
 
   /* Layout */
-  --sidebar-width: 260px;
+  --sidebar-width: 264px;
   --content-max-width: 1440px;
 
+  /*
+   * ระยะขอบหน้า (ทุกหน้าใช้ร่วมกัน)
+   * เปลี่ยนตาม breakpoint 900 / 620 ด้านล่าง
+   */
+  --page-padding-y: var(--space-10);
+  --page-padding-x: clamp(var(--space-5), 3vw, var(--space-10));
+
   /* Motion */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-fast: 150ms var(--ease-out);
+  --transition-normal: 250ms var(--ease-out);
+}
+
+/*
+ * Breakpoints มาตรฐานของทั้งแอป
+ * (media query ใช้ var() ไม่ได้ → ใช้ค่าเหล่านี้ตรงๆ)
+ *
+ * 1200px  โน้ตบุ๊กหน้าต่างเล็ก / iPad แนวนอน → sidebar แคบลง
+ *  900px  iPad แนวตั้ง / Fold กางออก       → sidebar เป็นแถบล่าง
+ *  600px  มือถือแนวตั้ง (360–430)          → คอลัมน์เดียว
+ *  380px  มือถือจอเล็ก (SE 375, 360, 320, Fold นอก 280)
+ *  (max-height: 500px) and (orientation: landscape)
+ *         มือถือแนวนอน                     → แถบล่างเตี้ยลง
+ */
+:root {
+  /*
+   * ความสูงแถบเมนูล่าง (ใช้เว้นพื้นที่ท้ายหน้า)
+   */
+  --bottom-nav-height: 72px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --sidebar-width: 224px;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --page-padding-y: var(--space-6);
+    --page-padding-x: var(--space-5);
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --page-padding-y: var(--space-5);
+    --page-padding-x: var(--space-4);
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --page-padding-y: var(--space-4);
+    --page-padding-x: var(--space-3);
+    --bottom-nav-height: 60px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --bottom-nav-height: 56px;
+  }
+}
+
+/*
+ * Dark theme
+ * - data-theme="dark"            ผู้ใช้เลือก Dark
+ * - ไม่มี data-theme + OS มืด     โหมด "ตามระบบ"
+ * (CSS แชร์ชุดค่ากันไม่ได้ → ค่าซ้ำ 2 ที่ ต้องแก้คู่กัน)
+ */
+:root[data-theme="dark"] {
+  --color-navy: #dbe5f5;
+  --color-steel-blue: #8fb0dd;
+
+  --color-primary-hover: #c5d3ea;
+  --color-primary-soft: rgba(143, 176, 221, 0.1);
+
+  --color-background: #0f1729;
+  --color-surface: #16213a;
+  --color-surface-muted: #1d2a47;
+
+  --color-text-primary: #e6ecf7;
+  --color-text-secondary: #a3b1c9;
+  --color-text-muted: #7384a3;
+
+  --color-border: #26334f;
+  --color-border-strong: #334366;
+
+  --color-success: #5cc28f;
+  --color-warning: #e0a64a;
+  --color-danger: #f08080;
+
+  --gradient-brand:
+    linear-gradient(135deg, #223a66 0%, #2f4d80 100%);
+
+  --gradient-brand-vertical:
+    linear-gradient(180deg, #1a2c4f 0%, #121d35 100%);
+
+  --color-brand-solid: #2f4d80;
+  --color-brand-solid-hover: #38598f;
+  --color-on-status: #0f1729;
+
+  --color-tooltip-bg: #26344f;
+
+  --color-overlay: rgba(3, 7, 18, 0.65);
+
+  --color-accent-soft: rgba(253, 214, 205, 0.08);
+  --gradient-accent:
+    linear-gradient(135deg, rgba(253, 214, 205, 0.16) 0%, rgba(253, 214, 205, 0.05) 100%);
+  --gradient-accent-soft:
+    linear-gradient(135deg, rgba(253, 214, 205, 0.1) 0%, rgba(253, 214, 205, 0.04) 100%);
+
+  --body-glow-peach: rgba(253, 214, 205, 0.06);
+  --body-glow-blue: rgba(73, 105, 149, 0.18);
+
+  --shadow-sm:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+
+  --shadow-md:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 12px 32px rgba(0, 0, 0, 0.3);
+
+  --shadow-lg:
+    0 8px 20px rgba(0, 0, 0, 0.35),
+    0 24px 56px rgba(0, 0, 0, 0.45);
+
+  --focus-ring:
+    0 0 0 4px rgba(143, 176, 221, 0.3);
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-navy: #dbe5f5;
+    --color-steel-blue: #8fb0dd;
+
+    --color-primary-hover: #c5d3ea;
+    --color-primary-soft: rgba(143, 176, 221, 0.1);
+
+    --color-background: #0f1729;
+    --color-surface: #16213a;
+    --color-surface-muted: #1d2a47;
+
+    --color-text-primary: #e6ecf7;
+    --color-text-secondary: #a3b1c9;
+    --color-text-muted: #7384a3;
+
+    --color-border: #26334f;
+    --color-border-strong: #334366;
+
+    --color-success: #5cc28f;
+    --color-warning: #e0a64a;
+    --color-danger: #f08080;
+
+    --gradient-brand:
+      linear-gradient(135deg, #223a66 0%, #2f4d80 100%);
+
+    --gradient-brand-vertical:
+      linear-gradient(180deg, #1a2c4f 0%, #121d35 100%);
+
+    --color-brand-solid: #2f4d80;
+    --color-brand-solid-hover: #38598f;
+    --color-on-status: #0f1729;
+
+    --color-tooltip-bg: #26344f;
+
+    --color-overlay: rgba(3, 7, 18, 0.65);
+
+    --color-accent-soft: rgba(253, 214, 205, 0.08);
+    --gradient-accent:
+      linear-gradient(135deg, rgba(253, 214, 205, 0.16) 0%, rgba(253, 214, 205, 0.05) 100%);
+    --gradient-accent-soft:
+      linear-gradient(135deg, rgba(253, 214, 205, 0.1) 0%, rgba(253, 214, 205, 0.04) 100%);
+
+    --body-glow-peach: rgba(253, 214, 205, 0.06);
+    --body-glow-blue: rgba(73, 105, 149, 0.18);
+
+    --shadow-sm:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.2);
+
+    --shadow-md:
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      0 12px 32px rgba(0, 0, 0, 0.3);
+
+    --shadow-lg:
+      0 8px 20px rgba(0, 0, 0, 0.35),
+      0 24px 56px rgba(0, 0, 0, 0.45);
+
+    --focus-ring:
+      0 0 0 4px rgba(143, 176, 221, 0.3);
+
+    color-scheme: dark;
+  }
 }

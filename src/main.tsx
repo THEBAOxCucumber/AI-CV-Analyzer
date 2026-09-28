@@ -17,12 +17,15 @@ import {
 
 import {
   applyFontSize,
+  applyTheme,
   getFontSize,
+  getTheme,
 } from "./utils/appearance"
 
 import "./index.css"
 
 applyFontSize(getFontSize())
+applyTheme(getTheme())
 
 createRoot(
   document.getElementById("root")!,

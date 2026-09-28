@@ -10,9 +10,12 @@ import {
 } from "react-router-dom"
 
 import {
-  FileText,
   UserPlus,
 } from "lucide-react"
+
+import {
+  AuthShowcase,
+} from "../components/auth/AuthShowcase"
 
 import {
   Button,
@@ -188,34 +191,18 @@ export function RegisterPage() {
 
   return (
     <main className="sign-in">
-      <section className="sign-in__brand">
-        <div className="sign-in__brand-content">
-          <div className="sign-in__logo">
-            <FileText
-              size={34}
-              strokeWidth={2}
-            />
-
-            <span>
-              AI Resume
-            </span>
-          </div>
-
-          <h1>
+      <AuthShowcase
+        title={
+          <>
             เริ่มพัฒนา Resume
             <br />
             เพื่อโอกาสในการทำงาน
             <br />
             ที่ดียิ่งขึ้น
-          </h1>
-
-          <p>
-            สมัครสมาชิกเพื่อวิเคราะห์ Resume
-            ค้นหาจุดแข็ง จุดที่ควรปรับปรุง
-            และเปรียบเทียบกับตำแหน่งงานที่คุณสนใจ
-          </p>
-        </div>
-      </section>
+          </>
+        }
+        description="สมัครสมาชิกเพื่อวิเคราะห์ Resume ค้นหาจุดแข็ง จุดที่ควรปรับปรุง และเปรียบเทียบกับตำแหน่งงานที่คุณสนใจ"
+      />
 
       <section className="sign-in__form-side">
         <div className="sign-in__card">

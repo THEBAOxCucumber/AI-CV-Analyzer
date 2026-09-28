@@ -10,6 +10,9 @@
   color: var(--color-text-primary);
 }
 
+/*
+ * พื้นเทาอ่อน → ขาว + ring ตอน focus
+ */
 .input-field__input {
   width: 100%;
   min-height: 48px;
@@ -20,9 +23,10 @@
   border-radius: var(--radius-md);
 
   outline: none;
-  background: #ffffff;
+  background: var(--color-surface-muted);
 
   transition:
+    background var(--transition-fast),
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
 }
@@ -32,18 +36,21 @@
 }
 
 .input-field__input:hover {
-  border-color: var(--color-soft-blue-gray);
+  border-color: var(--color-border-strong);
 }
 
 .input-field__input:focus {
   border-color: var(--color-steel-blue);
-
-  box-shadow:
-    0 0 0 3px rgba(73, 105, 149, 0.12);
+  background: var(--color-surface);
+  box-shadow: var(--focus-ring);
 }
 
 .input-field__input--error {
   border-color: var(--color-danger);
+}
+
+.input-field__input--error:focus {
+  box-shadow: 0 0 0 4px rgba(201, 76, 76, 0.15);
 }
 
 .input-field__error {

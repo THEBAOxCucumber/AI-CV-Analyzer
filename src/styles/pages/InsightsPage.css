@@ -5,9 +5,8 @@
   margin-inline: auto;
 
   padding:
-    var(--space-10) clamp(var(--space-5),
-      4vw,
-      var(--space-12));
+    var(--page-padding-y)
+    var(--page-padding-x);
 }
 
 .insights__header {
@@ -72,9 +71,12 @@
 .insights__stats {
   margin-bottom: var(--space-6);
 
+  /*
+   * auto-fit: 4 → 2 → 1 คอลัมน์ตามพื้นที่
+   */
   display: grid;
   grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    repeat(auto-fit, minmax(min(100%, 160px), 1fr));
 
   gap: var(--space-5);
 }
@@ -285,7 +287,7 @@
 }
 
 .insights__panel-title--tip .insights__panel-icon {
-  color: var(--color-navy);
+  color: var(--color-on-accent);
   background: var(--color-soft-peach);
 }
 
@@ -447,7 +449,7 @@
 
   border-radius: var(--radius-md);
 
-  background: var(--color-background);
+  background: var(--color-surface-muted);
 }
 
 .recommendation-item p {
@@ -470,8 +472,8 @@
 
   border-radius: var(--radius-full);
 
-  color: #ffffff;
-  background: var(--color-navy);
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
 
   font-size: var(--font-size-xs);
   font-weight: 600;
@@ -557,30 +559,27 @@
 
   border-radius: var(--radius-md);
 
-  color: #ffffff;
-  background: var(--color-navy);
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
 
   font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
 .insights__primary-button:hover {
-  background: var(--color-steel-blue);
+  background: var(--color-brand-solid-hover);
 }
 
-@media (max-width: 1100px) {
-  .insights__stats {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+/*
+ * Breakpoints มาตรฐาน: 900 / 600 / 380
+ */
+@media (max-width: 900px) {
+  .insights__panel {
+    padding: var(--space-6);
   }
 }
 
-@media (max-width: 760px) {
-  .insights {
-    padding:
-      var(--space-6) var(--space-4) 100px;
-  }
-
+@media (max-width: 600px) {
   .insights__header {
     flex-direction: column;
   }
@@ -601,14 +600,19 @@
   .recommendation-item {
     flex-wrap: wrap;
   }
-}
-
-@media (max-width: 520px) {
-  .insights__stats {
-    grid-template-columns: 1fr;
-  }
 
   .insights__panel-header {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 380px) {
+  .insights__panel,
+  .insight-stat {
+    padding: var(--space-4);
+  }
+
+  .recommendation-item {
+    padding: var(--space-3) var(--space-4);
   }
 }

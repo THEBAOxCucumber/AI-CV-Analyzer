@@ -11,9 +11,12 @@ import {
 
 import {
   CircleCheck,
-  FileText,
   KeyRound,
 } from "lucide-react"
+
+import {
+  AuthShowcase,
+} from "../components/auth/AuthShowcase"
 
 import {
   Button,
@@ -211,32 +214,16 @@ export function ForgotPasswordPage() {
 
   return (
     <main className="sign-in">
-      <section className="sign-in__brand">
-        <div className="sign-in__brand-content">
-          <div className="sign-in__logo">
-            <FileText
-              size={34}
-              strokeWidth={2}
-            />
-
-            <span>
-              AI Resume
-            </span>
-          </div>
-
-          <h1>
+      <AuthShowcase
+        title={
+          <>
             ลืมรหัสผ่าน?
             <br />
             ไม่ต้องกังวล
-          </h1>
-
-          <p>
-            ยืนยันตัวตนด้วยรหัส OTP
-            ที่ส่งไปยังอีเมลของคุณ
-            แล้วตั้งรหัสผ่านใหม่ได้ทันที
-          </p>
-        </div>
-      </section>
+          </>
+        }
+        description="ยืนยันตัวตนด้วยรหัส OTP ที่ส่งไปยังอีเมลของคุณ แล้วตั้งรหัสผ่านใหม่ได้ทันที"
+      />
 
       <section className="sign-in__form-side">
         <div className="sign-in__card">

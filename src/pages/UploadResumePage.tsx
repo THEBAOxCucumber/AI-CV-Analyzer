@@ -1,6 +1,7 @@
 import {
   CheckCircle2,
   FileText,
+  Lightbulb,
   UploadCloud,
   X,
 } from "lucide-react"
@@ -40,8 +41,13 @@ import {
 import "../styles/pages/UploadResumePage.css"
 
 
+/*
+ * ต้องตรงกับ MAX_RESUME_SIZE_MB ของ backend (5 MB)
+ */
+const MAX_FILE_SIZE_MB = 5
+
 const MAX_FILE_SIZE =
-  10 * 1024 * 1024
+  MAX_FILE_SIZE_MB * 1024 * 1024
 
 function formatFileSize(
   bytes: number,
@@ -109,7 +115,7 @@ export function UploadResumePage() {
       MAX_FILE_SIZE
     ) {
       setError(
-        "ไฟล์มีขนาดใหญ่เกิน 10 MB",
+        `ไฟล์มีขนาดใหญ่เกิน ${MAX_FILE_SIZE_MB} MB`,
       )
 
       return false
@@ -259,6 +265,7 @@ export function UploadResumePage() {
         </p>
       </header>
 
+      <div className="upload-layout">
       <section className="upload-card">
         {!uploadedResume && (
           <>
@@ -318,8 +325,15 @@ export function UploadResumePage() {
                 หรือคลิกเพื่อเลือกไฟล์
               </p>
 
-              <span>
-                PDF เท่านั้น
+              <span
+                className="upload-dropzone__pick"
+                aria-hidden="true"
+              >
+                เลือกไฟล์
+              </span>
+
+              <span className="upload-dropzone__hint">
+                PDF · ไม่เกิน {MAX_FILE_SIZE_MB} MB
               </span>
             </div>
 
@@ -427,6 +441,66 @@ export function UploadResumePage() {
           </div>
         )}
       </section>
+
+      <aside className="upload-guide">
+        <section className="upload-guide__card">
+          <h2>ขั้นตอน</h2>
+
+          <ol className="upload-steps">
+            <li>
+              <span>1</span>
+              <div>
+                <strong>อัปโหลด Resume</strong>
+                <p>ไฟล์ PDF ไม่เกิน {MAX_FILE_SIZE_MB} MB</p>
+              </div>
+            </li>
+
+            <li>
+              <span>2</span>
+              <div>
+                <strong>AI วิเคราะห์</strong>
+                <p>ใช้เวลาประมาณ 1–2 นาที</p>
+              </div>
+            </li>
+
+            <li>
+              <span>3</span>
+              <div>
+                <strong>ดูคะแนนและคำแนะนำ</strong>
+                <p>คะแนนรายหมวด จุดแข็ง และสิ่งที่ควรปรับ</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section className="upload-guide__card upload-guide__card--tips">
+          <h2>
+            <Lightbulb size={18} />
+            เคล็ดลับก่อนอัปโหลด
+          </h2>
+
+          <ul className="upload-tips">
+            <li>
+              <CheckCircle2 size={16} />
+              ใช้ PDF ที่เป็นข้อความ ไม่ใช่ภาพสแกน
+              เพื่อให้ AI อ่านได้ครบ
+            </li>
+
+            <li>
+              <CheckCircle2 size={16} />
+              แบ่งหัวข้อชัดเจน: ข้อมูลติดต่อ สรุปโปรไฟล์
+              ทักษะ ประสบการณ์ โปรเจกต์ การศึกษา
+            </li>
+
+            <li>
+              <CheckCircle2 size={16} />
+              ระบุผลงานเป็นตัวเลข เช่น
+              ลดเวลาทำงานลง 30%
+            </li>
+          </ul>
+        </section>
+      </aside>
+      </div>
     </main>
   )
 }

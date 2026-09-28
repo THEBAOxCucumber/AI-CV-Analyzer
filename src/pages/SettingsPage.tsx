@@ -67,7 +67,19 @@ import {
   getFontSize,
   setFontSize,
   type FontSize,
+  type Theme,
 } from "../utils/appearance"
+
+import {
+  useTheme,
+} from "../hooks/useTheme"
+
+import {
+  Monitor,
+  Moon,
+  Sun,
+  type LucideIcon,
+} from "lucide-react"
 
 import "../styles/pages/SettingsPage.css"
 
@@ -106,6 +118,16 @@ const FONT_SIZE_OPTIONS: Array<{
   { value: "small", label: "Small" },
   { value: "medium", label: "Medium" },
   { value: "large", label: "Large" },
+]
+
+const THEME_OPTIONS: Array<{
+  value: Theme
+  label: string
+  icon: LucideIcon
+}> = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
 ]
 
 function toNullable(
@@ -229,6 +251,11 @@ export function SettingsPage() {
 
   const [fontSize, setFontSizeState] =
     useState<FontSize>(getFontSize)
+
+  const {
+    theme,
+    setTheme,
+  } = useTheme()
 
   const [resumes, setResumes] =
     useState<Resume[]>([])
@@ -1079,6 +1106,42 @@ export function SettingsPage() {
             number={4}
             title="Appearance"
           />
+
+          <h3 className="settings-subheading">
+            Theme
+          </h3>
+
+          <div
+            className="segmented"
+            role="radiogroup"
+            aria-label="Theme"
+          >
+            {THEME_OPTIONS.map((option) => {
+              const Icon = option.icon
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={
+                    theme === option.value
+                  }
+                  className={
+                    theme === option.value
+                      ? "segmented__option segmented__option--active"
+                      : "segmented__option"
+                  }
+                  onClick={() =>
+                    setTheme(option.value)
+                  }
+                >
+                  <Icon size={16} />
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
 
           <h3 className="settings-subheading">
             Font Size

@@ -1,6 +1,10 @@
+/*
+ * "/api" ผ่าน Vite proxy → backend :5000
+ * (Tester เข้าผ่าน tunnel ได้ ไม่ต้องรู้ที่อยู่ backend)
+ */
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
-  "http://localhost:5000/api"
+  "/api"
 
 const TOKEN_KEY = "ai-cv-analyzer-token"
 

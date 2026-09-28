@@ -1,12 +1,15 @@
 import {
-  BaggageClaimIcon,
   BarChart3,
-  FileClock,
-  FileText,
+  BriefcaseBusiness,
+  Clock3,
+  History,
   LayoutDashboard,
   LogOut,
+  Moon,
   Settings,
+  Sun,
   Upload,
+  type LucideIcon,
 } from "lucide-react"
 
 import {
@@ -18,9 +21,27 @@ import {
   useAuth,
 } from "../../hooks/useAuth"
 
+import {
+  useTheme,
+} from "../../hooks/useTheme"
+
+import {
+  SESSION_WARNING_SECONDS,
+  formatSessionTime,
+  getInitials,
+} from "../../utils/session"
+
+import logoWhite from "../../assets/brand/logo-white.png"
+
 import "../../styles/components/Sidebar.css"
 
-const navigation = [
+interface NavigationItem {
+  to: string
+  label: string
+  icon: LucideIcon
+}
+
+const mainNavigation: NavigationItem[] = [
   {
     to: "/dashboard",
     label: "Dashboard",
@@ -34,7 +55,7 @@ const navigation = [
   {
     to: "/history",
     label: "History",
-    icon: FileClock,
+    icon: History,
   },
   {
     to: "/insights",
@@ -44,9 +65,11 @@ const navigation = [
   {
     to: "/jobs",
     label: "Job Matches",
-    icon: BaggageClaimIcon,
+    icon: BriefcaseBusiness,
   },
+]
 
+const accountNavigation: NavigationItem[] = [
   {
     to: "/settings",
     label: "Settings",
@@ -54,22 +77,29 @@ const navigation = [
   },
 ]
 
-function formatSessionTime(
-  totalSeconds: number,
-): string {
-  const minutes =
-    Math.floor(totalSeconds / 60)
+function NavigationLink({
+  to,
+  label,
+  icon: Icon,
+}: NavigationItem) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        isActive
+          ? "sidebar__link sidebar__link--active"
+          : "sidebar__link"
+      }
+    >
+      <span className="sidebar__link-icon">
+        <Icon size={19} />
+      </span>
 
-  const seconds =
-    totalSeconds % 60
-
-  return `${String(minutes).padStart(
-    2,
-    "0",
-  )}:${String(seconds).padStart(
-    2,
-    "0",
-  )}`
+      <span className="sidebar__link-label">
+        {label}
+      </span>
+    </NavLink>
+  )
 }
 
 export function Sidebar() {
@@ -81,94 +111,111 @@ export function Sidebar() {
 
   const navigate = useNavigate()
 
+  const {
+    resolvedTheme,
+    toggleTheme,
+  } = useTheme()
+
+  const themeToggleLabel =
+    resolvedTheme === "dark"
+      ? "เปลี่ยนเป็นโหมดสว่าง"
+      : "เปลี่ยนเป็นโหมดมืด"
+
   function handleLogout() {
     logout()
 
-    navigate(
-      "/sign-in",
-      {
-        replace: true,
-      },
-    )
+    navigate("/sign-in", {
+      replace: true,
+    })
   }
 
-  const initials = [
-    user?.firstName?.[0],
-    user?.lastName?.[0],
-  ]
-    .filter(Boolean)
-    .join("")
-    .toUpperCase()
+  const isSessionEnding =
+    sessionRemainingSeconds <=
+    SESSION_WARNING_SECONDS
 
   return (
     <aside className="sidebar">
-      <div className="sidebar__brand">
-        <div className="sidebar__brand-icon">
-          <FileText size={23} />
-        </div>
-
-        <div>
-          <strong>
-            AI Resume
-          </strong>
-
-          <span>
-            Analyzer
-          </span>
-        </div>
-      </div>
+      <NavLink
+        to="/dashboard"
+        className="sidebar__brand"
+        aria-label="AI Resume Analyzer — ไปที่ Dashboard"
+      >
+        <img
+          className="sidebar__logo"
+          src={logoWhite}
+          alt="AI Resume Analyzer"
+          width={480}
+          height={208}
+        />
+      </NavLink>
 
       <nav
         className="sidebar__navigation"
         aria-label="Main navigation"
       >
-        {navigation.map(
-          ({
-            to,
-            label,
-            icon: Icon,
-          }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({
-                isActive,
-              }) =>
-                [
-                  "sidebar__link",
-                  isActive
-                    ? "sidebar__link--active"
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")
-              }
-            >
-              <Icon size={20} />
+        <p className="sidebar__group-label">
+          เมนูหลัก
+        </p>
 
-              <span>
-                {label}
-              </span>
-            </NavLink>
-          ),
-        )}
+        {mainNavigation.map((item) => (
+          <NavigationLink
+            key={item.to}
+            {...item}
+          />
+        ))}
+
+        <p className="sidebar__group-label">
+          บัญชี
+        </p>
+
+        {accountNavigation.map((item) => (
+          <NavigationLink
+            key={item.to}
+            {...item}
+          />
+        ))}
       </nav>
 
       <div className="sidebar__footer">
-        <div className="sidebar__session">
-          <span>
-            เวลาการเข้าสู่ระบบ
-          </span>
+        <div className="sidebar__footer-row">
+          <div
+            className={
+              isSessionEnding
+                ? "sidebar__session sidebar__session--warning"
+                : "sidebar__session"
+            }
+            title="เวลาที่เหลือก่อนต้องเข้าสู่ระบบใหม่"
+          >
+            <Clock3 size={15} />
 
-          <strong>
-            {formatSessionTime(
-              sessionRemainingSeconds,
-            )}
-          </strong>
+            <span>Session</span>
+
+            <strong>
+              {formatSessionTime(
+                sessionRemainingSeconds,
+              )}
+            </strong>
+          </div>
+
+          <button
+            type="button"
+            className="sidebar__theme"
+            onClick={toggleTheme}
+            aria-label={themeToggleLabel}
+            title={themeToggleLabel}
+          >
+            {resolvedTheme === "dark"
+              ? <Sun size={17} />
+              : <Moon size={17} />}
+          </button>
         </div>
+
         <div className="sidebar__user">
           <div className="sidebar__avatar">
-            {initials || "U"}
+            {getInitials(
+              user?.firstName,
+              user?.lastName,
+            )}
           </div>
 
           <div className="sidebar__user-info">
@@ -177,20 +224,19 @@ export function Sidebar() {
               {user?.lastName}
             </strong>
 
-            <span>
-              {user?.email}
-            </span>
+            <span>{user?.email}</span>
           </div>
-        </div>
 
-        <button
-          type="button"
-          className="sidebar__logout"
-          onClick={handleLogout}
-        >
-          <LogOut size={19} />
-          <span>ออกจากระบบ</span>
-        </button>
+          <button
+            type="button"
+            className="sidebar__logout"
+            onClick={handleLogout}
+            aria-label="ออกจากระบบ"
+            title="ออกจากระบบ"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
     </aside>
   )

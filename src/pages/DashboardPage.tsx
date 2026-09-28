@@ -2,8 +2,11 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUp,
+  Briefcase,
   ChartLine,
+  FileCheck2,
   FileText,
+  Gauge,
   Trash2,
   Upload,
 } from "lucide-react"
@@ -296,6 +299,9 @@ export function DashboardPage() {
       >
         <article className="stat-card">
           <span className="stat-card__label">
+            <span className="stat-card__icon">
+              <FileCheck2 size={18} />
+            </span>
             Resumes Analyzed
           </span>
 
@@ -322,15 +328,21 @@ export function DashboardPage() {
 
         <article className="stat-card">
           <span className="stat-card__label">
+            <span className="stat-card__icon">
+              <Gauge size={18} />
+            </span>
             Avg. Resume Score
           </span>
 
           <strong className="stat-card__value">
             {isLoading
               ? "..."
-              : stats.averageScore !== null
-                ? `${stats.averageScore} / 100`
-                : "—"}
+              : stats.averageScore ?? "—"}
+
+            {!isLoading &&
+              stats.averageScore !== null && (
+                <small>/100</small>
+              )}
           </strong>
 
           {!isLoading &&
@@ -346,6 +358,9 @@ export function DashboardPage() {
 
         <article className="stat-card">
           <span className="stat-card__label">
+            <span className="stat-card__icon">
+              <Briefcase size={18} />
+            </span>
             Job Matches
           </span>
 
@@ -402,6 +417,13 @@ export function DashboardPage() {
                         className="recent-analysis__item"
                         to={`/analyses/${analysis.id}`}
                       >
+                        <span
+                          className="recent-analysis__icon"
+                          aria-hidden="true"
+                        >
+                          <FileText size={18} />
+                        </span>
+
                         <div className="recent-analysis__details">
                           <strong>
                             {resumeNameById.get(
@@ -475,6 +497,10 @@ export function DashboardPage() {
                         }}
                       />
                     </div>
+
+                    <small>
+                      {item.count} งาน
+                    </small>
                   </li>
                 ))}
               </ul>

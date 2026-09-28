@@ -1,10 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cv</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1e3156" />
+    <meta name="description" content="วิเคราะห์ Resume ด้วย AI ให้คะแนน เทียบกับตำแหน่งงาน และแนะนำสิ่งที่ควรปรับ" />
+    <title>AI Resume Analyzer</title>
+    <script>
+      /* ตั้งธีมก่อน render กันจอขาวแวบ (key เดียวกับ utils/appearance.ts) */
+      try {
+        var theme = localStorage.getItem("ai-cv-analyzer-theme");
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.setAttribute("data-theme", theme);
+        }
+      } catch (error) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

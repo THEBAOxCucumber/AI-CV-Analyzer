@@ -1,7 +1,6 @@
 import {
     CheckCircle2,
     CircleAlert,
-    Clock3,
     Lightbulb,
     LoaderCircle,
     Sparkles,
@@ -40,6 +39,10 @@ import {
 import {
     ScoreRing,
 } from "../components/analysis/ScoreRing"
+
+import {
+    AnalysisProgress,
+} from "../components/analysis/AnalysisProgress"
 
 import {
     buildSectionScores,
@@ -332,47 +335,9 @@ export function AnalysisResultPage() {
     if (isPending(analysis.status)) {
         return (
             <main className="analysis-page">
-                <header className="analysis-header">
-                    <div>
-                        <p className="analysis-eyebrow">
-                            AI Resume Analysis
-                        </p>
-
-                        <h1>
-                            Analysis Result
-                        </h1>
-                    </div>
-
-                    <span
-                        className={`analysis-status analysis-status--${analysis.status.toLowerCase()}`}
-                    >
-                        {analysis.status}
-                    </span>
-                </header>
-
-                <section className="analysis-state">
-                    {analysis.status ===
-                        "QUEUED" ? (
-                        <Clock3 size={36} />
-                    ) : (
-                        <LoaderCircle
-                            className="analysis-spinner"
-                            size={36}
-                        />
-                    )}
-
-                    <h2>
-                        {analysis.status ===
-                            "QUEUED"
-                            ? "กำลังรอคิววิเคราะห์"
-                            : "AI กำลังวิเคราะห์ Resume"}
-                    </h2>
-
-                    <p>
-                        ระบบจะอัปเดตผลให้อัตโนมัติ
-                        ไม่จำเป็นต้องรีเฟรชหน้า
-                    </p>
-                </section>
+                <AnalysisProgress
+                    analysis={analysis}
+                />
             </main>
         )
     }
