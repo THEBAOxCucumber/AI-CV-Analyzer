@@ -105,102 +105,125 @@ export async function answerResumeQuestion(
     const context =
         buildResumeContext(searchResults);
 
-    try {
-        const prompt = buildAnalysisPrompt(
-            question,
-            context,
-        );
+    const answer = await generateAnswer(
+        question,
+        context,
+        searchResults.length,
+    );
 
+    return {
+        resumeId: input.resumeId,
+        question,
+        answer,
+        hasRelevantEvidence: true,
+        evidence: searchResults.map((result) => ({
+            chunkId: result.chunkId,
+            chunkIndex: result.chunkIndex,
+            section: result.section,
+            score: result.score,
+            content: result.content,
+        })),
+    };
+}
+
+/**
+ * เรียก Gemini ตอบคำถามจาก Context
+ * error ทุกแบบถูกแปลงเป็น AppError
+ */
+async function generateAnswer(
+    question: string,
+    context: string,
+    evidenceCount: number,
+): Promise<string> {
+    let answer: string | undefined;
+
+    try {
         console.log("Gemini generation request:", {
             model: env.gemini.generationModel,
             questionLength: question.length,
             contextLength: context.length,
-            evidenceCount: searchResults.length,
+            evidenceCount,
         });
 
         const response =
             await gemini.models.generateContent({
                 model: env.gemini.generationModel,
-                contents: prompt,
+                contents: buildAnalysisPrompt(
+                    question,
+                    context,
+                ),
                 config: {
                     temperature: 0.2,
                     maxOutputTokens: 700,
                 },
             });
 
-        const answer = response.text?.trim();
-
-        if (!answer) {
-            throw new AppError(
-                "Gemini ไม่ได้ส่งข้อความคำตอบกลับมา",
-                502,
-                "GEMINI_EMPTY_RESPONSE",
-            );
-        }
-
-        return {
-            resumeId: input.resumeId,
-            question,
-            answer,
-            hasRelevantEvidence: true,
-            evidence: searchResults.map((result) => ({
-                chunkId: result.chunkId,
-                chunkIndex: result.chunkIndex,
-                section: result.section,
-                score: result.score,
-                content: result.content,
-            })),
-        };
-
+        answer = response.text?.trim();
     } catch (error) {
-        if (error instanceof AppError) {
-            throw error;
-        }
+        throw toGeminiAppError(error);
+    }
 
-        console.error("========== GEMINI ANALYSIS ERROR ==========");
-        console.dir(error, { depth: null });
-        console.error("===========================================");
+    if (!answer) {
+        throw new AppError(
+            "Gemini ไม่ได้ส่งข้อความคำตอบกลับมา",
+            502,
+            "GEMINI_EMPTY_RESPONSE",
+        );
+    }
 
-        const details =
-            typeof error === "object" && error !== null
-                ? (error as {
-                    status?: number;
-                    code?: number | string;
-                    message?: string;
-                })
-                : {};
+    return answer;
+}
 
-        const message =
-            details.message ??
-            "ไม่สามารถให้ Gemini วิเคราะห์ Resume ได้";
+/**
+ * แปลง error จาก Gemini SDK เป็น AppError ตาม HTTP status
+ */
+function toGeminiAppError(
+    error: unknown,
+): AppError {
+    if (error instanceof AppError) {
+        return error;
+    }
 
-        if (details.status === 400) {
-            throw new AppError(
+    console.error("========== GEMINI ANALYSIS ERROR ==========");
+    console.dir(error, { depth: null });
+    console.error("===========================================");
+
+    const details =
+        typeof error === "object" && error !== null
+            ? (error as {
+                status?: number;
+                message?: string;
+            })
+            : {};
+
+    const message =
+        details.message ??
+        "ไม่สามารถให้ Gemini วิเคราะห์ Resume ได้";
+
+    switch (details.status) {
+        case 400:
+            return new AppError(
                 `คำขอ Gemini ไม่ถูกต้อง: ${message}`,
                 400,
                 "GEMINI_BAD_REQUEST",
             );
-        }
 
-        if (
-            details.status === 401 ||
-            details.status === 403
-        ) {
-            throw new AppError(
+        case 401:
+        case 403:
+            return new AppError(
                 "Gemini API Key ไม่ถูกต้องหรือไม่มีสิทธิ์ใช้โมเดลนี้",
                 502,
                 "GEMINI_AUTHENTICATION_FAILED",
             );
-        }
 
-        if (details.status === 404) {
+        case 404:
             console.error("Gemini model not found:", {
                 configuredModel:
                     env.gemini.generationModel,
                 providerMessage: details.message,
             });
 
-            throw new AppError(
+            return new AppError(
                 "ไม่พบ Gemini Model ที่กำหนด กรุณาตรวจ GEMINI_GENERATION_MODEL",
                 502,
                 "GEMINI_MODEL_NOT_FOUND",
@@ -209,28 +232,26 @@ export async function answerResumeQuestion(
                     providerMessage: details.message,
                 },
             );
-        }
 
-        if (details.status === 429) {
-            throw new AppError(
+        case 429:
+            return new AppError(
                 "Gemini API เกินโควตาหรือ Rate Limit กรุณาลองใหม่ภายหลัง",
                 429,
                 "GEMINI_RATE_LIMITED",
             );
-        }
 
-        if (details.status === 503) {
-            throw new AppError(
+        case 503:
+            return new AppError(
                 "Gemini API ไม่พร้อมใช้งานชั่วคราว",
                 503,
                 "GEMINI_SERVICE_UNAVAILABLE",
             );
-        }
 
-        throw new AppError(
-            message,
-            502,
-            "GEMINI_ANALYSIS_FAILED",
-        );
+        default:
+            return new AppError(
+                message,
+                502,
+                "GEMINI_ANALYSIS_FAILED",
+            );
     }
 }

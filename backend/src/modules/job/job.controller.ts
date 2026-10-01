@@ -26,26 +26,11 @@ export async function searchJobsController(
         pageSize: number;
     };
 
-    const forwardedFor =
-        req.headers["x-forwarded-for"];
-
-    const userIp =
-        typeof forwardedFor === "string"
-            ? forwardedFor
-                .split(",")[0]
-                .trim()
-            : req.ip ||
-            req.socket.remoteAddress ||
-            "";
-
-    const userAgent =
-        req.get("user-agent") ??
-        "Unknown";
-
-    const referer =
-        req.get("referer") ??
-        req.get("origin") ??
-        "http://localhost:5173/";
+    const {
+        userIp,
+        userAgent,
+        referer,
+    } = getRequestMetadata(req);
 
     const result =
         await searchJobs({
@@ -66,23 +51,36 @@ export async function searchJobsController(
     });
 }
 
+/*
+ * IP ผู้ใช้สำหรับ Careerjet (ต้องส่ง user_ip)
+ * - ใช้ req.ip (ผ่าน trust proxy แล้ว) ไม่อ่าน X-Forwarded-For ดิบ → ปลอมไม่ได้
+ * - Careerjet ไม่ตอบเลยถ้า user_ip = "::1" → แปลง loopback/IPv4-mapped เป็น IPv4
+ */
+function getCareerjetUserIp(
+  req: Request,
+): string {
+  const ip =
+    req.ip ||
+    req.socket.remoteAddress ||
+    "";
+
+  if (!ip || ip === "::1") {
+    return "127.0.0.1";
+  }
+
+  if (ip.startsWith("::ffff:")) {
+    return ip.slice("::ffff:".length);
+  }
+
+  return ip;
+}
+
 function getRequestMetadata(
   req: Request,
 ) {
-  const forwardedFor =
-    req.headers["x-forwarded-for"];
-
-  const userIp =
-    typeof forwardedFor === "string"
-      ? forwardedFor
-          .split(",")[0]
-          .trim()
-      : req.ip ||
-        req.socket.remoteAddress ||
-        "";
-
   return {
-    userIp,
+    userIp:
+      getCareerjetUserIp(req),
 
     userAgent:
       req.get("user-agent") ??

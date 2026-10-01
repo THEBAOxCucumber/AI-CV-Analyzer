@@ -137,9 +137,28 @@ function getGeminiErrorDetails(
     return error as GeminiErrorDetails;
 }
 
-export async function analyzeResume(
+type ResumeChunks = Awaited<
+    ReturnType<typeof findCompletedChunksByResumeId>
+>;
+
+type AnalysisContext =
+    | {
+        kind: "EXISTING";
+        analysis: ResumeAnalysisRecord;
+    }
+    | {
+        kind: "READY";
+        totalChunks: number;
+        selectedChunks: ResumeChunks;
+    };
+
+/**
+ * ตรวจเงื่อนไขก่อนวิเคราะห์ + เลือก chunk
+ * มีผลเดิมที่ใช้ได้ → EXISTING
+ */
+async function loadAnalysisContext(
     input: AnalyzeResumeInput,
-): Promise<ResumeAnalysisRecord> {
+): Promise<AnalysisContext> {
     const resume = await findResumeById(
         input.resumeId,
         input.userId,
@@ -164,7 +183,10 @@ export async function analyzeResume(
         "COMPLETED" &&
         !input.force
     ) {
-        return existingAnalysis;
+        return {
+            kind: "EXISTING",
+            analysis: existingAnalysis,
+        };
     }
 
     if (
@@ -207,107 +229,201 @@ export async function analyzeResume(
         );
     }
 
+    return {
+        kind: "READY",
+        totalChunks: allChunks.length,
+        selectedChunks,
+    };
+}
+
+/**
+ * เรียก Gemini → parse JSON → validate schema + คะแนนรวม
+ */
+async function requestGeminiAnalysis(
+    resumeId: number,
+    totalChunks: number,
+    selectedChunks: ResumeChunks,
+): Promise<ResumeAnalysisResult> {
+    const prompt =
+        buildResumeAnalysisPrompt(
+            {
+                chunks: selectedChunks,
+                analysisType: "BASE",
+                jobDescription: null,
+            },
+            env.resumeAnalysis.promptVersion,
+        );
+
+    console.log(
+        "Gemini resume analysis request:",
+        {
+            resumeId,
+            model:
+                env.gemini.generationModel,
+            totalChunks,
+            selectedChunks:
+                selectedChunks.length,
+            promptLength: prompt.length,
+        },
+    );
+
+    const response =
+        await gemini.models.generateContent({
+            model:
+                env.gemini.generationModel,
+
+            contents: prompt,
+
+            config: {
+                temperature: 0.1,
+                maxOutputTokens: 2_500,
+
+                responseMimeType:
+                    "application/json",
+
+                responseJsonSchema:
+                    z.toJSONSchema(
+                        resumeAnalysisResultSchema,
+                        {
+                            target: "draft-07",
+                        },
+                    ),
+            },
+        });
+
+    const responseText =
+        response.text?.trim();
+
+    if (!responseText) {
+        throw new AppError(
+            "Gemini ไม่ได้ส่งผลวิเคราะห์กลับมา",
+            502,
+            "GEMINI_EMPTY_ANALYSIS_RESPONSE",
+        );
+    }
+
+    let rawResult: unknown;
+
+    try {
+        rawResult = JSON.parse(
+            responseText,
+        );
+    } catch {
+        throw new AppError(
+            "Gemini ส่งผลลัพธ์ที่ไม่ใช่ JSON",
+            502,
+            "GEMINI_INVALID_JSON_RESPONSE",
+            {
+                responsePreview:
+                    responseText.slice(0, 500),
+            },
+        );
+    }
+
+    const validationResult =
+        resumeAnalysisResultSchema.safeParse(
+            rawResult,
+        );
+
+    if (!validationResult.success) {
+        throw new AppError(
+            "รูปแบบผลวิเคราะห์จาก Gemini ไม่ถูกต้อง",
+            502,
+            "GEMINI_INVALID_ANALYSIS_RESPONSE",
+            z.flattenError(
+                validationResult.error,
+            ),
+        );
+    }
+
+    validateScoreTotal(
+        validationResult.data,
+    );
+
+    return validationResult.data;
+}
+
+/**
+ * แปลง error ระหว่างวิเคราะห์เป็น AppError ตาม HTTP status ของ Gemini
+ */
+function toGeminiAnalysisAppError(
+    error: unknown,
+): AppError {
+    if (error instanceof AppError) {
+        return error;
+    }
+
+    console.error(
+        "========== GEMINI RESUME ANALYSIS ERROR ==========",
+    );
+    console.dir(error, {
+        depth: null,
+    });
+    console.error(
+        "==================================================",
+    );
+
+    switch (getGeminiErrorDetails(error).status) {
+        case 401:
+        case 403:
+            return new AppError(
+                "Gemini API Key ไม่ถูกต้องหรือไม่มีสิทธิ์ใช้โมเดล",
+                502,
+                "GEMINI_AUTHENTICATION_FAILED",
+            );
+
+        case 404:
+            return new AppError(
+                "ไม่พบ Gemini Model ที่กำหนด",
+                502,
+                "GEMINI_MODEL_NOT_FOUND",
+            );
+
+        case 429:
+            return new AppError(
+                "Gemini API เกินโควตาหรือ Rate Limit",
+                429,
+                "GEMINI_RATE_LIMITED",
+            );
+
+        case 503:
+            return new AppError(
+                "Gemini API ไม่พร้อมใช้งานชั่วคราว",
+                503,
+                "GEMINI_SERVICE_UNAVAILABLE",
+            );
+
+        default:
+            return new AppError(
+                "ไม่สามารถวิเคราะห์ Resume ได้",
+                502,
+                "GEMINI_ANALYSIS_FAILED",
+            );
+    }
+}
+
+export async function analyzeResume(
+    input: AnalyzeResumeInput,
+): Promise<ResumeAnalysisRecord> {
+    const context =
+        await loadAnalysisContext(input);
+
+    if (context.kind === "EXISTING") {
+        return context.analysis;
+    }
+
     await upsertAnalysisProcessing(
         input.resumeId,
         input.userId,
     );
 
     try {
-        const prompt =
-            buildResumeAnalysisPrompt(
-                {
-                    chunks: selectedChunks,
-                    analysisType: "BASE",
-                    jobDescription: null,
-                },
-                 env.resumeAnalysis.promptVersion,
+        const analysisResult =
+            await requestGeminiAnalysis(
+                input.resumeId,
+                context.totalChunks,
+                context.selectedChunks,
             );
-
-        console.log(
-            "Gemini resume analysis request:",
-            {
-                resumeId: input.resumeId,
-                model:
-                    env.gemini.generationModel,
-                totalChunks: allChunks.length,
-                selectedChunks:
-                    selectedChunks.length,
-                promptLength: prompt.length,
-            },
-        );
-
-        const response =
-            await gemini.models.generateContent({
-                model:
-                    env.gemini.generationModel,
-
-                contents: prompt,
-
-                config: {
-                    temperature: 0.1,
-                    maxOutputTokens: 2_500,
-
-                    responseMimeType:
-                        "application/json",
-
-                    responseJsonSchema:
-                        z.toJSONSchema(
-                            resumeAnalysisResultSchema,
-                            {
-                                target: "draft-07",
-                            },
-                        ),
-                },
-            });
-
-        const responseText =
-            response.text?.trim();
-
-        if (!responseText) {
-            throw new AppError(
-                "Gemini ไม่ได้ส่งผลวิเคราะห์กลับมา",
-                502,
-                "GEMINI_EMPTY_ANALYSIS_RESPONSE",
-            );
-        }
-
-        let rawResult: unknown;
-
-        try {
-            rawResult = JSON.parse(
-                responseText,
-            );
-        } catch {
-            throw new AppError(
-                "Gemini ส่งผลลัพธ์ที่ไม่ใช่ JSON",
-                502,
-                "GEMINI_INVALID_JSON_RESPONSE",
-                {
-                    responsePreview:
-                        responseText.slice(0, 500),
-                },
-            );
-        }
-
-        const validationResult =
-            resumeAnalysisResultSchema.safeParse(
-                rawResult,
-            );
-
-        if (!validationResult.success) {
-            throw new AppError(
-                "รูปแบบผลวิเคราะห์จาก Gemini ไม่ถูกต้อง",
-                502,
-                "GEMINI_INVALID_ANALYSIS_RESPONSE",
-                validationResult.error.flatten(),
-            );
-        }
-
-        const analysisResult:
-            ResumeAnalysisResult =
-            validationResult.data;
-
-        validateScoreTotal(analysisResult);
 
         await markAnalysisCompleted(
             input.resumeId,
@@ -316,6 +432,7 @@ export async function analyzeResume(
             env.gemini.generationModel,
             env.resumeAnalysis.promptVersion,
         );
+
         const completedAnalysis =
             await findResumeAnalysis(
                 input.resumeId,
@@ -332,74 +449,15 @@ export async function analyzeResume(
 
         return completedAnalysis;
     } catch (error) {
-        const errorMessage =
-            error instanceof Error
-                ? error.message
-                : "Unknown resume analysis error";
-
         await markAnalysisFailed(
             input.resumeId,
             input.userId,
-            errorMessage,
+            error instanceof Error
+                ? error.message
+                : "Unknown resume analysis error",
         );
 
-        if (error instanceof AppError) {
-            throw error;
-        }
-
-        console.error(
-            "========== GEMINI RESUME ANALYSIS ERROR ==========",
-        );
-        console.dir(error, {
-            depth: null,
-        });
-        console.error(
-            "==================================================",
-        );
-
-        const details =
-            getGeminiErrorDetails(error);
-
-        if (
-            details.status === 401 ||
-            details.status === 403
-        ) {
-            throw new AppError(
-                "Gemini API Key ไม่ถูกต้องหรือไม่มีสิทธิ์ใช้โมเดล",
-                502,
-                "GEMINI_AUTHENTICATION_FAILED",
-            );
-        }
-
-        if (details.status === 404) {
-            throw new AppError(
-                "ไม่พบ Gemini Model ที่กำหนด",
-                502,
-                "GEMINI_MODEL_NOT_FOUND",
-            );
-        }
-
-        if (details.status === 429) {
-            throw new AppError(
-                "Gemini API เกินโควตาหรือ Rate Limit",
-                429,
-                "GEMINI_RATE_LIMITED",
-            );
-        }
-
-        if (details.status === 503) {
-            throw new AppError(
-                "Gemini API ไม่พร้อมใช้งานชั่วคราว",
-                503,
-                "GEMINI_SERVICE_UNAVAILABLE",
-            );
-        }
-
-        throw new AppError(
-            "ไม่สามารถวิเคราะห์ Resume ได้",
-            502,
-            "GEMINI_ANALYSIS_FAILED",
-        );
+        throw toGeminiAnalysisAppError(error);
     }
 }
 

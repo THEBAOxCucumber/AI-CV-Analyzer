@@ -3,7 +3,7 @@ import type {
   Request,
   Response,
 } from "express";
-import type { ZodType } from "zod";
+import { flattenError, type ZodType } from "zod";
 
 import { AppError } from "../errors/app-error.js";
 
@@ -25,7 +25,7 @@ export function validate(schemas: ValidationSchemas) {
       const result = schemas.body.safeParse(req.body);
 
       if (!result.success) {
-        validationErrors.body = result.error.flatten();
+        validationErrors.body = flattenError(result.error);
       } else {
         req.body = result.data;
       }
@@ -35,7 +35,7 @@ export function validate(schemas: ValidationSchemas) {
       const result = schemas.params.safeParse(req.params);
 
       if (!result.success) {
-        validationErrors.params = result.error.flatten();
+        validationErrors.params = flattenError(result.error);
       } else {
         Object.assign(req.params, result.data);
       }
@@ -45,7 +45,7 @@ export function validate(schemas: ValidationSchemas) {
       const result = schemas.query.safeParse(req.query);
 
       if (!result.success) {
-        validationErrors.query = result.error.flatten();
+        validationErrors.query = flattenError(result.error);
       } else {
         Object.assign(req.query, result.data);
       }

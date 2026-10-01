@@ -212,7 +212,7 @@ beforeEach(async () => {
    */
   const keys =
     await redisConnection.keys(
-      "analysis:rate-limit:user:*",
+      "analysis:rate-limit:test:user:*",
     );
 
   if (keys.length > 0) {
@@ -515,7 +515,7 @@ describe(
 
         const rateLimitKey =
           await redisConnection.get(
-            `analysis:rate-limit:user:${userId}`,
+            `analysis:rate-limit:test:user:${userId}`,
           );
 
         expect(
@@ -605,7 +605,7 @@ describe(
 
         const rateLimitKey =
           await redisConnection.get(
-            `analysis:rate-limit:user:${firstUser.userId}`,
+            `analysis:rate-limit:test:user:${firstUser.userId}`,
           );
 
         expect(
@@ -1013,7 +1013,7 @@ it(
       );
 
     const key =
-      `analysis:rate-limit:user:${userId}`;
+      `analysis:rate-limit:test:user:${userId}`;
 
     /*
      * ทำให้ request ถัดไปเกิน limit

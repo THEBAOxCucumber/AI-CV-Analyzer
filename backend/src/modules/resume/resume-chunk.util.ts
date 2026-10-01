@@ -4,6 +4,11 @@ import type {
   ResumeSection,
 } from "./resume-chunk.types.js";
 
+import {
+  normalizeExtractedText,
+  trimEndChars,
+} from "../../utils/text-normalize.util.js";
+
 interface SectionBlock {
   section: ResumeSection;
   content: string;
@@ -119,21 +124,17 @@ const sectionPatterns: Array<{
   },
 ];
 
-function normalizeLine(line: string): string {
-  return line
-    .trim()
-    .replace(/[:：\-–—]+$/, "")
-    .trim();
-}
+/*
+ * เครื่องหมายท้ายหัวข้อ เช่น "Skills:" / "ทักษะ —"
+ */
+const HEADING_TRAILING_MARKS: ReadonlySet<string> =
+  new Set([":", "：", "-", "–", "—"]);
 
-function normalizeText(text: string): string {
-  return text
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/[ \t]{2,}/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+function normalizeLine(line: string): string {
+  return trimEndChars(
+    line.trim(),
+    HEADING_TRAILING_MARKS,
+  ).trim();
 }
 
 function detectSection(
@@ -164,7 +165,7 @@ function detectSection(
 export function splitResumeIntoSections(
   text: string,
 ): SectionBlock[] {
-  const normalizedText = normalizeText(text);
+  const normalizedText = normalizeExtractedText(text);
 
   if (!normalizedText) {
     return [];

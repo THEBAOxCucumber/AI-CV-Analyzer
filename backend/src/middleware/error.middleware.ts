@@ -4,7 +4,7 @@ import type {
   Request,
 } from "express";
 import multer from "multer";
-import { ZodError } from "zod";
+import { ZodError, flattenError } from "zod";
 
 import { AppError } from "../errors/app-error.js";
 
@@ -85,7 +85,7 @@ export const errorHandler: ErrorRequestHandler = (
       success: false,
       message: "ข้อมูลที่ส่งมาไม่ถูกต้อง",
       code: "VALIDATION_ERROR",
-      errors: error.flatten(),
+      errors: flattenError(error),
     });
     return;
   }

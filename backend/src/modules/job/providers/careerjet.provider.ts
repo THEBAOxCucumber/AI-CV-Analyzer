@@ -6,7 +6,8 @@ import {
   createHash,
 } from "node:crypto";
 
-const CAREERJET_TIMEOUT_MS = 15_000;
+// Careerjet ตอบช้าจริง (วัดได้ 5–14 วินาที)
+const CAREERJET_TIMEOUT_MS = 25_000;
 
 interface CareerjetApiJob {
   title?: string;

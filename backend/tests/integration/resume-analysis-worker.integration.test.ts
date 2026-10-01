@@ -483,7 +483,7 @@ beforeEach(async () => {
 
     const rateLimitKeys =
         await redisConnection.keys(
-            "analysis:rate-limit:user:*",
+            "analysis:rate-limit:test:user:*",
         );
 
     if (

@@ -55,6 +55,23 @@ function getNumberEnv(
   return parsedValue;
 }
 
+/*
+ * "false" → ไม่เชื่อ proxy, ตัวเลข → จำนวน hop, อื่นๆ → ส่งให้ Express ตรงๆ (เช่น "loopback")
+ */
+function parseTrustProxy(
+  value: string,
+): boolean | number | string {
+  if (value === "false") {
+    return false;
+  }
+
+  if (/^\d+$/.test(value)) {
+    return Number(value);
+  }
+
+  return value;
+}
+
 export const env = {
   nodeEnv:
     process.env.NODE_ENV ??
@@ -342,6 +359,48 @@ export const env = {
         600,
       ),
 
+  },
+
+  admin: {
+    // งาน QUEUED/PROCESSING ที่ค้างเกินนี้ → หน้า Admin ยกเลิกได้
+    stuckMinutes:
+      getNumberEnv(
+        "ADMIN_STUCK_MINUTES",
+        30,
+      ),
+  },
+
+  /*
+   * Rate limit หน้า auth
+   * TRUST_PROXY: request ผ่าน Vite proxy / Cloudflare tunnel (localhost)
+   * → "loopback" ให้ req.ip เป็น IP จริงของผู้ใช้ ไม่ใช่ 127.0.0.1
+   */
+  rateLimit: {
+    trustProxy:
+      parseTrustProxy(
+        process.env.TRUST_PROXY ??
+        "loopback",
+      ),
+
+    windowMinutes:
+      getNumberEnv(
+        "RATE_LIMIT_WINDOW_MINUTES",
+        15,
+      ),
+
+    // ล็อกอินผิดต่อ (IP + email)
+    loginMaxFailures:
+      getNumberEnv(
+        "RATE_LIMIT_LOGIN_MAX_FAILURES",
+        5,
+      ),
+
+    // register / login / forgot / reset รวมกันต่อ IP
+    authIpMax:
+      getNumberEnv(
+        "RATE_LIMIT_AUTH_IP_MAX",
+        30,
+      ),
   },
 
   cors: {

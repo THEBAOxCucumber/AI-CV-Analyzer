@@ -291,7 +291,7 @@ export async function processResumeAnalysis(
       "รูปแบบผลวิเคราะห์จาก Local AI ไม่ถูกต้อง",
       502,
       "OLLAMA_INVALID_ANALYSIS_RESPONSE",
-      parsed.error.flatten(),
+      z.flattenError(parsed.error),
     );
   }
 

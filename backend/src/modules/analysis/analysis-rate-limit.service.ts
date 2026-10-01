@@ -17,8 +17,9 @@ interface RateLimitResult {
 async function consumeAnalysisRateLimit(
   userId: number,
 ): Promise<RateLimitResult> {
+  // แยกตาม NODE_ENV — เทสต์ (DB แยก, id ชนกันได้) ไม่ใช้โควตาของผู้ใช้จริง
   const key =
-    `analysis:rate-limit:user:${userId}`;
+    `analysis:rate-limit:${env.nodeEnv}:user:${userId}`;
 
   const limit =
   env.analysisRateLimit.maxRequests;

@@ -22,7 +22,7 @@ export const updateProfileSchema = z.object({
     .string()
     .trim()
     .regex(
-      /^0[0-9]{8,9}$/,
+      /^0\d{8,9}$/,
       "เบอร์โทรศัพท์ต้องขึ้นต้นด้วย 0 และมี 9–10 หลัก",
     )
     .nullable(),
