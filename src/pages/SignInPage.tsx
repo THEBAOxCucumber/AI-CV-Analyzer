@@ -34,6 +34,14 @@ import {
   useAuth,
 } from "../hooks/useAuth"
 
+import {
+  OAuthButtons,
+} from "../components/auth/OAuthButtons"
+
+import {
+  getOAuthErrorMessage,
+} from "../utils/oauth-errors"
+
 import "../styles/pages/SignInPage.css"
 
 interface LocationState {
@@ -61,6 +69,13 @@ export function SignInPage() {
 
   const [isSubmitting, setIsSubmitting] =
     useState(false)
+
+  // กลับมาจาก Google ไม่สำเร็จ (?oauthError=…)
+  const oauthError =
+    getOAuthErrorMessage(
+      new URLSearchParams(location.search)
+        .get("oauthError"),
+    )
 
   if (isAuthLoading) {
     return (
@@ -217,12 +232,12 @@ export function SignInPage() {
               ลืมรหัสผ่าน?
             </Link>
 
-            {error && (
+            {(error || oauthError) && (
               <div
                 className="sign-in__error"
                 role="alert"
               >
-                {error}
+                {error || oauthError}
               </div>
             )}
 
@@ -235,6 +250,8 @@ export function SignInPage() {
             </Button>
           </form>
 
+          <OAuthButtons />
+
           <p className="sign-in__register">
             ยังไม่มีบัญชี?{" "}
             <Link
@@ -243,12 +260,6 @@ export function SignInPage() {
             >
               สมัครสมาชิก
             </Link>
-          </p>
-
-          <p className="sign-in__oauth-note">
-            Google และ LinkedIn
-            จะเปิดใช้งานเมื่อ backend
-            รองรับ OAuth
           </p>
         </div>
       </section>

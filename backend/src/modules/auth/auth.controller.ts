@@ -7,6 +7,7 @@ import {
   getCurrentUser,
   login,
   register,
+  setInitialPassword,
 } from "./auth.service.js";
 import type {
   ChangePasswordBody,
@@ -14,6 +15,7 @@ import type {
   LoginBody,
   RegisterBody,
   ResetPasswordBody,
+  SetPasswordBody,
 } from "./auth.validation.js";
 import {
   requestPasswordReset,
@@ -93,6 +95,32 @@ export const changePasswordController = asyncHandler(
     res.status(200).json({
       success: true,
       message: "เปลี่ยนรหัสผ่านสำเร็จ",
+    });
+  },
+);
+
+export const setPasswordController = asyncHandler(
+  async (
+    req: Request<object, object, SetPasswordBody>,
+    res: Response,
+  ) => {
+    if (!req.user) {
+      throw new AppError(
+        "กรุณาเข้าสู่ระบบ",
+        401,
+        "UNAUTHENTICATED",
+      );
+    }
+
+    const user = await setInitialPassword(
+      req.user.id,
+      req.body.newPassword,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "ตั้งรหัสผ่านสำเร็จ",
+      data: { user },
     });
   },
 );

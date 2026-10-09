@@ -40,6 +40,14 @@ import {
   ForgotPasswordPage,
 } from "./pages/ForgotPasswordPage"
 
+import {
+  OAuthCallbackPage,
+} from "./pages/OAuthCallbackPage"
+
+import {
+  SetPasswordPage,
+} from "./pages/SetPasswordPage"
+
 // import {
 //   JobMatchPage,
 // } from "./pages/JobMatchPage"
@@ -86,6 +94,22 @@ function App() {
       <Route
         path="/forgot-password"
         element={<ForgotPasswordPage />}
+      />
+
+      {/* กลับมาจาก Google */}
+      <Route
+        path="/auth/callback"
+        element={<OAuthCallbackPage />}
+      />
+
+      {/* บัญชีจาก Google ต้องตั้งรหัสผ่านก่อน (ไม่มี sidebar) */}
+      <Route
+        path="/set-password"
+        element={
+          <ProtectedRoute>
+            <SetPasswordPage />
+          </ProtectedRoute>
+        }
       />
 
       <Route

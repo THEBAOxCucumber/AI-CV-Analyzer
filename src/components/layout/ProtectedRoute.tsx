@@ -19,6 +19,7 @@ export function ProtectedRoute({
   children,
 }: ProtectedRouteProps) {
   const {
+    user,
     isAuthenticated,
     isLoading,
   } = useAuth()
@@ -41,6 +42,21 @@ export function ProtectedRoute({
         state={{
           from: location.pathname,
         }}
+      />
+    )
+  }
+
+  /*
+   * บัญชีจาก Google ที่ยังไม่มีรหัสผ่าน → ต้องตั้งก่อนเข้าหน้าอื่น
+   */
+  if (
+    user?.needsPassword &&
+    location.pathname !== "/set-password"
+  ) {
+    return (
+      <Navigate
+        to="/set-password"
+        replace
       />
     )
   }

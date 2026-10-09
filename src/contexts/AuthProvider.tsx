@@ -7,6 +7,7 @@ import {
 } from "react"
 
 import {
+  exchangeOAuthCode,
   getMe,
   login as loginRequest,
 } from "../services/auth.service"
@@ -210,15 +211,12 @@ export function AuthProvider({
    * useCallback/useMemo: value คงที่ระหว่าง render
    * consumer ไม่ re-render ถ้าข้อมูลไม่เปลี่ยน (S6481)
    */
-  const login = useCallback(async (
-    input: LoginInput,
-  ): Promise<void> => {
-    const response =
-      await loginRequest(input)
-
-    const token =
-      response.data.token
-
+  /*
+   * เก็บ token แล้วโหลดผู้ใช้ — ใช้ทั้งรหัสผ่านและ Google
+   */
+  const startSession = useCallback(async (
+    token: string,
+  ): Promise<User> => {
     setAccessToken(token)
 
     try {
@@ -232,6 +230,8 @@ export function AuthProvider({
       setUser(
         meResponse.data.user,
       )
+
+      return meResponse.data.user
     } catch (error) {
       clearAccessToken()
       setSessionRemainingSeconds(0)
@@ -239,6 +239,30 @@ export function AuthProvider({
 
       throw error
     }
+  }, [])
+
+  const login = useCallback(async (
+    input: LoginInput,
+  ): Promise<void> => {
+    const response =
+      await loginRequest(input)
+
+    await startSession(response.data.token)
+  }, [startSession])
+
+  const loginWithOAuthCode = useCallback(async (
+    code: string,
+  ): Promise<User> => {
+    const response =
+      await exchangeOAuthCode(code)
+
+    return startSession(response.data.token)
+  }, [startSession])
+
+  const updateUser = useCallback((
+    nextUser: User,
+  ): void => {
+    setUser(nextUser)
   }, [])
 
   const logout = useCallback((): void => {
@@ -255,6 +279,8 @@ export function AuthProvider({
       isLoading,
       sessionRemainingSeconds,
       login,
+      loginWithOAuthCode,
+      updateUser,
       logout,
     }),
     [
@@ -262,6 +288,8 @@ export function AuthProvider({
       isLoading,
       sessionRemainingSeconds,
       login,
+      loginWithOAuthCode,
+      updateUser,
       logout,
     ],
   )

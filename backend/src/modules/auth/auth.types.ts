@@ -8,6 +8,8 @@ export interface UserRow extends RowDataPacket {
   last_name: string;
   email: string;
   password_hash: string;
+  // 0 = สร้างผ่าน OAuth และยังไม่ได้ตั้งรหัสผ่าน
+  password_set: number;
   role: UserRole;
   last_login_at: Date | null;
   created_at: Date;
@@ -34,4 +36,6 @@ export interface PublicUser {
   role: UserRole;
   createdAt: Date;
   lastLoginAt: Date | null;
+  // ต้องตั้งรหัสผ่านก่อนใช้งาน (บัญชีจาก Google)
+  needsPassword: boolean;
 }

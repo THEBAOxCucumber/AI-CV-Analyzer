@@ -82,6 +82,12 @@ export const resetPasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
+// ตั้งรหัสผ่านครั้งแรก (บัญชีจาก Google)
+export const setPasswordSchema = z.object({
+  newPassword: passwordSchema,
+});
+
+export type SetPasswordBody = z.infer<typeof setPasswordSchema>;
 export type RegisterBody = z.infer<typeof registerSchema>;
 export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;

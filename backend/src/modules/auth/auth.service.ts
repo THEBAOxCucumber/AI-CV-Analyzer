@@ -36,6 +36,7 @@ function toPublicUser(row: UserRow): PublicUser {
     role: row.role,
     createdAt: row.created_at,
     lastLoginAt: row.last_login_at,
+    needsPassword: Number(row.password_set) === 0,
   };
 }
 
@@ -148,6 +149,79 @@ export async function login(
   const token = createToken(user);
 
   return { user, token };
+}
+
+/*
+ * ออก JWT ให้ผู้ใช้ที่ยืนยันตัวตนแล้วด้วยวิธีอื่น (Google)
+ */
+export async function issueAuthResultForUser(
+  userId: number,
+): Promise<AuthResult> {
+  const userRow = await findUserById(userId);
+
+  if (!userRow) {
+    throw new AppError(
+      "ไม่พบบัญชีผู้ใช้",
+      404,
+      "USER_NOT_FOUND",
+    );
+  }
+
+  const lastLoginAt =
+    await updateLastLoginAt(userRow.id);
+
+  const user: PublicUser = {
+    ...toPublicUser(userRow),
+    lastLoginAt,
+  };
+
+  return {
+    user,
+    token: createToken(user),
+  };
+}
+
+/*
+ * ตั้งรหัสผ่านครั้งแรก (บัญชีที่สร้างผ่าน OAuth) — ไม่ต้องใช้รหัสเดิม
+ * บัญชีที่มีรหัสผ่านแล้วต้องใช้ changePassword
+ */
+export async function setInitialPassword(
+  userId: number,
+  newPassword: string,
+): Promise<PublicUser> {
+  const userRow = await findUserById(userId);
+
+  if (!userRow) {
+    throw new AppError(
+      "ไม่พบบัญชีผู้ใช้",
+      404,
+      "USER_NOT_FOUND",
+    );
+  }
+
+  if (Number(userRow.password_set) !== 0) {
+    throw new AppError(
+      "บัญชีนี้ตั้งรหัสผ่านแล้ว กรุณาใช้เมนูเปลี่ยนรหัสผ่าน",
+      409,
+      "PASSWORD_ALREADY_SET",
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(
+    newPassword,
+    12,
+  );
+
+  // updatePasswordHash ตั้ง password_set = 1 ด้วย
+  await updatePasswordHash(
+    userId,
+    passwordHash,
+  );
+
+  return {
+    ...toPublicUser(userRow),
+    needsPassword: false,
+  };
 }
 
 export async function getCurrentUser(

@@ -300,12 +300,98 @@
   font-weight: 500;
 }
 
-.sign-in__oauth-note {
-  margin-top: var(--space-4);
+/*
+ * ล็อกอินด้วย Google
+ */
+.oauth {
+  margin-top: var(--space-6);
+
+  display: grid;
+  gap: var(--space-4);
+}
+
+.oauth__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.oauth__divider::before,
+.oauth__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.oauth__button {
+  min-height: 46px;
+  padding: 0 var(--space-4);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.oauth__button:hover {
+  border-color: var(--color-steel-blue);
+  background: var(--color-surface-muted);
+}
+
+.oauth__button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.oauth__button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.oauth__button:disabled:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+}
+
+.oauth__note {
+  margin: 0;
 
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
+}
+
+/*
+ * /auth/callback ตอนแลก code ไม่สำเร็จ
+ */
+.auth-callback {
+  padding: var(--space-6);
+
+  align-content: center;
+  gap: var(--space-4);
+
+  text-align: center;
 }
 
 .sign-in__register-link {

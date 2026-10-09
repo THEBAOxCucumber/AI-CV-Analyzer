@@ -10,7 +10,11 @@ export interface User {
   role: UserRole
   createdAt: string
   lastLoginAt: string | null
+  // บัญชีจาก Google ที่ยังไม่ได้ตั้งรหัสผ่าน → ต้องตั้งก่อนใช้งาน
+  needsPassword: boolean
 }
+
+export type OAuthProvider = "google"
 
 export interface LoginInput {
   email: string

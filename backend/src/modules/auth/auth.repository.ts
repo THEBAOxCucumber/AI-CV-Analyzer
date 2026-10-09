@@ -19,6 +19,7 @@ export async function findUserByEmail(
         last_name,
         email,
         password_hash,
+        password_set,
         role,
         last_login_at,
         created_at,
@@ -63,6 +64,7 @@ export async function createUser(
     role: "USER",
     createdAt: new Date(),
     lastLoginAt: null,
+    needsPassword: false,
   };
 }
 
@@ -76,7 +78,8 @@ export async function updatePasswordHash(
   await executor.execute<ResultSetHeader>(
     `
       UPDATE users
-      SET password_hash = ?
+      SET password_hash = ?,
+          password_set = 1
       WHERE id = ?
     `,
     [passwordHash, userId],
@@ -117,6 +120,7 @@ export async function findUserById(
         last_name,
         email,
         password_hash,
+        password_set,
         role,
         last_login_at,
         created_at,

@@ -37,6 +37,10 @@ import {
   useAuth,
 } from "../hooks/useAuth"
 
+import {
+  OAuthButtons,
+} from "../components/auth/OAuthButtons"
+
 import "../styles/pages/SignInPage.css"
 
 export function RegisterPage() {
@@ -316,6 +320,8 @@ export function RegisterPage() {
               สมัครสมาชิก
             </Button>
           </form>
+
+          <OAuthButtons dividerLabel="หรือสมัครด้วย" />
 
           <p className="sign-in__register">
             มีบัญชีอยู่แล้ว?{" "}

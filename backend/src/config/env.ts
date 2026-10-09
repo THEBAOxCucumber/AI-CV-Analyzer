@@ -361,6 +361,30 @@ export const env = {
 
   },
 
+  /*
+   * ล็อกอินด้วย Google (คู่มือ: docs/OAUTH_SETUP.md)
+   * ไม่ใส่ CLIENT_ID/SECRET = ปิด provider นั้น (ปุ่มขึ้นว่ายังไม่เปิดใช้)
+   *
+   * publicBaseUrl: URL ที่เบราว์เซอร์เห็น (ผ่าน Vite proxy)
+   *   callback = <publicBaseUrl>/api/auth/oauth/<provider>/callback
+   *   ต้องลงทะเบียน URL นี้ใน Google Cloud ให้ตรงทุกตัวอักษร
+   */
+  oauth: {
+    publicBaseUrl:
+      (process.env.OAUTH_PUBLIC_BASE_URL ??
+        "http://localhost:5173").replace(/\/+$/, ""),
+
+    frontendUrl:
+      (process.env.FRONTEND_URL ??
+        process.env.CORS_ORIGIN ??
+        "http://localhost:5173").replace(/\/+$/, ""),
+
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    },
+  },
+
   admin: {
     // งาน QUEUED/PROCESSING ที่ค้างเกินนี้ → หน้า Admin ยกเลิกได้
     stuckMinutes:

@@ -13,6 +13,7 @@ import {
   loginController,
   registerController,
   resetPasswordController,
+  setPasswordController,
 } from "./auth.controller.js";
 import {
   changePasswordSchema,
@@ -20,7 +21,9 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  setPasswordSchema,
 } from "./auth.validation.js";
+import { oauthRouter } from "../oauth/oauth.routes.js";
 
 export const authRouter = Router();
 
@@ -51,6 +54,16 @@ authRouter.post(
   validate({ body: changePasswordSchema }),
   changePasswordController,
 );
+
+authRouter.post(
+  "/set-password",
+  authenticateToken,
+  validate({ body: setPasswordSchema }),
+  setPasswordController,
+);
+
+// Google
+authRouter.use("/oauth", oauthRouter);
 
 authRouter.post(
   "/forgot-password",

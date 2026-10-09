@@ -6,6 +6,15 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
   "/api"
 
+/*
+ * URL เต็มสำหรับลิงก์ที่เบราว์เซอร์เปิดเอง (เช่น เริ่มล็อกอิน Google)
+ */
+export function getApiUrl(
+  path: string,
+): string {
+  return `${API_BASE_URL}${path}`
+}
+
 const TOKEN_KEY = "ai-cv-analyzer-token"
 
 interface ApiErrorResponse {
