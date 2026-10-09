@@ -5,7 +5,7 @@ import {
 import {
   useEffect,
   useState,
-  type FormEvent,
+  type SubmitEvent,
   type ReactNode,
 } from "react"
 
@@ -191,6 +191,67 @@ function SectionTitle({
   )
 }
 
+/*
+ * ตัวเลือกแบบปุ่มติดกัน — ใช้ radio จริง (ลูกศรเลือกได้, screen reader อ่านเป็นกลุ่ม)
+ */
+function SegmentedControl<T extends string>({
+  legend,
+  name,
+  options,
+  value,
+  onChange,
+}: {
+  legend: string
+  name: string
+  options: Array<{
+    value: T
+    label: string
+    icon?: LucideIcon
+  }>
+  value: T
+  onChange: (value: T) => void
+}) {
+  return (
+    <fieldset className="segmented-field">
+      <legend className="settings-subheading">
+        {legend}
+      </legend>
+
+      <div className="segmented">
+        {options.map((option) => {
+          const Icon = option.icon
+          const isActive = value === option.value
+
+          return (
+            <label
+              key={option.value}
+              className={
+                isActive
+                  ? "segmented__option segmented__option--active"
+                  : "segmented__option"
+              }
+            >
+              <input
+                type="radio"
+                className="segmented__input"
+                name={name}
+                value={option.value}
+                checked={isActive}
+                onChange={() =>
+                  onChange(option.value)
+                }
+              />
+
+              {Icon && <Icon size={16} />}
+              {option.label}
+            </label>
+          )
+        })}
+      </div>
+    </fieldset>
+  )
+}
+
 function Message({
   type,
   children,
@@ -367,7 +428,7 @@ export function SettingsPage() {
    * (PUT /profile รับทุก field)
    */
   async function handleSaveProfile(
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
     card: "profile" | "preferences",
   ) {
     event.preventDefault()
@@ -378,7 +439,7 @@ export function SettingsPage() {
 
     if (
       phone &&
-      !/^0[0-9]{8,9}$/.test(phone)
+      !/^0\d{8,9}$/.test(phone)
     ) {
       setSaveResult({
         card,
@@ -462,7 +523,7 @@ export function SettingsPage() {
   }
 
   async function handleChangePassword(
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault()
 
@@ -1107,74 +1168,21 @@ export function SettingsPage() {
             title="Appearance"
           />
 
-          <h3 className="settings-subheading">
-            Theme
-          </h3>
+          <SegmentedControl
+            legend="Theme"
+            name="theme"
+            options={THEME_OPTIONS}
+            value={theme}
+            onChange={setTheme}
+          />
 
-          <div
-            className="segmented"
-            role="radiogroup"
-            aria-label="Theme"
-          >
-            {THEME_OPTIONS.map((option) => {
-              const Icon = option.icon
-
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={
-                    theme === option.value
-                  }
-                  className={
-                    theme === option.value
-                      ? "segmented__option segmented__option--active"
-                      : "segmented__option"
-                  }
-                  onClick={() =>
-                    setTheme(option.value)
-                  }
-                >
-                  <Icon size={16} />
-                  {option.label}
-                </button>
-              )
-            })}
-          </div>
-
-          <h3 className="settings-subheading">
-            Font Size
-          </h3>
-
-          <div
-            className="segmented"
-            role="radiogroup"
-            aria-label="Font Size"
-          >
-            {FONT_SIZE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                role="radio"
-                aria-checked={
-                  fontSize === option.value
-                }
-                className={
-                  fontSize === option.value
-                    ? "segmented__option segmented__option--active"
-                    : "segmented__option"
-                }
-                onClick={() =>
-                  handleFontSizeChange(
-                    option.value,
-                  )
-                }
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            legend="Font Size"
+            name="font-size"
+            options={FONT_SIZE_OPTIONS}
+            value={fontSize}
+            onChange={handleFontSizeChange}
+          />
 
           <p className="settings-note">
             ใช้กับอุปกรณ์และเบราว์เซอร์นี้เท่านั้น

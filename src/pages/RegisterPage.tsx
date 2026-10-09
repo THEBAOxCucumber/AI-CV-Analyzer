@@ -1,6 +1,6 @@
 import {
   useState,
-  type FormEvent,
+  type SubmitEvent,
 } from "react"
 
 import {
@@ -86,7 +86,7 @@ export function RegisterPage() {
   }
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault()
     setError("")
@@ -132,7 +132,7 @@ export function RegisterPage() {
       return
     }
 
-    if (!/[0-9]/.test(password)) {
+    if (!/\d/.test(password)) {
       setError(
         "รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว",
       )

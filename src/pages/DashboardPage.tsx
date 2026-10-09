@@ -61,6 +61,10 @@ import {
   getTopSkills,
 } from "../utils/dashboard-stats"
 
+import {
+  ModalDialog,
+} from "../components/ui/ModalDialog"
+
 import "../styles/pages/DashboardPage.css"
 
 
@@ -640,24 +644,14 @@ export function DashboardPage() {
                     <Trash2 size={18} />
                   </button>
                   {resumeToDelete?.id === resume.id && (
-                    <div
-                      className="delete-modal"
-                      role="presentation"
-                      onMouseDown={() => {
-                        if (deletingResumeId === null) {
-                          setResumeToDelete(null)
-                        }
+                    <ModalDialog
+                      labelledBy="delete-resume-title"
+                      dismissible={deletingResumeId === null}
+                      onClose={() => {
+                        setResumeToDelete(null)
                       }}
                     >
-                      <div
-                        className="delete-modal__dialog"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="delete-resume-title"
-                        onMouseDown={(event) => {
-                          event.stopPropagation()
-                        }}
-                      >
+                      <div className="delete-modal__dialog">
                         <div className="delete-modal__icon">
                           <Trash2 size={24} />
                         </div>
@@ -704,7 +698,7 @@ export function DashboardPage() {
                           </button>
                         </div>
                       </div>
-                    </div>
+                    </ModalDialog>
                   )}
                 </article>
               ),

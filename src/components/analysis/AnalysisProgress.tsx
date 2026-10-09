@@ -216,11 +216,12 @@ export function AnalysisProgress({
           </p>
         </div>
 
+        {/*
+          * แถบวิ่งตกแต่ง — สถานะจริงเป็นข้อความด้านบนแล้ว
+          */}
         <div
           className="analysis-progress__bar"
-          role="progressbar"
-          aria-label="สถานะการวิเคราะห์"
-          aria-valuetext={title}
+          aria-hidden="true"
         >
           <span />
         </div>

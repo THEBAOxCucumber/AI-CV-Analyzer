@@ -48,6 +48,10 @@ import type {
   Resume,
 } from "../types/resume"
 
+import {
+  ModalDialog,
+} from "../components/ui/ModalDialog"
+
 import "../styles/pages/HistoryPage.css"
 
 interface HistoryItem {
@@ -487,25 +491,15 @@ export function HistoryPage() {
             )}
 
       {analysisToDelete && (
-        <div
-          className="history-modal-backdrop"
-          role="presentation"
-          onMouseDown={() => {
-            if (!isDeleting) {
-              setAnalysisToDelete(null)
-              setDeleteError("")
-            }
+        <ModalDialog
+          labelledBy="delete-analysis-title"
+          dismissible={!isDeleting}
+          onClose={() => {
+            setAnalysisToDelete(null)
+            setDeleteError("")
           }}
         >
-          <div
-            className="history-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-analysis-title"
-            onMouseDown={(event) => {
-              event.stopPropagation()
-            }}
-          >
+          <div className="history-modal">
             <div className="history-modal__icon">
               <Trash2 size={22} />
             </div>
@@ -589,7 +583,7 @@ export function HistoryPage() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalDialog>
       )}
     </main>
   )

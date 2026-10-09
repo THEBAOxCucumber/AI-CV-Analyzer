@@ -530,16 +530,32 @@
   font-weight: 400;
 }
 
+/*
+ * <progress> — ลบหน้าตาเดิมของ browser แล้ววาดใหม่
+ */
 .job-match-progress {
+  display: block;
+  width: 100%;
   height: 10px;
   margin-top: var(--space-6);
   overflow: hidden;
+  border: 0;
   border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  appearance: none;
+}
+
+.job-match-progress::-webkit-progress-bar {
+  border-radius: inherit;
   background: rgba(255, 255, 255, 0.18);
 }
 
-.job-match-progress__bar {
-  height: 100%;
+.job-match-progress::-webkit-progress-value {
+  border-radius: inherit;
+  background: #b0cbe6;
+}
+
+.job-match-progress::-moz-progress-bar {
   border-radius: inherit;
   background: #b0cbe6;
 }

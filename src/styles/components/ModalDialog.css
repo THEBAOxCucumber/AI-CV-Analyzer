@@ -1,0 +1,25 @@
+/*
+ * <dialog> เป็นแค่กรอบโปร่งใส — การ์ดด้านในใช้ style ของแต่ละหน้า
+ */
+.modal-dialog {
+  width: min(calc(100% - 2 * var(--space-4)), 460px);
+  max-width: none;
+  max-height: calc(100dvh - 2 * var(--space-4));
+
+  padding: 0;
+
+  overflow: visible;
+
+  border: 0;
+
+  color: inherit;
+  background: transparent;
+}
+
+/*
+ * fallback: browser เก่าไม่ส่ง custom property เข้า ::backdrop
+ */
+.modal-dialog::backdrop {
+  background: var(--color-overlay, rgba(21, 35, 63, 0.5));
+  backdrop-filter: blur(4px);
+}

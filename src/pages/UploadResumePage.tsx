@@ -278,19 +278,6 @@ export function UploadResumePage() {
               ]
                 .filter(Boolean)
                 .join(" ")}
-              role="button"
-              tabIndex={0}
-              onClick={() =>
-                inputRef.current?.click()
-              }
-              onKeyDown={(event) => {
-                if (
-                  event.key === "Enter" ||
-                  event.key === " "
-                ) {
-                  inputRef.current?.click()
-                }
-              }}
               onDragEnter={(event) => {
                 event.preventDefault()
                 setIsDragging(true)
@@ -325,12 +312,19 @@ export function UploadResumePage() {
                 หรือคลิกเพื่อเลือกไฟล์
               </p>
 
-              <span
+              {/*
+                * ปุ่มจริง (คีย์บอร์ด/screen reader)
+                * ::after ขยายพื้นที่คลิกให้คลุมทั้งกรอบ
+                */}
+              <button
+                type="button"
                 className="upload-dropzone__pick"
-                aria-hidden="true"
+                onClick={() =>
+                  inputRef.current?.click()
+                }
               >
                 เลือกไฟล์
-              </span>
+              </button>
 
               <span className="upload-dropzone__hint">
                 PDF · ไม่เกิน {MAX_FILE_SIZE_MB} MB

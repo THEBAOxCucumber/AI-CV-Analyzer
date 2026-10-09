@@ -65,6 +65,8 @@
 }
 
 .upload-dropzone {
+  position: relative;
+
   min-height: 300px;
 
   padding: var(--space-8) var(--space-5);
@@ -104,9 +106,10 @@
   transform: scale(1.01);
 }
 
-.upload-dropzone:focus-visible {
-  outline: none;
-
+/*
+ * focus อยู่ที่ปุ่มเลือกไฟล์ → ไฮไลต์ทั้งกรอบ
+ */
+.upload-dropzone:has(.upload-dropzone__pick:focus-visible) {
   border-color: var(--color-steel-blue);
 
   box-shadow: var(--focus-ring);
@@ -157,8 +160,27 @@
 
   box-shadow: var(--shadow-sm);
 
+  font: inherit;
   font-size: var(--font-size-sm);
   font-weight: 500;
+
+  cursor: pointer;
+}
+
+.upload-dropzone__pick:focus-visible {
+  outline: none;
+}
+
+/*
+ * พื้นที่คลิกของปุ่มคลุมทั้ง dropzone
+ */
+.upload-dropzone__pick::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  border-radius: var(--radius-lg);
 }
 
 .upload-dropzone__hint {

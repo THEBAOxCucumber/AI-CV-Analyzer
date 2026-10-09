@@ -1,6 +1,6 @@
 import {
   useState,
-  type FormEvent,
+  type SubmitEvent,
 } from "react"
 
 import {
@@ -80,7 +80,7 @@ export function SignInPage() {
   }
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault()
     setError("")

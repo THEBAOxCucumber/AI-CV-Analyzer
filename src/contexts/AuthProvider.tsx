@@ -1,5 +1,7 @@
 import {
+  useCallback,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react"
@@ -204,9 +206,13 @@ export function AuthProvider({
     }
   }, [user])
 
-  async function login(
+  /*
+   * useCallback/useMemo: value คงที่ระหว่าง render
+   * consumer ไม่ re-render ถ้าข้อมูลไม่เปลี่ยน (S6481)
+   */
+  const login = useCallback(async (
     input: LoginInput,
-  ): Promise<void> {
+  ): Promise<void> => {
     const response =
       await loginRequest(input)
 
@@ -233,25 +239,36 @@ export function AuthProvider({
 
       throw error
     }
-  }
+  }, [])
 
-  function logout(): void {
+  const logout = useCallback((): void => {
     clearAccessToken()
     setSessionRemainingSeconds(0)
     setUser(null)
-  }
+  }, [])
+
+  const value = useMemo(
+    () => ({
+      user,
+      isAuthenticated:
+        user !== null,
+      isLoading,
+      sessionRemainingSeconds,
+      login,
+      logout,
+    }),
+    [
+      user,
+      isLoading,
+      sessionRemainingSeconds,
+      login,
+      logout,
+    ],
+  )
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated:
-          user !== null,
-        isLoading,
-        sessionRemainingSeconds,
-        login,
-        logout,
-      }}
+      value={value}
     >
       {children}
     </AuthContext.Provider>

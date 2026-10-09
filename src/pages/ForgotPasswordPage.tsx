@@ -1,7 +1,7 @@
 import {
   useEffect,
   useState,
-  type FormEvent,
+  type SubmitEvent,
 } from "react"
 
 import {
@@ -152,7 +152,7 @@ export function ForgotPasswordPage() {
   }
 
   async function handleRequestOtp(
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault()
 
@@ -173,7 +173,7 @@ export function ForgotPasswordPage() {
   }
 
   async function handleResetPassword(
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault()
     setError("")

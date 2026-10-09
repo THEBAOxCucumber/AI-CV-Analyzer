@@ -420,20 +420,6 @@
 /*
  * Modal ยืนยันการลบ
  */
-.history-modal-backdrop {
-  position: fixed;
-  z-index: 1000;
-  inset: 0;
-
-  padding: var(--space-4);
-
-  display: grid;
-  place-items: center;
-
-  background: var(--color-overlay);
-  backdrop-filter: blur(4px);
-}
-
 .history-modal {
   width: min(100%, 460px);
 

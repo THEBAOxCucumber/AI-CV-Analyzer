@@ -755,20 +755,6 @@
 /*
  * Modal ยืนยันการลบ
  */
-.delete-modal {
-  position: fixed;
-  z-index: 1000;
-  inset: 0;
-
-  padding: var(--space-4);
-
-  display: grid;
-  place-items: center;
-
-  background: var(--color-overlay);
-  backdrop-filter: blur(4px);
-}
-
 .delete-modal__dialog {
   width: min(100%, 460px);
 
