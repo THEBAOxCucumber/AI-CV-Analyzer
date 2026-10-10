@@ -1,0 +1,69 @@
+# ตรวจโค้ดทุกครั้งที่ push / เปิด PR เข้า main
+#
+# frontend: lint → typecheck + build → test (Vitest)
+# backend : typecheck เท่านั้น
+#   integration test ต้องใช้ MySQL + Redis + Qdrant และ test:db:setup คัดลอก schema จาก DB dev
+#   ยังรันบน CI ไม่ได้ — รันในเครื่อง: cd backend; npm run test:db:setup; npm test
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck + build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run type-check

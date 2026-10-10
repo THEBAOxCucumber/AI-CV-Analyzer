@@ -120,11 +120,12 @@ or ask an existing admin to use **Promote by email** on the admin page.
 
 ## Testing
 
-Frontend:
+Frontend unit and component tests use Vitest with jsdom. Test files live next to the code they cover (`*.test.ts` / `*.test.tsx`):
 
 ```bash
 npm run lint
 npm run build
+npm test            # or: npm run test:watch
 ```
 
 Backend tests run against a **separate database** (`ai_resume_analyzer_test`), a separate Qdrant collection, and separate Redis keys, so they never touch development data and can run while the dev server is up:
@@ -136,7 +137,9 @@ npm run type-check
 npm test
 ```
 
-Current automated test suite: **138 tests passing** (19 files), including OAuth, admin, rate-limiting, and analysis-worker integration tests.
+Current automated test suite: **138 backend tests** (19 files), including OAuth, admin, rate-limiting, and analysis-worker integration tests, plus **42 frontend tests** (6 files).
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `main`: frontend lint, typecheck + build, and tests; backend typecheck. Backend integration tests are not in CI yet because they need MySQL, Redis, and Qdrant.
 
 ## Known Issues
 
