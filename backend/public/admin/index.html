@@ -20,66 +20,99 @@
     <main id="login-view" class="login" hidden>
       <form id="login-form" class="login__card" novalidate>
         <div class="login__brand">
-          <img src="logo-white.png" alt="AI Resume Analyzer" width="180" height="78" />
-          <span class="badge badge--accent">Admin</span>
+          <img src="logo-white.png" alt="AI Resume Analyzer" width="160" height="69" />
+          <span class="badge badge--accent">Admin Console</span>
         </div>
 
-        <h1>เข้าสู่ระบบผู้ดูแล</h1>
-        <p class="muted">ใช้บัญชีที่มีสิทธิ์ ADMIN</p>
+        <div class="login__body">
+          <div class="login__icon"><span data-icon="shield"></span></div>
 
-        <label class="field">
-          <span>อีเมล</span>
-          <input id="login-email" type="email" autocomplete="username" required />
-        </label>
+          <h1>เข้าสู่ระบบผู้ดูแล</h1>
+          <p class="muted">ใช้บัญชีที่มีสิทธิ์ ADMIN</p>
 
-        <label class="field">
-          <span>รหัสผ่าน</span>
-          <input id="login-password" type="password" autocomplete="current-password" required />
-        </label>
+          <label class="field">
+            <span>อีเมล</span>
+            <input id="login-email" type="email" autocomplete="username" placeholder="name@example.com" required />
+          </label>
 
-        <p id="login-error" class="alert alert--error" role="alert" hidden></p>
+          <label class="field">
+            <span>รหัสผ่าน</span>
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="กรอกรหัสผ่าน" required />
+          </label>
 
-        <button id="login-submit" type="submit" class="button button--primary">
-          เข้าสู่ระบบ
-        </button>
+          <p id="login-error" class="alert alert--error" role="alert" hidden></p>
+
+          <button id="login-submit" type="submit" class="button button--primary button--block">
+            เข้าสู่ระบบ
+          </button>
+        </div>
       </form>
     </main>
 
     <!-- แอป -->
     <div id="app-view" class="app" hidden>
-      <header class="topbar">
-        <div class="topbar__brand">
-          <img src="logo-white.png" alt="AI Resume Analyzer" width="120" height="52" />
+      <aside class="sidebar">
+        <div class="sidebar__brand">
+          <img src="logo-white.png" alt="AI Resume Analyzer" width="132" height="57" />
           <span class="badge badge--accent">Admin</span>
         </div>
 
-        <nav class="tabs" aria-label="เมนู Admin">
-          <a href="#overview" data-tab="overview">ภาพรวม</a>
-          <a href="#status" data-tab="status">บริการ</a>
-          <a href="#users" data-tab="users">ผู้ใช้</a>
-          <a href="#analyses" data-tab="analyses">Analysis</a>
-          <a href="#audit" data-tab="audit">Audit log</a>
+        <nav class="nav" aria-label="เมนู Admin">
+          <p class="nav__label">ระบบ</p>
+          <a href="#overview" data-tab="overview"><span data-icon="dashboard"></span><span>ภาพรวม</span></a>
+          <a href="#status" data-tab="status"><span data-icon="activity"></span><span>บริการ</span></a>
+
+          <p class="nav__label">ข้อมูล</p>
+          <a href="#users" data-tab="users"><span data-icon="users"></span><span>ผู้ใช้</span></a>
+          <a href="#analyses" data-tab="analyses"><span data-icon="file"></span><span>Analysis</span></a>
+          <a href="#audit" data-tab="audit"><span data-icon="shield"></span><span>Audit log</span></a>
         </nav>
 
-        <div class="topbar__user">
-          <span id="admin-email"></span>
-          <button id="logout-button" type="button" class="button button--ghost">ออกจากระบบ</button>
+        <div class="sidebar__footer">
+          <div class="theme-switch" role="group" aria-label="ธีม">
+            <button type="button" data-theme-option="light" title="สว่าง"><span data-icon="sun"></span></button>
+            <button type="button" data-theme-option="dark" title="มืด"><span data-icon="moon"></span></button>
+            <button type="button" data-theme-option="system" title="ตามระบบ"><span data-icon="monitor"></span></button>
+          </div>
+
+          <div class="me">
+            <span id="admin-avatar" class="avatar avatar--light" aria-hidden="true"></span>
+            <div class="me__info">
+              <strong id="admin-name"></strong>
+              <span id="admin-email"></span>
+            </div>
+            <button id="logout-button" type="button" class="icon-button" title="ออกจากระบบ" aria-label="ออกจากระบบ">
+              <span data-icon="logout"></span>
+            </button>
+          </div>
         </div>
-      </header>
+      </aside>
 
       <main class="content">
         <!-- ภาพรวม -->
         <section id="tab-overview" class="tab" hidden>
-          <div class="section-head">
-            <h2>ภาพรวมระบบ</h2>
-            <button type="button" class="button button--ghost" data-refresh="overview">รีเฟรช</button>
-          </div>
-          <div id="overview-cards" class="cards"></div>
-          <h3 class="subhead">Analysis แยกตามสถานะ</h3>
-          <div id="overview-status" class="chips"></div>
+          <header class="page-head">
+            <div>
+              <h1>ภาพรวมระบบ</h1>
+              <p>สถิติการใช้งานและแนวโน้มของการวิเคราะห์ Resume</p>
+            </div>
+            <button type="button" class="button" data-refresh="overview"><span data-icon="refresh"></span>รีเฟรช</button>
+          </header>
 
-          <div class="section-head trends-head">
-            <h3 class="subhead">แนวโน้ม</h3>
+          <div id="overview-cards" class="cards"></div>
+
+          <article class="panel">
+            <header class="panel__head">
+              <h2>Analysis แยกตามสถานะ</h2>
+            </header>
+            <div id="overview-status" class="chips"></div>
+          </article>
+
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">แนวโน้ม</h2>
+              <p class="muted small">นับตามวันที่สร้างงาน (เวลาไทย)</p>
+            </div>
             <div class="segmented" role="group" aria-label="ช่วงเวลา">
               <button type="button" data-days="7" aria-pressed="true">7 วัน</button>
               <button type="button" data-days="30" aria-pressed="false">30 วัน</button>
@@ -89,7 +122,7 @@
           <div class="charts">
             <article class="chart-card">
               <header class="chart-card__head">
-                <h4>Analysis ต่อวัน</h4>
+                <h3>Analysis ต่อวัน</h3>
                 <div class="legend">
                   <span><i class="swatch swatch--completed"></i>สำเร็จ</span>
                   <span><i class="swatch swatch--failed"></i>ล้มเหลว</span>
@@ -100,15 +133,15 @@
 
             <article class="chart-card">
               <header class="chart-card__head">
-                <h4>อัตราสำเร็จ</h4>
-                <span class="muted small">สำเร็จ ÷ (สำเร็จ + ล้มเหลว) ของงานที่สร้างวันนั้น</span>
+                <h3>อัตราสำเร็จ</h3>
+                <span class="muted small">สำเร็จ ÷ (สำเร็จ + ล้มเหลว)</span>
               </header>
               <div id="chart-success" class="chart"></div>
             </article>
 
             <article class="chart-card">
               <header class="chart-card__head">
-                <h4>เวลาเฉลี่ยต่อ Analysis</h4>
+                <h3>เวลาเฉลี่ยต่อ Analysis</h3>
                 <span class="muted small">เฉพาะงานที่สำเร็จ (เริ่มทำ → เสร็จ)</span>
               </header>
               <div id="chart-duration" class="chart"></div>
@@ -137,31 +170,46 @@
 
         <!-- บริการ -->
         <section id="tab-status" class="tab" hidden>
+          <header class="page-head">
+            <div>
+              <h1>สถานะบริการ</h1>
+              <p>รีเฟรชอัตโนมัติทุก 15 วินาทีขณะเปิดหน้านี้ · <span id="status-checked"></span></p>
+            </div>
+          </header>
+
+          <div id="status-services" class="cards cards--4"></div>
+
           <div class="section-head">
-            <h2>สถานะบริการ</h2>
-            <span id="status-checked" class="muted small"></span>
+            <h2 class="section-title">คิววิเคราะห์ (BullMQ)</h2>
           </div>
-          <div id="status-services" class="cards"></div>
-          <h3 class="subhead">คิววิเคราะห์</h3>
           <div id="status-queue" class="cards cards--compact"></div>
-          <p class="muted small">รีเฟรชอัตโนมัติทุก 15 วินาทีขณะเปิดแท็บนี้</p>
         </section>
 
         <!-- ผู้ใช้ -->
         <section id="tab-users" class="tab" hidden>
-          <div class="section-head">
-            <h2>ผู้ใช้</h2>
-            <input id="users-search" type="search" class="search" placeholder="ค้นหาชื่อหรืออีเมล" aria-label="ค้นหาผู้ใช้" />
-          </div>
+          <header class="page-head">
+            <div>
+              <h1>ผู้ใช้</h1>
+              <p>ค้นหา ปลดล็อกการเข้าสู่ระบบ และจัดการสิทธิ์ Admin</p>
+            </div>
+            <label class="search">
+              <span data-icon="search"></span>
+              <input id="users-search" type="search" placeholder="ค้นหาชื่อหรืออีเมล" aria-label="ค้นหาผู้ใช้" />
+            </label>
+          </header>
 
-          <form id="promote-form" class="promote" novalidate>
-            <label for="promote-email">ตั้ง Admin ด้วยอีเมล</label>
+          <form id="promote-form" class="panel promote" novalidate>
+            <div class="promote__icon"><span data-icon="shield"></span></div>
+            <div class="promote__body">
+              <label for="promote-email">ตั้ง Admin ด้วยอีเมล</label>
+              <p class="muted small">บัญชีต้องสมัครสมาชิกไว้ก่อน · มีผลทันที</p>
+            </div>
             <div class="promote__row">
-              <input id="promote-email" type="email" class="search" placeholder="name@example.com" autocomplete="off" required />
+              <input id="promote-email" type="email" placeholder="name@example.com" autocomplete="off" required />
               <button id="promote-submit" type="submit" class="button button--primary">ตั้งเป็น Admin</button>
             </div>
-            <p class="muted small">บัญชีต้องสมัครสมาชิกไว้ก่อน · มีผลทันทีในการเรียกครั้งถัดไป</p>
           </form>
+
           <div class="table-wrap">
             <table>
               <thead>
@@ -170,8 +218,7 @@
                   <th>Role</th>
                   <th>สมัครเมื่อ</th>
                   <th>ล็อกอินล่าสุด</th>
-                  <th class="num">Resume</th>
-                  <th class="num">Analysis</th>
+                  <th class="num">Resume / Analysis</th>
                   <th>จัดการ</th>
                 </tr>
               </thead>
@@ -183,21 +230,28 @@
 
         <!-- Analysis -->
         <section id="tab-analyses" class="tab" hidden>
-          <div class="section-head">
-            <h2>Analysis ล่าสุด</h2>
-            <select id="analyses-status" aria-label="กรองตามสถานะ">
-              <option value="ALL">ทั้งหมด</option>
-              <option value="ACTIVE">กำลังทำ / รอคิว</option>
-              <option value="STUCK" id="stuck-option">ค้างนานผิดปกติ</option>
-              <option value="COMPLETED">สำเร็จ</option>
-              <option value="FAILED">ล้มเหลว</option>
-            </select>
-          </div>
+          <header class="page-head">
+            <div>
+              <h1>Analysis</h1>
+              <p>ทุกการวิเคราะห์ในระบบ · ลองใหม่รายการที่ล้มเหลว · ยกเลิกงานที่ค้าง</p>
+            </div>
+            <label class="select">
+              <span class="sr-only">กรองตามสถานะ</span>
+              <select id="analyses-status">
+                <option value="ALL">ทุกสถานะ</option>
+                <option value="ACTIVE">กำลังทำ / รอคิว</option>
+                <option value="STUCK" id="stuck-option">ค้างนานผิดปกติ</option>
+                <option value="COMPLETED">สำเร็จ</option>
+                <option value="FAILED">ล้มเหลว</option>
+              </select>
+            </label>
+          </header>
+
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th class="num">#</th>
                   <th>ผู้ใช้ / Resume</th>
                   <th>ประเภท</th>
                   <th>สถานะ</th>
@@ -215,10 +269,14 @@
 
         <!-- Audit log -->
         <section id="tab-audit" class="tab" hidden>
-          <div class="section-head">
-            <h2>Audit log</h2>
-            <button type="button" class="button button--ghost" data-refresh="audit">รีเฟรช</button>
-          </div>
+          <header class="page-head">
+            <div>
+              <h1>Audit log</h1>
+              <p>บันทึกทุกการกระทำของผู้ดูแลระบบ</p>
+            </div>
+            <button type="button" class="button" data-refresh="audit"><span data-icon="refresh"></span>รีเฟรช</button>
+          </header>
+
           <div class="table-wrap">
             <table>
               <thead>
