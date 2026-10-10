@@ -362,6 +362,34 @@ export async function findRunStatus(
   return rows[0]?.status ?? null;
 }
 
+/*
+ * เหตุการณ์ที่ผู้ใช้ทำเอง (ไม่มี Admin) เช่น ลบบัญชี
+ * admin_email ห้ามว่าง → ใส่ค่าคงที่ แทนการเก็บอีเมลของผู้ใช้ (PDPA: ขอลบแล้ว)
+ */
+export const SELF_SERVICE_ACTOR = "self-service";
+
+export async function insertSelfServiceAuditLog(
+  action: string,
+  target: { type: string; id: number },
+  details: Record<string, unknown>,
+): Promise<void> {
+  await database.execute(
+    `
+      INSERT INTO admin_audit_logs (
+        admin_id, admin_email, action, target_type, target_id, details, ip_address
+      )
+      VALUES (NULL, ?, ?, ?, ?, ?, NULL)
+    `,
+    [
+      SELF_SERVICE_ACTOR,
+      action,
+      target.type,
+      target.id,
+      JSON.stringify(details),
+    ],
+  );
+}
+
 export async function insertAuditLog(
   actor: AdminActor,
   action: string,

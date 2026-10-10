@@ -4,6 +4,7 @@ import { AppError } from "../../errors/app-error.js";
 import { env } from "../../config/env.js";
 import {
   countAdmins,
+  countAnalysesByUserId,
   createUser,
   deleteUserById,
   findUserByEmail,
@@ -24,6 +25,9 @@ import {
 import {
   deleteUserVectors,
 } from "../embedding/vector-store.service.js";
+import {
+  insertSelfServiceAuditLog,
+} from "../admin/admin.repository.js";
 import {
   notifyPasswordChanged,
 } from "../password-reset/password-reset.service.js";
@@ -353,8 +357,9 @@ export async function deleteAccount(
     );
   }
 
-  // เก็บ path ไว้ก่อน — หลังลบ user แถวใน resumes จะหายไปด้วย
+  // เก็บ path / จำนวนไว้ก่อน — หลังลบ user แถวลูกจะหายไปด้วย
   const resumes = await findResumesByUserId(userId);
+  const analysisCount = await countAnalysesByUserId(userId);
 
   await deleteUserVectors(userId);
 
@@ -365,4 +370,43 @@ export async function deleteAccount(
       removeResumeFile(resume.file_path),
     ),
   );
+
+  await recordAccountDeletion(userRow, resumes.length, analysisCount);
+}
+
+/*
+ * บันทึกให้ Admin เห็นว่ามีการลบบัญชี
+ * ไม่เก็บอีเมล / ชื่อ / IP (ผู้ใช้ขอลบข้อมูลแล้ว) — เก็บแค่ id และตัวเลขสรุป
+ * บันทึกไม่สำเร็จ ≠ ลบไม่สำเร็จ (ข้อมูลลบไปแล้ว) → log ไว้ ไม่ throw
+ */
+async function recordAccountDeletion(
+  userRow: UserRow,
+  resumeCount: number,
+  analysisCount: number,
+): Promise<void> {
+  const accountAgeDays = Math.max(
+    0,
+    Math.floor(
+      (Date.now() - new Date(userRow.created_at).getTime()) /
+        (24 * 60 * 60 * 1000),
+    ),
+  );
+
+  try {
+    await insertSelfServiceAuditLog(
+      "ACCOUNT_SELF_DELETED",
+      { type: "user", id: userRow.id },
+      {
+        role: userRow.role,
+        resumes: resumeCount,
+        analyses: analysisCount,
+        accountAgeDays,
+      },
+    );
+  } catch (error) {
+    console.error(
+      "Failed to write account deletion audit log:",
+      error instanceof Error ? error.message : error,
+    );
+  }
 }

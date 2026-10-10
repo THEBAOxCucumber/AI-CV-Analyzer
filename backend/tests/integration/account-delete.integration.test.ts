@@ -108,6 +108,41 @@ describe("DELETE /api/auth/account", () => {
     expect(login.status).toBe(401);
   });
 
+  it("records an audit log entry without personal data", async () => {
+    const { email, userId, token } = await createUserAndToken();
+    await createResumeWithFile(userId);
+
+    const response = await request(app)
+      .delete("/api/auth/account")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ currentPassword: PASSWORD, confirmEmail: email });
+
+    expect(response.status).toBe(200);
+
+    const [rows] = await database.execute<RowDataPacket[]>(
+      `
+        SELECT admin_id, admin_email, action, target_type, target_id, details, ip_address
+        FROM admin_audit_logs
+        WHERE action = 'ACCOUNT_SELF_DELETED' AND target_id = ?
+      `,
+      [userId],
+    );
+
+    expect(rows).toHaveLength(1);
+
+    const row = rows[0];
+    const details = typeof row.details === "string" ? JSON.parse(row.details) : row.details;
+
+    expect(row).toMatchObject({
+      admin_id: null,
+      admin_email: "self-service",
+      target_type: "user",
+      ip_address: null,
+    });
+    expect(details).toEqual({ role: "USER", resumes: 1, analyses: 0, accountAgeDays: 0 });
+    expect(JSON.stringify(row)).not.toContain(email);
+  });
+
   it("rejects a wrong password with 400 and keeps the account", async () => {
     const { email, userId, token } = await createUserAndToken();
 

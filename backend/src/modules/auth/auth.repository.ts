@@ -151,6 +151,24 @@ export async function countAdmins(): Promise<number> {
 }
 
 /*
+ * จำนวนการวิเคราะห์ของผู้ใช้ (ใช้สรุปใน audit log ตอนลบบัญชี)
+ */
+export async function countAnalysesByUserId(
+  userId: number,
+): Promise<number> {
+  const [rows] = await database.execute<(RowDataPacket & { total: number })[]>(
+    `
+      SELECT COUNT(*) AS total
+      FROM resume_analysis_runs
+      WHERE user_id = ?
+    `,
+    [userId],
+  );
+
+  return Number(rows[0]?.total ?? 0);
+}
+
+/*
  * ลบผู้ใช้ — ตารางลูกทั้งหมดเป็น ON DELETE CASCADE
  * (profile, resumes, chunks, analysis runs, job descriptions, OTP, OAuth)
  * admin_audit_logs.admin_id → SET NULL (ประวัติยังอยู่ด้วย admin_email)

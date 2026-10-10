@@ -1167,6 +1167,16 @@ const ACTION_LABEL = {
   UNLOCK_LOGIN: "ปลดล็อกล็อกอิน",
   PROMOTE_ADMIN_BY_EMAIL: "ตั้ง Admin ด้วยอีเมล",
   CHANGE_ROLE: "เปลี่ยน role",
+  ACCOUNT_SELF_DELETED: "ผู้ใช้ลบบัญชีเอง",
+};
+
+// เหตุการณ์ที่ผู้ใช้ทำเอง (backend ใส่ค่านี้แทนอีเมล — ไม่เก็บข้อมูลส่วนตัวของบัญชีที่ลบ)
+const SELF_SERVICE_ACTOR = "self-service";
+
+const DETAIL_LABEL = {
+  resumes: "Resume",
+  analyses: "การวิเคราะห์",
+  accountAgeDays: "อายุบัญชี (วัน)",
 };
 
 const TARGET_LABEL = {
@@ -1182,7 +1192,7 @@ function detailsList(details) {
   return el(
     "ul",
     { className: "details-list" },
-    ...entries.map(([key, value]) => el("li", {}, `${key}: ${typeof value === "object" ? JSON.stringify(value) : value}`)),
+    ...entries.map(([key, value]) => el("li", {}, `${DETAIL_LABEL[key] ?? key}: ${typeof value === "object" ? JSON.stringify(value) : value}`)),
   );
 }
 
@@ -1196,13 +1206,19 @@ async function loadAudit() {
 
   $("audit-body").replaceChildren(
     ...(data.logs.length === 0
-      ? [emptyRow(6, "ยังไม่มีการกระทำของ Admin")]
+      ? [emptyRow(6, "ยังไม่มีประวัติ")]
       : data.logs.map((log) =>
           el(
             "tr",
             {},
             el("td", { className: "nowrap" }, formatDate(log.createdAt)),
-            el("td", {}, log.adminEmail),
+            el(
+              "td",
+              {},
+              log.adminEmail === SELF_SERVICE_ACTOR
+                ? el("span", { className: "muted" }, "ผู้ใช้ (ลบเอง)")
+                : log.adminEmail,
+            ),
             el("td", {}, el("span", { className: "badge badge--info" }, ACTION_LABEL[log.action] ?? log.action)),
             el("td", {}, log.targetType ? `${TARGET_LABEL[log.targetType] ?? log.targetType} #${log.targetId}` : "—"),
             el("td", {}, detailsList(log.details)),
