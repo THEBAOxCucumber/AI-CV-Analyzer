@@ -70,7 +70,14 @@ cd backend
 docker compose up -d   # MySQL :3306, phpMyAdmin :8081, Qdrant :6333, Redis :6379
 ```
 
-Run the SQL files in `backend/database/migrations/` in order (for example through phpMyAdmin at `http://localhost:8081`).
+Create the tables from `backend/database/migrations/` on the empty database (the script refuses to run on a database that already has tables):
+
+```bash
+cd backend
+DB_HOST=127.0.0.1 DB_USER=root DB_PASSWORD=root_password DB_NAME=ai_resume_analyzer npm run db:create-schema
+```
+
+On an existing database, apply only the migration files you have not run yet. `018_fix_schema_drift.sql` is safe to run on any database; it fixes tables created before it existed.
 
 ### 2. Backend
 
@@ -132,14 +139,14 @@ Backend tests run against a **separate database** (`ai_resume_analyzer_test`), a
 
 ```bash
 cd backend
-npm run test:db:setup   # create/reset the test DB from the dev schema; rerun after new migrations
+npm run test:db:setup   # recreate the test DB from migrations (same as CI); rerun after new migrations
 npm run type-check
 npm test
 ```
 
 Current automated test suite: **144 backend tests** (20 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `main`: frontend lint, typecheck + build, and tests; backend typecheck. Backend integration tests are not in CI yet because they need MySQL, Redis, and Qdrant.
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `main`: frontend lint, typecheck + build, and tests; backend typecheck, then the full backend suite against MySQL, Redis, and Qdrant service containers with the schema built from migrations (Ollama is mocked; external API keys are dummies).
 
 ## Known Issues
 

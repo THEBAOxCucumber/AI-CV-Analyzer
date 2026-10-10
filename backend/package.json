@@ -9,7 +9,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:db:setup": "bash scripts/setup-test-db.sh"
+    "test:db:setup": "bash scripts/setup-test-db.sh",
+    "db:create-schema": "node scripts/create-schema.mjs"
   },
   "keywords": [],
   "author": "",

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # สร้าง/รีเซ็ต DB สำหรับเทสต์ (ai_resume_analyzer_test)
-# คัดลอกเฉพาะโครงสร้างตารางจาก DB dev — ไม่แตะข้อมูลใน DB dev
+# สร้างตารางจาก database/migrations (แบบเดียวกับ CI) — ไม่แตะ DB dev
 #
 # ใช้: npm run test:db:setup
 # รันซ้ำได้ทุกครั้งหลังเพิ่ม migration (ตารางในเทสต์ DB จะถูกสร้างใหม่)
@@ -10,7 +10,6 @@ set -euo pipefail
 
 CONTAINER="${MYSQL_CONTAINER:-resume-mysql}"
 ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-root_password}"
-SOURCE_DB="${SOURCE_DB:-ai_resume_analyzer}"
 TEST_DB="${TEST_DB:-ai_resume_analyzer_test}"
 APP_USER="${DB_USER:-resume_user}"
 
@@ -28,17 +27,20 @@ mysql_root() {
 
 echo "สร้าง $TEST_DB และให้สิทธิ์ $APP_USER"
 mysql_root -e "
-  CREATE DATABASE IF NOT EXISTS \`$TEST_DB\`
+  DROP DATABASE IF EXISTS \`$TEST_DB\`;
+  CREATE DATABASE \`$TEST_DB\`
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
   GRANT ALL PRIVILEGES ON \`$TEST_DB\`.* TO '$APP_USER'@'%';
   FLUSH PRIVILEGES;
 " 2>/dev/null
 
-echo "คัดลอกโครงสร้างตารางจาก $SOURCE_DB"
-docker exec "$CONTAINER" mysqldump -uroot -p"$ROOT_PASSWORD" \
-  --no-data --skip-comments --skip-add-locks "$SOURCE_DB" 2>/dev/null \
-  | sed -E 's/ AUTO_INCREMENT=[0-9]+//' \
-  | mysql_root "$TEST_DB" 2>/dev/null
+echo "สร้างตารางจาก migrations"
+DB_HOST="${MYSQL_HOST:-127.0.0.1}" \
+DB_PORT="${MYSQL_PORT:-3306}" \
+DB_USER=root \
+DB_PASSWORD="$ROOT_PASSWORD" \
+DB_NAME="$TEST_DB" \
+  node "$(dirname "$0")/create-schema.mjs" | tail -1
 
 TABLES=$(mysql_root -N -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='$TEST_DB'" 2>/dev/null)
 echo "เสร็จ: $TEST_DB มี $TABLES ตาราง"
