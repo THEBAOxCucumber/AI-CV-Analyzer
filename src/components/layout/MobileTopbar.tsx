@@ -222,7 +222,7 @@ export function MobileTopbar() {
                 className="mobile-topbar__item"
               >
                 <Settings size={17} />
-                Settings
+                ตั้งค่า
               </Link>
 
               <button

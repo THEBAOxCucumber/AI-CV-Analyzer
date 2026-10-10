@@ -179,8 +179,8 @@ export function AnalysisProgress({
           <div className="analysis-progress__eyebrow">
             <span>
               {isJobMatch
-                ? "Job Match Analysis"
-                : "AI Resume Analysis"}
+                ? "วิเคราะห์ Job Match"
+                : "วิเคราะห์ Resume ด้วย AI"}
             </span>
 
             <span className="analysis-progress__status">

@@ -218,7 +218,7 @@ export function InsightsPage() {
             } catch {
                 if (!cancelled) {
                     setError(
-                        "ไม่สามารถโหลดข้อมูล Insights ได้",
+                        "ไม่สามารถโหลดข้อมูลเชิงลึกได้",
                     )
                 }
             } finally {
@@ -393,8 +393,8 @@ export function InsightsPage() {
             <main className="insights" aria-busy="true">
                 <header className="insights__header">
                     <div>
-                        <p className="insights__eyebrow">Insights</p>
-                        <h1>Resume Insights</h1>
+                        <p className="insights__eyebrow">ข้อมูลเชิงลึก</p>
+                        <h1>พัฒนาการของ Resume</h1>
                         <p>กำลังรวบรวมข้อมูลจากการวิเคราะห์ของคุณ…</p>
                     </div>
                 </header>
@@ -439,7 +439,7 @@ export function InsightsPage() {
                     </div>
 
                     <h1>
-                        ยังไม่มีข้อมูล Insights
+                        ยังไม่มีข้อมูลเชิงลึก
                     </h1>
 
                     <p>
@@ -464,11 +464,11 @@ export function InsightsPage() {
             <header className="insights__header">
                 <div>
                     <p className="insights__eyebrow">
-                        Insights
+                        ข้อมูลเชิงลึก
                     </p>
 
                     <h1>
-                        Resume Insights
+                        พัฒนาการของ Resume
                     </h1>
 
                     <p>

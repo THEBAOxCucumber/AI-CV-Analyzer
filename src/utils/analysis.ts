@@ -7,13 +7,13 @@ export function getAnalysisTypeLabel(
 ): string {
   switch (type) {
     case "BASE":
-      return "Resume Analysis"
+      return "วิเคราะห์ Resume"
 
     case "JOB_MATCH":
       return "Job Match"
 
     case "COMBINED":
-      return "Combined"
+      return "Resume + Job Match"
 
     default:
       return type

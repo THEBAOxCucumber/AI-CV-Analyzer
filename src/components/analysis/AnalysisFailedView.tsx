@@ -146,8 +146,8 @@ export function AnalysisFailedView({
   return (
     <main className="analysis-page">
       <AnalysisHeader
-        eyebrow="AI Resume Analysis"
-        title="Analysis Result"
+        eyebrow="วิเคราะห์ Resume ด้วย AI"
+        title="ผลการวิเคราะห์"
         status="FAILED"
       />
 

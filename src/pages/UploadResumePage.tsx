@@ -259,7 +259,7 @@ export function UploadResumePage() {
         </p>
 
         <h1>
-          Upload Resume
+          อัปโหลด Resume
         </h1>
 
         <p>
@@ -408,7 +408,7 @@ export function UploadResumePage() {
               )}
               {isUploading
                 ? "กำลังอัปโหลด..."
-                : "Upload Resume"}
+                : "อัปโหลด Resume"}
             </button>
           </>
         )}
@@ -425,7 +425,7 @@ export function UploadResumePage() {
 
             <p>
               Resume พร้อมสำหรับ
-              AI Analysis
+              การวิเคราะห์ด้วย AI
             </p>
 
             <div className="upload-success__resume">
@@ -446,7 +446,7 @@ export function UploadResumePage() {
                   {
                     uploadedResume.chunkCount
                   }{" "}
-                  chunks
+                  ส่วน
                 </span>
               </div>
             </div>
@@ -466,7 +466,7 @@ export function UploadResumePage() {
               )}
               {isStartingAnalysis
                 ? "กำลังเตรียม Resume..."
-                : "Analyze Resume"}
+                : "วิเคราะห์ Resume"}
             </button>
           </div>
         )}

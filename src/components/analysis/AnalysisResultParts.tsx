@@ -91,12 +91,12 @@ export function AnalysisHeader({
       {status === "COMPLETED" ? (
         <span className="analysis-status analysis-status--completed">
           <CheckCircle2 size={15} />
-          COMPLETED
+          สำเร็จ
         </span>
       ) : (
         <span className="analysis-status analysis-status--failed">
           <XCircle size={15} />
-          FAILED
+          ล้มเหลว
         </span>
       )}
     </header>
@@ -189,7 +189,7 @@ export function RecommendationsCard({
         <Lightbulb size={23} />
 
         <div>
-          <h2>Recommendations</h2>
+          <h2>คำแนะนำ</h2>
 
           <p>{description}</p>
         </div>

@@ -301,12 +301,12 @@ export function DashboardPage() {
       <header className="dashboard__header">
         <div>
           <h1>
-            Hello, {user?.firstName} !
+            สวัสดี, {user?.firstName}
           </h1>
 
           <p className="dashboard__subtitle">
-            Let's improve your resume
-            and get you hired
+            มาปรับ Resume ให้พร้อม
+            สำหรับงานที่คุณต้องการ
           </p>
         </div>
 
@@ -315,7 +315,7 @@ export function DashboardPage() {
           to="/resumes/upload"
         >
           <Upload size={20} />
-          Upload Resume
+          อัปโหลด Resume
         </Link>
       </header>
 
@@ -330,14 +330,14 @@ export function DashboardPage() {
 
       <section
         className="dashboard__stats"
-        aria-label="Dashboard statistics"
+        aria-label="สถิติภาพรวม"
       >
         <article className="stat-card">
           <span className="stat-card__label">
             <span className="stat-card__icon">
               <FileCheck2 size={18} />
             </span>
-            Resumes Analyzed
+            Resume ที่วิเคราะห์แล้ว
           </span>
 
           <strong className="stat-card__value">
@@ -352,11 +352,11 @@ export function DashboardPage() {
                 value={
                   stats.analyzedChangePercent
                 }
-                suffix="% this month"
+                suffix="% จากเดือนก่อน"
               />
             ) : (
               <p className="stat-card__trend stat-card__trend--muted">
-                {stats.analyzedThisMonth} this month
+                เดือนนี้ {stats.analyzedThisMonth} ครั้ง
               </p>
             ))}
         </article>
@@ -366,7 +366,7 @@ export function DashboardPage() {
             <span className="stat-card__icon">
               <Gauge size={18} />
             </span>
-            Avg. Resume Score
+            คะแนน Resume เฉลี่ย
           </span>
 
           <strong className="stat-card__value">
@@ -386,7 +386,7 @@ export function DashboardPage() {
                 value={
                   stats.averageScoreChange
                 }
-                suffix=" points"
+                suffix=" คะแนนจากเดือนก่อน"
               />
             )}
         </article>
@@ -396,7 +396,7 @@ export function DashboardPage() {
             <span className="stat-card__icon">
               <Briefcase size={18} />
             </span>
-            Job Matches
+            Job Match
           </span>
 
           <strong className="stat-card__value">
@@ -412,12 +412,11 @@ export function DashboardPage() {
                   className="stat-card__dot"
                   aria-hidden="true"
                 />
-                {stats.jobMatchesThisMonth} new
-                matches this month
+                เดือนนี้เพิ่ม {stats.jobMatchesThisMonth} ครั้ง
               </p>
             ) : (
               <p className="stat-card__trend stat-card__trend--muted">
-                No new matches this month
+                เดือนนี้ยังไม่มี Job Match ใหม่
               </p>
             ))}
         </article>
@@ -426,7 +425,7 @@ export function DashboardPage() {
       <div className="dashboard__grid">
         <section className="dashboard-card recent-analysis">
           <h2>
-            Recent Analysis
+            การวิเคราะห์ล่าสุด
           </h2>
 
           {isLoading ? (
@@ -496,7 +495,7 @@ export function DashboardPage() {
             className="dashboard-card__link"
             to="/history"
           >
-            View all history
+            ดูประวัติทั้งหมด
             <ArrowRight size={20} />
           </Link>
         </section>
@@ -504,7 +503,7 @@ export function DashboardPage() {
         <div className="dashboard__side">
           <section className="dashboard-card top-skills">
             <h2>
-              Top Skills
+              ทักษะที่ตรงกับงานบ่อยที่สุด
             </h2>
 
             {isLoading ? (
@@ -559,19 +558,18 @@ export function DashboardPage() {
           <section className="dashboard-card improve-card">
             <div>
               <h2>
-                Improve your score
+                เพิ่มคะแนน Resume
               </h2>
 
               <p>
-                Get personalized tips
-                to boost your resume.
+                ดูคำแนะนำเฉพาะสำหรับ Resume ของคุณ
               </p>
 
               <Link
                 className="dashboard-card__link"
                 to="/insights"
               >
-                View Recommendations
+                ดูคำแนะนำ
                 <ArrowRight size={20} />
               </Link>
             </div>
@@ -626,7 +624,7 @@ export function DashboardPage() {
               to="/resumes/upload"
               className="dashboard__empty-link"
             >
-              Upload Resume
+              อัปโหลด Resume
             </Link>
           </div>
         ) : (

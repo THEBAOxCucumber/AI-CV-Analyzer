@@ -289,10 +289,10 @@ const [
       <header className="job-matches-header">
         <div>
           <p className="job-matches-eyebrow">
-            Career Opportunities
+            โอกาสงาน
           </p>
 
-          <h1>Job Matches</h1>
+          <h1>หางานที่เหมาะกับคุณ</h1>
 
           <p className="job-matches-subtitle">
             ค้นหาตำแหน่งงานในประเทศไทย
@@ -344,7 +344,7 @@ const [
         )
       }
     >
-      Upload Resume
+      อัปโหลด Resume
     </button>
   )}
 </section>
@@ -395,7 +395,7 @@ const [
           )}
           {isLoading
             ? "กำลังค้นหา..."
-            : "Search Jobs"}
+            : "ค้นหางาน"}
         </button>
       </form>
 
@@ -589,7 +589,7 @@ const [
     {analyzingJobId ===
     job.externalJobId
       ? "กำลังวิเคราะห์..."
-      : "Analyze Match"}
+      : "วิเคราะห์ความเหมาะสม"}
   </button>
 
   <a
@@ -598,7 +598,7 @@ const [
     target="_blank"
     rel="noreferrer"
   >
-    View Job
+    ดูประกาศงาน
 
     <ExternalLink
       size={16}
@@ -613,7 +613,7 @@ const [
         )}
 
       <p className="job-source">
-        Job listings provided by Careerjet
+        ข้อมูลตำแหน่งงานจาก Careerjet
       </p>
     </main>
   )

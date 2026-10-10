@@ -91,8 +91,8 @@ export function BaseResultView({
   return (
     <main className="analysis-page">
       <AnalysisHeader
-        eyebrow="AI Resume Analysis"
-        title="Analysis Result"
+        eyebrow="วิเคราะห์ Resume ด้วย AI"
+        title="ผลการวิเคราะห์"
         description="ผลการวิเคราะห์ Resume และข้อเสนอแนะจาก AI"
         status="COMPLETED"
       />
@@ -102,7 +102,7 @@ export function BaseResultView({
           <div className="base-score-card__label">
             <Sparkles size={20} />
 
-            <span>Base Resume Score</span>
+            <span>คะแนน Resume</span>
           </div>
 
           <div className="base-score-card__score">
@@ -118,7 +118,7 @@ export function BaseResultView({
         </div>
 
         <div className="analysis-summary-card">
-          <h2>Summary</h2>
+          <h2>สรุป</h2>
 
           <p>
             {analysis.summary ||
@@ -130,7 +130,7 @@ export function BaseResultView({
       <div className="analysis-insights-grid">
         <section className="analysis-section analysis-section--scores">
           <div className="analysis-section__heading">
-            <h2>Section Scores</h2>
+            <h2>คะแนนรายหมวด</h2>
 
             <p>
               คะแนนแยกตามองค์ประกอบของ Resume
@@ -150,7 +150,7 @@ export function BaseResultView({
 
         <div className="analysis-feedback-stack">
           <FeedbackCard
-            title="Strengths"
+            title="จุดแข็ง"
             items={analysis.strengths}
             tone="strength"
             headingIcon={ThumbsUp}
@@ -158,7 +158,7 @@ export function BaseResultView({
           />
 
           <FeedbackCard
-            title="Weaknesses"
+            title="จุดที่ควรปรับปรุง"
             items={analysis.weaknesses}
             tone="weakness"
             headingIcon={ThumbsDown}

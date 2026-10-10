@@ -49,22 +49,22 @@ const mainNavigation: NavigationItem[] = [
   },
   {
     to: "/resumes/upload",
-    label: "Upload Resume",
+    label: "อัปโหลด Resume",
     icon: Upload,
   },
   {
     to: "/history",
-    label: "History",
+    label: "ประวัติ",
     icon: History,
   },
   {
     to: "/insights",
-    label: "Insights",
+    label: "ข้อมูลเชิงลึก",
     icon: BarChart3,
   },
   {
     to: "/jobs",
-    label: "Job Matches",
+    label: "หางาน",
     icon: BriefcaseBusiness,
   },
 ]
@@ -72,7 +72,7 @@ const mainNavigation: NavigationItem[] = [
 const accountNavigation: NavigationItem[] = [
   {
     to: "/settings",
-    label: "Settings",
+    label: "ตั้งค่า",
     icon: Settings,
   },
 ]
@@ -151,7 +151,7 @@ export function Sidebar() {
 
       <nav
         className="sidebar__navigation"
-        aria-label="Main navigation"
+        aria-label="เมนูหลัก"
       >
         <p className="sidebar__group-label">
           เมนูหลัก
@@ -188,7 +188,7 @@ export function Sidebar() {
           >
             <Clock3 size={15} />
 
-            <span>Session</span>
+            <span>เซสชัน</span>
 
             <strong>
               {formatSessionTime(

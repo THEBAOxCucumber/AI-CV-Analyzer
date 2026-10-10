@@ -34,7 +34,7 @@ function MatchScoreCard({
     <div className="job-match-score-card">
       <div className="job-match-score-card__top">
         <div>
-          <p>Match Score</p>
+          <p>คะแนนความเหมาะสม</p>
 
           <strong className="tabular-nums">
             {score === null ? "—" : displayed}
@@ -51,7 +51,7 @@ function MatchScoreCard({
       {score !== null && (
         <progress
           className="job-match-progress"
-          aria-label="Job Match Score"
+          aria-label="คะแนน Job Match"
           value={clampPercent(displayed)}
           max={100}
         />
@@ -79,10 +79,10 @@ export function JobMatchResultView({
   return (
     <main className="analysis-page">
       <AnalysisHeader
-        eyebrow="Job Match Analysis"
+        eyebrow="วิเคราะห์ Job Match"
         title={
           analysis.job?.title ??
-          "Job Match Result"
+          "ผล Job Match"
         }
         description={
           `${analysis.job?.company ?? "ไม่ระบุบริษัท"}${location}`
@@ -94,7 +94,7 @@ export function JobMatchResultView({
         <MatchScoreCard score={matchScore} />
 
         <div className="analysis-summary-card">
-          <h2>Why this job matches you</h2>
+          <h2>ทำไมงานนี้เหมาะกับคุณ</h2>
 
           <p>
             {analysis.summary ||
@@ -105,7 +105,7 @@ export function JobMatchResultView({
 
       <section className="analysis-section">
         <div className="analysis-section__heading">
-          <h2>Skills Match</h2>
+          <h2>ทักษะเทียบกับงาน</h2>
 
           <p>
             เปรียบเทียบทักษะใน Resume
@@ -119,7 +119,7 @@ export function JobMatchResultView({
               <ThumbsUp size={20} />
 
               <h3>
-                Matching Skills
+                ทักษะที่ตรง
                 <span className="job-match-count">
                   {jobMatch?.matchedSkills.length ?? 0}
                 </span>
@@ -138,7 +138,7 @@ export function JobMatchResultView({
               <ThumbsDown size={20} />
 
               <h3>
-                Missing Skills
+                ทักษะที่ยังขาด
                 <span className="job-match-count">
                   {jobMatch?.missingSkills.length ?? 0}
                 </span>
@@ -156,7 +156,7 @@ export function JobMatchResultView({
 
       <section className="analysis-section">
         <div className="analysis-section__heading">
-          <h2>Keyword Matches</h2>
+          <h2>คีย์เวิร์ดที่ตรง</h2>
 
           <p>
             Keywords ที่พบทั้งใน Resume
@@ -182,7 +182,7 @@ export function JobMatchResultView({
             target="_blank"
             rel="noreferrer"
           >
-            View Original Job
+            ดูประกาศงานต้นฉบับ
           </a>
         </div>
       )}

@@ -307,8 +307,8 @@ export function HistoryPage() {
       <main className="history-page">
         <header className="history-header">
           <div>
-            <p className="history-eyebrow">Resume Analysis</p>
-            <h1>Analysis History</h1>
+            <p className="history-eyebrow">วิเคราะห์ Resume</p>
+            <h1>ประวัติการวิเคราะห์</h1>
             <p>ดูผลการวิเคราะห์ Resume ที่เคยสร้างไว้</p>
           </div>
         </header>
@@ -359,11 +359,11 @@ export function HistoryPage() {
       <header className="history-header">
         <div>
           <p className="history-eyebrow">
-            Resume Analysis
+            วิเคราะห์ Resume
           </p>
 
           <h1>
-            Analysis History
+            ประวัติการวิเคราะห์
           </h1>
 
           <p>
@@ -376,7 +376,7 @@ export function HistoryPage() {
           <Clock3 size={18} />
 
           <span>
-            {items.length} Analyses
+            {items.length} รายการ
           </span>
         </div>
       </header>
@@ -403,7 +403,7 @@ export function HistoryPage() {
               )
             }
           >
-            Upload Resume
+            อัปโหลด Resume
           </button>
         </section>
       ) : (
@@ -572,7 +572,7 @@ export function HistoryPage() {
             </div>
 
             <h2 id="delete-analysis-title">
-              ลบ Analysis History?
+              ลบประวัติการวิเคราะห์?
             </h2>
 
             <p>
@@ -592,7 +592,7 @@ export function HistoryPage() {
               analysisToDelete.analysis
                 .job && (
                 <p className="history-modal__job">
-                  Job:{" "}
+                  ตำแหน่งงาน:{" "}
                   <strong>
                     {
                       analysisToDelete
@@ -604,12 +604,12 @@ export function HistoryPage() {
 
             <p className="history-modal__warning">
               เมื่อลบแล้วจะไม่สามารถกู้คืน
-              Analysis นี้ได้
+              ผลการวิเคราะห์นี้ได้
             </p>
 
             {isLastAnalysisOfResume && (
               <p className="history-modal__warning">
-                นี่คือ Analysis สุดท้ายของ Resume นี้
+                นี่คือผลการวิเคราะห์สุดท้ายของ Resume นี้
                 — Resume จะถูกลบออกจากระบบด้วย
               </p>
             )}
@@ -633,7 +633,7 @@ export function HistoryPage() {
                   setDeleteError("")
                 }}
               >
-                Cancel
+                ยกเลิก
               </button>
 
               <button
@@ -646,7 +646,7 @@ export function HistoryPage() {
               >
                 {isDeleting
                   ? "กำลังลบ..."
-                  : "Delete Analysis"}
+                  : "ลบ"}
               </button>
             </div>
           </div>

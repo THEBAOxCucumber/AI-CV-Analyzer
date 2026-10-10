@@ -160,7 +160,7 @@ export function JobMatchPage() {
       <header className="job-match-header">
         <div>
           <span className="job-match-header__eyebrow">
-            AI Job Matching
+            เทียบ Resume กับงานด้วย AI
           </span>
 
           <h1>Job Match</h1>
@@ -200,7 +200,7 @@ export function JobMatchPage() {
                 )
               }}
             >
-              Upload Resume
+              อัปโหลด Resume
             </button>
           </div>
         ) : (
@@ -243,7 +243,7 @@ export function JobMatchPage() {
             <div className="job-match-form__row">
               <div className="job-match-field">
                 <label htmlFor="job-title">
-                  Job Title
+                  ตำแหน่งงาน
                 </label>
 
                 <input
@@ -262,7 +262,7 @@ export function JobMatchPage() {
 
               <div className="job-match-field">
                 <label htmlFor="company">
-                  Company
+                  บริษัท
                 </label>
 
                 <input
@@ -282,7 +282,7 @@ export function JobMatchPage() {
 
             <div className="job-match-field">
               <label htmlFor="job-description">
-                Job Description
+                รายละเอียดงาน
               </label>
 
               <textarea
@@ -318,7 +318,7 @@ export function JobMatchPage() {
 
               {submitting
                 ? "กำลังวิเคราะห์..."
-                : "Analyze Job Match"}
+                : "วิเคราะห์ Job Match"}
             </button>
           </form>
         )}

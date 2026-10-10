@@ -137,7 +137,7 @@ npm run type-check
 npm test
 ```
 
-Current automated test suite: **138 backend tests** (19 files), including OAuth, admin, rate-limiting, and analysis-worker integration tests, plus **42 frontend tests** (6 files).
+Current automated test suite: **144 backend tests** (20 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `main`: frontend lint, typecheck + build, and tests; backend typecheck. Backend integration tests are not in CI yet because they need MySQL, Redis, and Qdrant.
 
@@ -149,4 +149,4 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request 
 
 ## Project Status
 
-Core flows are implemented and tested: authentication (password and Google), resume management, asynchronous AI analysis and job matching, history, insights, job search, profile settings, theming, responsive layouts, and an admin console with audit logging.
+Core flows are implemented and tested: authentication (password and Google), resume management, asynchronous AI analysis and job matching, history, insights, job search, profile settings, self-service account deletion (password + email confirmation; removes data, PDFs, and vectors), theming, responsive layouts, and an admin console with audit logging.
