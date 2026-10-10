@@ -231,4 +231,23 @@ export async function deleteResume(
       "RESUME_DELETE_FAILED",
     )
   }
+
+  await removeResumeFile(resume.file_path)
+}
+
+/*
+ * ลบไฟล์ PDF หลังลบ Record แล้ว
+ * ไฟล์หายไปก่อน (ENOENT) = ถือว่าสำเร็จ
+ * error อื่น: log ไว้ ไม่ throw (Record ลบไปแล้ว ผู้ใช้ไม่ควรเห็น error)
+ */
+export async function removeResumeFile(
+  filePath: string,
+): Promise<void> {
+  try {
+    await fs.unlink(filePath)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      console.error("Unable to remove resume file:", { filePath, error })
+    }
+  }
 }
