@@ -20,7 +20,12 @@ import {
 
 import {
   changePassword,
+  deleteAccount,
 } from "../services/auth.service"
+
+import {
+  ModalDialog,
+} from "../components/ui/ModalDialog"
 
 import {
   getResumes,
@@ -64,6 +69,10 @@ import {
 } from "../utils/file-size"
 
 import {
+  mergeFields,
+} from "../utils/form-merge"
+
+import {
   getFontSize,
   setFontSize,
   type FontSize,
@@ -84,6 +93,7 @@ import {
   Monitor,
   Moon,
   Sun,
+  Trash2,
   type LucideIcon,
 } from "lucide-react"
 
@@ -117,13 +127,33 @@ const emptyForm: ProfileForm = {
   bio: "",
 }
 
+/*
+ * field ของแต่ละการ์ด — กด Save การ์ดไหน บันทึกเฉพาะ field ของการ์ดนั้น
+ * (PUT /profile รับทุก field → field การ์ดอื่นส่งค่าที่บันทึกไว้ล่าสุด
+ *  ไม่ใช่ค่าที่ผู้ใช้แก้ค้างไว้)
+ */
+type ProfileCard = "profile" | "preferences"
+
+const CARD_FIELDS: Record<ProfileCard, Array<keyof ProfileForm>> = {
+  profile: ["phone", "location", "headline", "bio"],
+  preferences: [
+    "interestedPosition",
+    "experienceLevel",
+    "university",
+    "faculty",
+    "major",
+    "educationLevel",
+    "graduationYear",
+  ],
+}
+
 const FONT_SIZE_OPTIONS: Array<{
   value: FontSize
   label: string
 }> = [
-  { value: "small", label: "Small" },
-  { value: "medium", label: "Medium" },
-  { value: "large", label: "Large" },
+  { value: "small", label: "เล็ก" },
+  { value: "medium", label: "กลาง" },
+  { value: "large", label: "ใหญ่" },
 ]
 
 const THEME_OPTIONS: Array<{
@@ -131,9 +161,9 @@ const THEME_OPTIONS: Array<{
   label: string
   icon: LucideIcon
 }> = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
+  { value: "light", label: "สว่าง", icon: Sun },
+  { value: "dark", label: "มืด", icon: Moon },
+  { value: "system", label: "ตามระบบ", icon: Monitor },
 ]
 
 function toNullable(
@@ -303,7 +333,7 @@ function SaveButton({
   isSaved: boolean
   disabled: boolean
 }) {
-  let label = "Save Changes"
+  let label = "บันทึก"
 
   if (isSaving) {
     label = "กำลังบันทึก..."
@@ -401,11 +431,10 @@ function SettingsSkeleton() {
       aria-busy="true"
     >
       <header className="settings-page__header">
-        <h1>Settings</h1>
+        <h1>ตั้งค่า</h1>
 
         <p>
-          Manage your profile, preferences
-          and account settings
+          จัดการโปรไฟล์ เป้าหมายงาน และบัญชีของคุณ
         </p>
       </header>
 
@@ -445,10 +474,28 @@ function SettingsSkeleton() {
 }
 
 export function SettingsPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
 
   const [form, setForm] =
     useState<ProfileForm>(emptyForm)
+
+  /*
+   * ค่าที่บันทึกในระบบล่าสุด (ใช้เป็น field ของการ์ดที่ไม่ได้กด Save)
+   */
+  const [savedForm, setSavedForm] =
+    useState<ProfileForm>(emptyForm)
+
+  const [isDeleteOpen, setIsDeleteOpen] =
+    useState(false)
+
+  const [deleteForm, setDeleteForm] =
+    useState({ currentPassword: "", confirmEmail: "" })
+
+  const [isDeletingAccount, setIsDeletingAccount] =
+    useState(false)
+
+  const [deleteError, setDeleteError] =
+    useState("")
 
   const [isLoading, setIsLoading] =
     useState(true)
@@ -460,7 +507,7 @@ export function SettingsPage() {
    * การ์ดที่กำลังบันทึก (ปุ่มอีกการ์ด disabled แต่ไม่หมุน)
    */
   const [savingCard, setSavingCard] =
-    useState<"profile" | "preferences" | null>(null)
+    useState<ProfileCard | null>(null)
 
   const isSaving = savingCard !== null
 
@@ -556,11 +603,12 @@ export function SettingsPage() {
           return
         }
 
-        setForm(
-          toForm(
-            profileResponse.data.profile,
-          ),
+        const loaded = toForm(
+          profileResponse.data.profile,
         )
+
+        setForm(loaded)
+        setSavedForm(loaded)
 
         setResumes(
           resumesResponse.data.resumes,
@@ -603,19 +651,24 @@ export function SettingsPage() {
   }
 
   /*
-   * Profile และ Preferences
-   * บันทึกข้อมูลโปรไฟล์ทั้งชุด
-   * (PUT /profile รับทุก field)
+   * บันทึกเฉพาะ field ของการ์ดที่กด
+   * field การ์ดอื่น = ค่าที่บันทึกไว้ล่าสุด (ที่แก้ค้างไว้ไม่ถูกบันทึกไปด้วย)
    */
   async function handleSaveProfile(
     event: SubmitEvent<HTMLFormElement>,
-    card: "profile" | "preferences",
+    card: ProfileCard,
   ) {
     event.preventDefault()
 
     setSaveResult(null)
 
-    const phone = form.phone.trim()
+    const values = mergeFields(
+      savedForm,
+      form,
+      CARD_FIELDS[card],
+    )
+
+    const phone = values.phone.trim()
 
     if (
       phone &&
@@ -634,9 +687,9 @@ export function SettingsPage() {
       | number
       | null = null
 
-    if (form.graduationYear.trim()) {
+    if (values.graduationYear.trim()) {
       graduationYear =
-        Number(form.graduationYear)
+        Number(values.graduationYear)
 
       const currentYear =
         new Date().getFullYear()
@@ -657,20 +710,20 @@ export function SettingsPage() {
     }
 
     const payload: UpdateProfileInput = {
-      phone: toNullable(form.phone),
-      location: toNullable(form.location),
-      headline: toNullable(form.headline),
-      university: toNullable(form.university),
-      faculty: toNullable(form.faculty),
-      major: toNullable(form.major),
+      phone: toNullable(values.phone),
+      location: toNullable(values.location),
+      headline: toNullable(values.headline),
+      university: toNullable(values.university),
+      faculty: toNullable(values.faculty),
+      major: toNullable(values.major),
       educationLevel:
-        form.educationLevel || null,
+        values.educationLevel || null,
       graduationYear,
       interestedPosition:
-        toNullable(form.interestedPosition),
+        toNullable(values.interestedPosition),
       experienceLevel:
-        form.experienceLevel || null,
-      bio: toNullable(form.bio),
+        values.experienceLevel || null,
+      bio: toNullable(values.bio),
     }
 
     try {
@@ -679,8 +732,13 @@ export function SettingsPage() {
       const response =
         await updateProfile(payload)
 
-      setForm(
-        toForm(response.data.profile),
+      const saved = toForm(response.data.profile)
+
+      setSavedForm(saved)
+
+      // อัปเดตเฉพาะการ์ดนี้ — การ์ดอื่นยังเก็บค่าที่แก้ค้างไว้
+      setForm((current) =>
+        mergeFields(current, saved, CARD_FIELDS[card]),
       )
 
       setSaveResult({
@@ -753,6 +811,47 @@ export function SettingsPage() {
       setIsChangingPassword(false)
     }
   }
+
+  function closeDeleteDialog() {
+    setIsDeleteOpen(false)
+    setDeleteForm({ currentPassword: "", confirmEmail: "" })
+    setDeleteError("")
+  }
+
+  async function handleDeleteAccount(
+    event: SubmitEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+    setDeleteError("")
+
+    try {
+      setIsDeletingAccount(true)
+
+      await deleteAccount(deleteForm)
+
+      /*
+       * โหลดหน้าใหม่ทั้งหน้า (ไม่ใช้ navigate):
+       * - navigate ของ React Router เป็น transition → logout render ก่อน
+       *   ProtectedRoute จึง redirect เองโดยไม่มีข้อความแจ้ง
+       * - ล้าง state ในหน่วยความจำของบัญชีที่ถูกลบทั้งหมด
+       */
+      logout()
+      window.location.replace("/sign-in?accountDeleted=1")
+    } catch (error) {
+      setDeleteError(
+        getErrorMessage(
+          error,
+          "ไม่สามารถลบบัญชีได้ กรุณาลองใหม่อีกครั้ง",
+        ),
+      )
+      setIsDeletingAccount(false)
+    }
+  }
+
+  const canConfirmDelete =
+    deleteForm.currentPassword.length > 0 &&
+    deleteForm.confirmEmail.trim().toLowerCase() ===
+      (user?.email ?? "").toLowerCase()
 
   function handleFontSizeChange(
     size: FontSize,
@@ -852,11 +951,10 @@ export function SettingsPage() {
   return (
     <main className="settings-page">
       <header className="settings-page__header">
-        <h1>Settings</h1>
+        <h1>ตั้งค่า</h1>
 
         <p>
-          Manage your profile, preferences
-          and account settings
+          จัดการโปรไฟล์ เป้าหมายงาน และบัญชีของคุณ
         </p>
       </header>
 
@@ -878,7 +976,7 @@ export function SettingsPage() {
       >
         <SectionTitle
           number={1}
-          title="Profile Information"
+          title="ข้อมูลโปรไฟล์"
         />
 
         <div className="profile-layout">
@@ -891,10 +989,10 @@ export function SettingsPage() {
             </div>
 
             <div className="account-status">
-              <h3>Account Status</h3>
+              <h3>สถานะบัญชี</h3>
 
               <dl>
-                <dt>Member since</dt>
+                <dt>สมัครเมื่อ</dt>
                 <dd>
                   {user?.createdAt
                     ? formatThaiDate(
@@ -903,7 +1001,7 @@ export function SettingsPage() {
                     : "—"}
                 </dd>
 
-                <dt>Last login</dt>
+                <dt>เข้าสู่ระบบล่าสุด</dt>
                 <dd>
                   {user?.lastLoginAt
                     ? formatThaiDateTime(
@@ -917,7 +1015,7 @@ export function SettingsPage() {
 
           <div className="settings-grid">
             <label className="settings-field">
-              <span>Full Name</span>
+              <span>ชื่อ-นามสกุล</span>
 
               <input
                 value={
@@ -930,7 +1028,7 @@ export function SettingsPage() {
             </label>
 
             <label className="settings-field">
-              <span>Email</span>
+              <span>อีเมล</span>
 
               <input
                 type="email"
@@ -940,7 +1038,7 @@ export function SettingsPage() {
             </label>
 
             <label className="settings-field">
-              <span>Phone Number</span>
+              <span>เบอร์โทรศัพท์</span>
 
               <input
                 type="tel"
@@ -964,7 +1062,7 @@ export function SettingsPage() {
               */}
             <div className="settings-field">
               <span id="location-label">
-                Location
+                จังหวัด
               </span>
 
               {provinceLoadFailed ? (
@@ -1006,7 +1104,7 @@ export function SettingsPage() {
             </div>
 
             <label className="settings-field settings-field--full">
-              <span>Headline / Title</span>
+              <span>ตำแหน่ง / หัวข้อโปรไฟล์</span>
 
               <input
                 maxLength={255}
@@ -1022,7 +1120,7 @@ export function SettingsPage() {
             </label>
 
             <label className="settings-field settings-field--full">
-              <span>Bio</span>
+              <span>แนะนำตัว</span>
 
               <textarea
                 rows={4}
@@ -1045,7 +1143,7 @@ export function SettingsPage() {
         </div>
 
         <p className="settings-note">
-          ชื่อและ Email เป็นข้อมูลบัญชี
+          ชื่อและอีเมลเป็นข้อมูลบัญชี
           จึงยังไม่สามารถแก้ไขจากหน้านี้ได้
         </p>
 
@@ -1078,12 +1176,12 @@ export function SettingsPage() {
         >
           <SectionTitle
             number={2}
-            title="Preferences"
+            title="เป้าหมายงานและการศึกษา"
           />
 
           <div className="settings-grid">
             <label className="settings-field settings-field--full">
-              <span>Target Job Role</span>
+              <span>ตำแหน่งงานที่สนใจ</span>
 
               <input
                 maxLength={255}
@@ -1099,7 +1197,7 @@ export function SettingsPage() {
             </label>
 
             <label className="settings-field settings-field--full">
-              <span>Experience Level</span>
+              <span>ระดับประสบการณ์</span>
 
               <select
                 value={form.experienceLevel}
@@ -1246,16 +1344,16 @@ export function SettingsPage() {
         >
           <SectionTitle
             number={3}
-            title="Privacy & Security"
+            title="ความปลอดภัย"
           />
 
           <h3 className="settings-subheading">
-            Change Password
+            เปลี่ยนรหัสผ่าน
           </h3>
 
           <div className="settings-grid">
             <PasswordField
-              label="Current Password"
+              label="รหัสผ่านปัจจุบัน"
               autoComplete="current-password"
               value={passwordForm.currentPassword}
               onChange={(value) =>
@@ -1267,7 +1365,7 @@ export function SettingsPage() {
             />
 
             <PasswordField
-              label="New Password"
+              label="รหัสผ่านใหม่"
               autoComplete="new-password"
               minLength={8}
               maxLength={72}
@@ -1282,7 +1380,7 @@ export function SettingsPage() {
             />
 
             <PasswordField
-              label="Confirm New Password"
+              label="ยืนยันรหัสผ่านใหม่"
               autoComplete="new-password"
               value={passwordForm.confirmPassword}
               onChange={(value) =>
@@ -1309,7 +1407,7 @@ export function SettingsPage() {
             {isChangingPassword && <Spinner />}
             {isChangingPassword
               ? "กำลังเปลี่ยน..."
-              : "Change Password"}
+              : "เปลี่ยนรหัสผ่าน"}
           </button>
         </form>
 
@@ -1317,11 +1415,11 @@ export function SettingsPage() {
         <section className="settings-card">
           <SectionTitle
             number={4}
-            title="Appearance"
+            title="การแสดงผล"
           />
 
           <SegmentedControl
-            legend="Theme"
+            legend="ธีม"
             name="theme"
             options={THEME_OPTIONS}
             value={theme}
@@ -1329,7 +1427,7 @@ export function SettingsPage() {
           />
 
           <SegmentedControl
-            legend="Font Size"
+            legend="ขนาดตัวอักษร"
             name="font-size"
             options={FONT_SIZE_OPTIONS}
             value={fontSize}
@@ -1345,13 +1443,13 @@ export function SettingsPage() {
         <section className="settings-card">
           <SectionTitle
             number={5}
-            title="Data & Storage"
+            title="ข้อมูลและพื้นที่จัดเก็บ"
           />
 
           <ul className="data-list">
             <li>
               <div>
-                <strong>Manage Resume</strong>
+                <strong>จัดการ Resume</strong>
                 <span>
                   ดูหรือลบ Resume ที่อัปโหลด
                 </span>
@@ -1361,13 +1459,13 @@ export function SettingsPage() {
                 className="settings-button settings-button--outline"
                 to="/dashboard"
               >
-                Manage
+                จัดการ
               </Link>
             </li>
 
             <li>
               <div>
-                <strong>Analysis History</strong>
+                <strong>ประวัติการวิเคราะห์</strong>
                 <span>
                   ดูและจัดการผลการวิเคราะห์ที่ผ่านมา
                 </span>
@@ -1377,13 +1475,13 @@ export function SettingsPage() {
                 className="settings-button settings-button--outline"
                 to="/history"
               >
-                Manage
+                จัดการ
               </Link>
             </li>
 
             <li>
               <div>
-                <strong>Export My Data</strong>
+                <strong>ดาวน์โหลดข้อมูลของฉัน</strong>
                 <span>
                   ดาวน์โหลดข้อมูลทั้งหมดเป็นไฟล์ JSON
                 </span>
@@ -1400,8 +1498,8 @@ export function SettingsPage() {
               >
                 {isExporting && <Spinner />}
                 {isExporting
-                  ? "กำลัง Export..."
-                  : "Export"}
+                  ? "กำลังเตรียมไฟล์..."
+                  : "ดาวน์โหลด"}
               </button>
             </li>
           </ul>
@@ -1413,7 +1511,7 @@ export function SettingsPage() {
           )}
 
           <div className="storage-used">
-            <span>Storage Used</span>
+            <span>พื้นที่ที่ใช้</span>
 
             <strong>
               {formatFileSize(storageUsed)}
@@ -1423,6 +1521,125 @@ export function SettingsPage() {
           </div>
         </section>
       </div>
+
+      {/* 6. ลบบัญชี */}
+      <section className="settings-card settings-card--danger">
+        <SectionTitle
+          number={6}
+          title="ลบบัญชี"
+        />
+
+        <div className="danger-zone">
+          <p>
+            ลบบัญชีและข้อมูลทั้งหมดอย่างถาวร ได้แก่ โปรไฟล์ Resume ไฟล์ PDF
+            และผลการวิเคราะห์ทุกครั้ง <strong>กู้คืนไม่ได้</strong>
+            {" "}— แนะนำให้ดาวน์โหลดข้อมูลของคุณเก็บไว้ก่อน
+          </p>
+
+          <button
+            type="button"
+            className="settings-button settings-button--danger"
+            onClick={() => setIsDeleteOpen(true)}
+          >
+            <Trash2 size={16} aria-hidden="true" />
+            ลบบัญชี
+          </button>
+        </div>
+      </section>
+
+      {isDeleteOpen && (
+        <ModalDialog
+          labelledBy="delete-account-title"
+          dismissible={!isDeletingAccount}
+          onClose={closeDeleteDialog}
+        >
+          <form
+            className="delete-account"
+            onSubmit={(event) => {
+              void handleDeleteAccount(event)
+            }}
+          >
+            <div className="delete-account__icon" aria-hidden="true">
+              <Trash2 size={22} />
+            </div>
+
+            <h2 id="delete-account-title">
+              ลบบัญชีถาวร?
+            </h2>
+
+            <p>
+              ข้อมูลทั้งหมดของ <strong>{user?.email}</strong> จะถูกลบทันทีและกู้คืนไม่ได้
+            </p>
+
+            <label className="settings-field">
+              <span>รหัสผ่านปัจจุบัน</span>
+
+              <input
+                type="password"
+                autoComplete="current-password"
+                required
+                value={deleteForm.currentPassword}
+                onChange={(event) =>
+                  setDeleteForm((current) => ({
+                    ...current,
+                    currentPassword: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label className="settings-field">
+              <span>
+                พิมพ์อีเมลของคุณเพื่อยืนยัน
+              </span>
+
+              <input
+                type="email"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder={user?.email}
+                required
+                value={deleteForm.confirmEmail}
+                onChange={(event) =>
+                  setDeleteForm((current) => ({
+                    ...current,
+                    confirmEmail: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            {deleteError && (
+              <Message type="error">
+                {deleteError}
+              </Message>
+            )}
+
+            <div className="delete-account__actions">
+              <button
+                type="button"
+                className="settings-button settings-button--outline"
+                disabled={isDeletingAccount}
+                onClick={closeDeleteDialog}
+              >
+                ยกเลิก
+              </button>
+
+              <button
+                type="submit"
+                className="settings-button settings-button--danger"
+                disabled={!canConfirmDelete || isDeletingAccount}
+                aria-busy={isDeletingAccount || undefined}
+              >
+                {isDeletingAccount && <Spinner />}
+                {isDeletingAccount
+                  ? "กำลังลบ..."
+                  : "ลบบัญชีถาวร"}
+              </button>
+            </div>
+          </form>
+        </ModalDialog>
+      )}
     </main>
   )
 }

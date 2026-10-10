@@ -72,17 +72,26 @@ export function SignInPage() {
   const [isSubmitting, setIsSubmitting] =
     useState(false)
 
+  const searchParams =
+    new URLSearchParams(location.search)
+
   // กลับมาจาก Google ไม่สำเร็จ (?oauthError=…)
   const oauthError =
     getOAuthErrorMessage(
-      new URLSearchParams(location.search)
-        .get("oauthError"),
+      searchParams.get("oauthError"),
     )
 
-  // มาจากหน้าสมัครสมาชิกสำเร็จ
-  const registrationSuccess =
-    (location.state as LocationState | null)
-      ?.registrationSuccess === true
+  // สมัครสมาชิกสำเร็จ (state) / ลบบัญชีแล้ว (?accountDeleted=1 — โหลดหน้าใหม่ทั้งหน้า)
+  const locationState =
+    location.state as LocationState | null
+
+  let notice: string | null = null
+
+  if (locationState?.registrationSuccess === true) {
+    notice = "สมัครสมาชิกสำเร็จ เข้าสู่ระบบด้วยอีเมลที่สมัครไว้ได้เลย"
+  } else if (searchParams.get("accountDeleted") === "1") {
+    notice = "ลบบัญชีและข้อมูลทั้งหมดของคุณเรียบร้อยแล้ว"
+  }
 
   if (isAuthLoading) {
     return (
@@ -200,7 +209,7 @@ export function SignInPage() {
             </p>
           </div>
 
-          {registrationSuccess && !error && (
+          {notice && !error && (
             <div
               className="sign-in__notice"
               role="status"
@@ -209,7 +218,7 @@ export function SignInPage() {
                 size={18}
                 aria-hidden="true"
               />
-              สมัครสมาชิกสำเร็จ เข้าสู่ระบบด้วยอีเมลที่สมัครไว้ได้เลย
+              {notice}
             </div>
           )}
 

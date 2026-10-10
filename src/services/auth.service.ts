@@ -48,6 +48,22 @@ export function changePassword(input: {
   )
 }
 
+/*
+ * ลบบัญชีถาวร — ยืนยันด้วยรหัสผ่าน + อีเมลของบัญชี
+ */
+export function deleteAccount(input: {
+  currentPassword: string
+  confirmEmail: string
+}): Promise<ApiResponse<unknown>> {
+  return apiRequest<ApiResponse<unknown>>(
+    "/auth/account",
+    {
+      method: "DELETE",
+      body: JSON.stringify(input),
+    },
+  )
+}
+
 export function forgotPassword(
   email: string,
 ): Promise<ApiResponse<unknown>> {
