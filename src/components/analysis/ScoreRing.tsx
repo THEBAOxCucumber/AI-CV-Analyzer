@@ -1,6 +1,11 @@
+import {
+  useCountUp,
+} from "../../hooks/useCountUp"
+
 /*
  * วงแหวนคะแนน 0–100
  * track จาง + ส่วนที่ได้เป็น navy (สีเดียว)
+ * ตัวเลขนับขึ้น + วงเติมไปพร้อมกัน
  */
 const SIZE = 136
 const STROKE = 12
@@ -14,10 +19,13 @@ export function ScoreRing({
   score: number | null
   max?: number
 }) {
+  const displayed =
+    useCountUp(score ?? 0)
+
   const ratio =
     score === null
       ? 0
-      : Math.min(1, Math.max(0, score / max))
+      : Math.min(1, Math.max(0, displayed / max))
 
   return (
     <div
@@ -57,7 +65,7 @@ export function ScoreRing({
 
       <div className="score-ring-gauge__label">
         <strong>
-          {score ?? "—"}
+          {score === null ? "—" : displayed}
         </strong>
 
         {score !== null && (

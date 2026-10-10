@@ -1,7 +1,10 @@
 import {
+  Check,
   CheckCircle2,
+  CircleAlert,
   FileText,
   Lightbulb,
+  LoaderCircle,
   UploadCloud,
   X,
 } from "lucide-react"
@@ -304,12 +307,15 @@ export function UploadResumePage() {
               </div>
 
               <h2>
-                อัปโหลด Resume
+                {isDragging
+                  ? "ปล่อยไฟล์ที่นี่"
+                  : "อัปโหลด Resume"}
               </h2>
 
               <p>
-                ลากไฟล์มาวางที่นี่
-                หรือคลิกเพื่อเลือกไฟล์
+                {isDragging
+                  ? "วางไฟล์ PDF เพื่อเลือก"
+                  : "ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์"}
               </p>
 
               {/*
@@ -332,9 +338,16 @@ export function UploadResumePage() {
             </div>
 
             {file && (
-              <div className="selected-file">
+              <div
+                className={
+                  isUploading
+                    ? "selected-file selected-file--uploading"
+                    : "selected-file"
+                }
+              >
                 <div className="selected-file__icon">
                   <FileText size={23} />
+                  <span className="selected-file__badge">PDF</span>
                 </div>
 
                 <div className="selected-file__details">
@@ -343,10 +356,18 @@ export function UploadResumePage() {
                   </strong>
 
                   <span>
-                    {formatFileSize(
-                      file.size,
-                    )}
+                    {isUploading
+                      ? "กำลังอัปโหลดและแบ่งเนื้อหา…"
+                      : formatFileSize(file.size)}
                   </span>
+
+                  {isUploading && (
+                    <span
+                      className="selected-file__progress"
+                      role="progressbar"
+                      aria-label="กำลังอัปโหลด"
+                    />
+                  )}
                 </div>
 
                 <button
@@ -365,6 +386,7 @@ export function UploadResumePage() {
                 className="upload-error"
                 role="alert"
               >
+                <CircleAlert size={18} aria-hidden="true" />
                 {error}
               </div>
             )}
@@ -377,8 +399,15 @@ export function UploadResumePage() {
               }
               onClick={handleUpload}
             >
+              {isUploading && (
+                <LoaderCircle
+                  className="upload-submit__spinner"
+                  size={18}
+                  aria-hidden="true"
+                />
+              )}
               {isUploading
-                ? "กำลังอัปโหลดและประมวลผล..."
+                ? "กำลังอัปโหลด..."
                 : "Upload Resume"}
             </button>
           </>
@@ -428,8 +457,15 @@ export function UploadResumePage() {
               disabled={isStartingAnalysis}
               onClick={handleAnalyze}
             >
+              {isStartingAnalysis && (
+                <LoaderCircle
+                  className="upload-submit__spinner"
+                  size={18}
+                  aria-hidden="true"
+                />
+              )}
               {isStartingAnalysis
-                ? "Preparing Resume..."
+                ? "กำลังเตรียม Resume..."
                 : "Analyze Resume"}
             </button>
           </div>
@@ -441,29 +477,48 @@ export function UploadResumePage() {
           <h2>ขั้นตอน</h2>
 
           <ol className="upload-steps">
-            <li>
-              <span>1</span>
-              <div>
-                <strong>อัปโหลด Resume</strong>
-                <p>ไฟล์ PDF ไม่เกิน {MAX_FILE_SIZE_MB} MB</p>
-              </div>
-            </li>
+            {[
+              {
+                title: "อัปโหลด Resume",
+                detail: `ไฟล์ PDF ไม่เกิน ${MAX_FILE_SIZE_MB} MB`,
+              },
+              {
+                title: "AI วิเคราะห์",
+                detail: "ใช้เวลาประมาณ 1–2 นาที",
+              },
+              {
+                title: "ดูคะแนนและคำแนะนำ",
+                detail: "คะแนนรายหมวด จุดแข็ง และสิ่งที่ควรปรับ",
+              },
+            ].map((step, index) => {
+              // อัปโหลดแล้ว → ขั้นที่ 2
+              const currentStep = uploadedResume ? 2 : 1
+              const stepNumber = index + 1
+              const state =
+                stepNumber < currentStep
+                  ? "done"
+                  : stepNumber === currentStep
+                    ? "active"
+                    : "upcoming"
 
-            <li>
-              <span>2</span>
-              <div>
-                <strong>AI วิเคราะห์</strong>
-                <p>ใช้เวลาประมาณ 1–2 นาที</p>
-              </div>
-            </li>
-
-            <li>
-              <span>3</span>
-              <div>
-                <strong>ดูคะแนนและคำแนะนำ</strong>
-                <p>คะแนนรายหมวด จุดแข็ง และสิ่งที่ควรปรับ</p>
-              </div>
-            </li>
+              return (
+                <li
+                  key={step.title}
+                  data-state={state}
+                  aria-current={state === "active" ? "step" : undefined}
+                >
+                  <span aria-hidden="true">
+                    {state === "done"
+                      ? <Check size={16} strokeWidth={3} />
+                      : stepNumber}
+                  </span>
+                  <div>
+                    <strong>{step.title}</strong>
+                    <p>{step.detail}</p>
+                  </div>
+                </li>
+              )
+            })}
           </ol>
         </section>
 

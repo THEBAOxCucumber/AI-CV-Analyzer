@@ -54,6 +54,54 @@
 }
 
 .input-field__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
   font-size: var(--font-size-xs);
   color: var(--color-danger);
+}
+
+.input-field__control {
+  position: relative;
+}
+
+/* เว้นที่ให้ปุ่มแสดง/ซ่อนรหัสผ่าน */
+.input-field__input--with-action {
+  padding-right: 3rem;
+}
+
+.input-field__action {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  border: 0;
+  border-radius: var(--radius-sm);
+
+  color: var(--color-text-muted);
+  background: transparent;
+
+  cursor: pointer;
+
+  transform: translateY(-50%);
+
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.input-field__action:hover {
+  color: var(--color-text-primary);
+  background: var(--color-primary-soft);
+}
+
+.input-field__action[aria-pressed="true"] {
+  color: var(--color-steel-blue);
 }

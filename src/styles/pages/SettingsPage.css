@@ -681,3 +681,130 @@
     align-items: stretch;
   }
 }
+
+/* ===== ขัดเกลา: skeleton / spinner / บันทึกแล้ว / แสดงรหัสผ่าน ===== */
+.settings-message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  animation: settings-message-in 220ms var(--ease-out);
+}
+
+.settings-message svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.settings-message--error {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.settings-message--success {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+@keyframes settings-message-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.settings-button {
+  gap: var(--space-2);
+}
+
+.settings-spinner {
+  flex: 0 0 auto;
+  animation: settings-spin 0.8s linear infinite;
+}
+
+@keyframes settings-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.settings-button--saved,
+.settings-button--saved:disabled {
+  color: var(--color-on-status);
+  background: var(--color-success);
+}
+
+.settings-button--saved svg {
+  animation: settings-check-pop 320ms var(--ease-spring);
+}
+
+@keyframes settings-check-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+.settings-password {
+  position: relative;
+  display: block;
+}
+
+.settings-password input {
+  width: 100%;
+  padding-right: 48px;
+}
+
+.settings-password__toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: var(--radius-sm);
+
+  color: var(--color-text-muted);
+  background: transparent;
+
+  cursor: pointer;
+  transform: translateY(-50%);
+
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.settings-password__toggle:hover {
+  color: var(--color-text-primary);
+  background: var(--color-primary-soft);
+}
+
+.settings-password__toggle[aria-pressed="true"] {
+  color: var(--color-steel-blue);
+}
+
+.settings-skeleton__field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* การ์ดทยอยขึ้น */
+.settings-page > .settings-card,
+.settings-columns > .settings-card {
+  animation: settings-card-in 360ms var(--ease-out) both;
+}
+
+.settings-columns > .settings-card:nth-child(1) { animation-delay: 60ms; }
+.settings-columns > .settings-card:nth-child(2) { animation-delay: 110ms; }
+.settings-columns > .settings-card:nth-child(3) { animation-delay: 160ms; }
+.settings-columns > .settings-card:nth-child(4) { animation-delay: 210ms; }
+
+@keyframes settings-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

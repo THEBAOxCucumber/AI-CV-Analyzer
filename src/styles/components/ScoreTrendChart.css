@@ -125,3 +125,39 @@
 
   pointer-events: none;
 }
+
+/* ===== วาดกราฟตอนแสดง ===== */
+.trend-chart__line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: trend-draw 900ms var(--ease-out) both;
+}
+
+.trend-chart__area {
+  animation: trend-fade 600ms 500ms var(--ease-out) both;
+}
+
+.trend-chart__dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: trend-dot 320ms var(--ease-spring) both;
+}
+
+@keyframes trend-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes trend-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes trend-dot {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}

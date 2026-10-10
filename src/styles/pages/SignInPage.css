@@ -534,3 +534,162 @@
     font-size: var(--font-size-xl);
   }
 }
+/* ===== ขัดเกลา: การ์ด / แจ้งเตือน / กฎรหัสผ่าน ===== */
+.sign-in__card {
+  animation: auth-card-in 420ms var(--ease-out) both;
+}
+
+@keyframes auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+}
+
+/* error: ไอคอน (mask ใช้สีตัวอักษร) + สั่นเบาๆ ตอนขึ้น */
+.sign-in__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  border-left: 3px solid var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+
+  animation: auth-shake 360ms var(--ease-out);
+}
+
+.sign-in__error::before {
+  content: "";
+
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  flex: 0 0 auto;
+
+  background: currentColor;
+
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4M12 16h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4M12 16h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+@keyframes auth-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+
+.sign-in__notice {
+  margin-top: var(--space-6);
+  margin-bottom: calc(var(--space-8) * -1 + var(--space-5));
+  padding: var(--space-3) var(--space-4);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  border-left: 3px solid var(--color-success);
+  border-radius: var(--radius-md);
+
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+
+  font-size: var(--font-size-sm);
+
+  animation: auth-card-in 320ms var(--ease-out) both;
+}
+
+.sign-in__notice svg {
+  flex: 0 0 auto;
+}
+
+/* กฎรหัสผ่าน */
+.password-rules {
+  margin-top: calc(var(--space-2) * -1);
+
+  display: grid;
+  gap: var(--space-2);
+
+  --rules-color: var(--color-border-strong);
+}
+
+.password-rules[data-level="1"],
+.password-rules[data-level="2"] {
+  --rules-color: var(--color-danger);
+}
+
+.password-rules[data-level="3"] {
+  --rules-color: var(--color-warning);
+}
+
+.password-rules[data-level="4"] {
+  --rules-color: var(--color-success);
+}
+
+.password-rules__meter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.password-rules__segment {
+  height: 4px;
+
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+
+  transition: background var(--transition-fast);
+}
+
+.password-rules__segment--on {
+  background: var(--rules-color);
+}
+
+.password-rules__meter em {
+  min-width: 52px;
+
+  color: var(--rules-color);
+
+  font-size: var(--font-size-xs);
+  font-style: normal;
+  font-weight: 600;
+  text-align: right;
+}
+
+.password-rules__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1) var(--space-3);
+}
+
+.password-rules__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+
+  transition: color var(--transition-fast);
+}
+
+.password-rules__item--passed {
+  color: var(--color-success);
+}
+
+.password-rules__item--passed svg {
+  animation: rule-pop 260ms var(--ease-spring);
+}
+
+@keyframes rule-pop {
+  from {
+    transform: scale(0.3);
+  }
+}
+
+@media (max-width: 380px) {
+  .password-rules__list {
+    grid-template-columns: 1fr;
+  }
+}

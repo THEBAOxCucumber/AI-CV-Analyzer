@@ -1,11 +1,18 @@
 import {
   AlertCircle,
+  CheckCircle2,
   ChevronRight,
   Clock3,
   FileSearch,
   LoaderCircle,
   Trash2,
+  XCircle,
+  type LucideIcon,
 } from "lucide-react"
+
+import type {
+  CSSProperties,
+} from "react"
 
 import {
   useEffect,
@@ -25,6 +32,10 @@ import {
   getAnalysisScore,
   getAnalysisTypeLabel,
 } from "../utils/analysis"
+
+import {
+  getScoreTone,
+} from "../utils/dashboard-stats"
 
 import {
   deleteAnalysisRun,
@@ -51,6 +62,40 @@ import type {
 import {
   ModalDialog,
 } from "../components/ui/ModalDialog"
+
+/*
+ * ป้ายสถานะ: ไอคอน + ข้อความ (ไม่ใช้สีอย่างเดียว)
+ */
+const STATUS_META: Record<
+  ResumeAnalysisRun["status"],
+  { label: string; icon: LucideIcon; spin?: boolean }
+> = {
+  COMPLETED: { label: "สำเร็จ", icon: CheckCircle2 },
+  FAILED: { label: "ล้มเหลว", icon: XCircle },
+  PENDING: { label: "รอคิว", icon: Clock3 },
+  QUEUED: { label: "รอคิว", icon: Clock3 },
+  PROCESSING: { label: "กำลังวิเคราะห์", icon: LoaderCircle, spin: true },
+}
+
+function StatusBadge({
+  status,
+}: {
+  status: ResumeAnalysisRun["status"]
+}) {
+  const meta = STATUS_META[status]
+  const Icon = meta.icon
+
+  return (
+    <span className={`history-status history-status--${status.toLowerCase()}`}>
+      <Icon
+        size={13}
+        className={meta.spin ? "history-status__spin" : undefined}
+        aria-hidden="true"
+      />
+      {meta.label}
+    </span>
+  )
+}
 
 import "../styles/pages/HistoryPage.css"
 
@@ -260,20 +305,35 @@ export function HistoryPage() {
   if (isLoading) {
     return (
       <main className="history-page">
-        <div className="history-state">
-          <LoaderCircle
-            className="history-spinner"
-            size={36}
-          />
+        <header className="history-header">
+          <div>
+            <p className="history-eyebrow">Resume Analysis</p>
+            <h1>Analysis History</h1>
+            <p>ดูผลการวิเคราะห์ Resume ที่เคยสร้างไว้</p>
+          </div>
+        </header>
 
-          <h2>
-            กำลังโหลด History
-          </h2>
-
-          <p>
-            กำลังดึงประวัติการวิเคราะห์ของคุณ
-          </p>
-        </div>
+        <section
+          className="history-card"
+          aria-busy="true"
+          aria-label="กำลังโหลดประวัติการวิเคราะห์"
+        >
+          {[0, 1, 2, 3].map((index) => (
+            <div key={index} className="history-row history-row--skeleton" aria-hidden="true">
+              <div className="history-row__main">
+                <span className="skeleton" style={{ width: 40, height: 40 }} />
+                <div className="history-skeleton__text">
+                  <span className="skeleton" style={{ width: "70%", height: 14 }} />
+                  <span className="skeleton" style={{ width: "35%", height: 12 }} />
+                </div>
+              </div>
+              <span className="skeleton" style={{ width: 72, height: 22, borderRadius: 999 }} />
+              <span className="skeleton" style={{ width: 48, height: 22 }} />
+              <span className="skeleton" style={{ width: 84, height: 16 }} />
+              <span />
+            </div>
+          ))}
+        </section>
       </main>
     )
   }
@@ -423,18 +483,24 @@ export function HistoryPage() {
                       </div>
                     </div>
 
-                    <span
-                      className={`history-status history-status--${analysis.status.toLowerCase()}`}
-                    >
-                      {analysis.status}
-                    </span>
+                    <StatusBadge status={analysis.status} />
 
-                    <strong className="history-score">
-                      {score ?? "—"}
+                    <div className="history-score-cell">
+                      <strong className="history-score">
+                        {score ?? "—"}
+                        {score !== null && (
+                          <small>/100</small>
+                        )}
+                      </strong>
+
                       {score !== null && (
-                        <small>/100</small>
+                        <span
+                          className={`history-score__bar history-score__bar--${getScoreTone(score)}`}
+                          style={{ "--score": score } as CSSProperties}
+                          aria-hidden="true"
+                        />
                       )}
-                    </strong>
+                    </div>
 
                     <span className="history-row__date">
                       {formatThaiDate(
@@ -451,7 +517,8 @@ export function HistoryPage() {
                         <button
                           type="button"
                           className="history-delete-button"
-                          aria-label="Delete analysis"
+                          aria-label={`ลบผลวิเคราะห์ ${resume.originalName}`}
+                          title="ลบผลวิเคราะห์"
                           disabled={
                             analysis.status ===
                             "PENDING" ||

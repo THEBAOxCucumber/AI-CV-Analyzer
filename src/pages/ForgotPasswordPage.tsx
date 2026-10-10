@@ -27,6 +27,10 @@ import {
 } from "../components/ui/Input"
 
 import {
+  PasswordRequirements,
+} from "../components/auth/PasswordRequirements"
+
+import {
   ApiError,
 } from "../services/api"
 
@@ -349,10 +353,9 @@ export function ForgotPasswordPage() {
                   }}
                 />
 
-                <p className="sign-in__password-hint">
-                  อย่างน้อย 8 ตัว มีตัวพิมพ์ใหญ่
-                  ตัวพิมพ์เล็ก และตัวเลข
-                </p>
+                <PasswordRequirements
+                  password={newPassword}
+                />
 
                 <Input
                   id="confirm-password"

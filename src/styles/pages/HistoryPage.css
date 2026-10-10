@@ -104,21 +104,27 @@
 }
 
 .history-row {
+  position: relative;
+
   padding: var(--space-4) var(--space-6);
 
   border-bottom: 1px solid var(--color-border);
 
   cursor: pointer;
 
-  transition: background var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .history-row:last-child {
   border-bottom: 0;
 }
 
+/* token (เดิมสีตายตัว → โหมดมืดพื้นขาว) + แถบ peach ด้านซ้าย */
 .history-row:hover {
-  background: rgba(240, 243, 248, 0.7);
+  background: var(--color-surface-muted);
+  box-shadow: inset 3px 0 0 var(--color-soft-peach);
 }
 
 .history-row:focus-visible {
@@ -218,7 +224,11 @@
 }
 
 .history-status {
-  padding: 3px var(--space-2);
+  padding: 3px var(--space-2) 3px 6px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 
   justify-self: start;
 
@@ -233,12 +243,12 @@
 
 .history-status--completed {
   color: var(--color-success);
-  background: rgba(46, 125, 91, 0.1);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 
 .history-status--failed {
   color: var(--color-danger);
-  background: rgba(201, 76, 76, 0.1);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 }
 
 .history-status--pending,
@@ -564,8 +574,10 @@
     margin-left: var(--space-1);
   }
 
-  .history-score {
+  /* ครอบตัวเลข + แถบคะแนน */
+  .history-score-cell {
     grid-area: score;
+    justify-items: end;
   }
 
   .history-modal {
@@ -610,4 +622,67 @@
   .history-row__job {
     white-space: normal;
   }
+}
+
+/* ===== ขัดเกลา ===== */
+.history-status__spin {
+  animation: history-spin 1s linear infinite;
+}
+
+.history-score-cell {
+  display: grid;
+  gap: 6px;
+}
+
+.history-score {
+  font-variant-numeric: tabular-nums;
+}
+
+/* แถบคะแนนเล็กใต้ตัวเลข — สีตามระดับเดียวกับ Dashboard */
+.history-score__bar {
+  --tone: var(--color-steel-blue);
+
+  width: 56px;
+  height: 4px;
+
+  border-radius: var(--radius-full);
+
+  background:
+    linear-gradient(90deg, var(--tone) calc(var(--score, 0) * 1%), var(--color-surface-muted) 0);
+}
+
+.history-score__bar--good { --tone: var(--color-success); }
+.history-score__bar--fair { --tone: var(--color-warning); }
+.history-score__bar--low { --tone: var(--color-danger); }
+
+/* ปุ่มลบโผล่ตอน hover (จอที่มีเมาส์) — คีย์บอร์ด focus ก็เห็น */
+@media (hover: hover) and (pointer: fine) {
+  .history-delete-button {
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+  }
+
+  .history-row:hover .history-delete-button,
+  .history-row:focus-within .history-delete-button,
+  .history-delete-button:focus-visible {
+    opacity: 1;
+  }
+}
+
+/* skeleton */
+.history-row--skeleton {
+  cursor: default;
+}
+
+.history-row--skeleton:hover {
+  background: transparent;
+  box-shadow: none;
+}
+
+.history-skeleton__text {
+  min-width: 0;
+  flex: 1;
+
+  display: grid;
+  gap: var(--space-2);
 }

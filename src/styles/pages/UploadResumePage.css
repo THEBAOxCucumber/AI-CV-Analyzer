@@ -106,6 +106,10 @@
   transform: scale(1.01);
 }
 
+.upload-dropzone--dragging .upload-dropzone__icon {
+  transform: translateY(-6px) scale(1.06);
+}
+
 /*
  * focus อยู่ที่ปุ่มเลือกไฟล์ → ไฮไลต์ทั้งกรอบ
  */
@@ -130,6 +134,9 @@
   background: var(--color-soft-peach);
 
   box-shadow: 0 10px 24px rgba(253, 214, 205, 0.6);
+
+  transition: transform var(--transition-normal);
+  transition-timing-function: var(--ease-spring);
 }
 
 .upload-dropzone h2 {
@@ -192,7 +199,13 @@
 }
 
 .selected-file {
+  position: relative;
+
   margin-top: var(--space-5);
+
+  overflow: hidden;
+
+  animation: file-in 260ms var(--ease-out);
 
   padding: var(--space-3) var(--space-4);
 
@@ -207,6 +220,8 @@
 }
 
 .selected-file__icon {
+  position: relative;
+
   width: 44px;
   height: 44px;
 
@@ -275,15 +290,40 @@
 
   padding: var(--space-3) var(--space-4);
 
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
   border-radius: var(--radius-md);
 
   color: var(--color-danger);
-  background: rgba(201, 76, 76, 0.08);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+
+  font-size: var(--font-size-sm);
+
+  animation: error-shake 360ms var(--ease-out);
+}
+
+.upload-error svg {
+  flex: 0 0 auto;
+}
+
+@keyframes error-shake {
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
 }
 
 .upload-submit {
   width: 100%;
   min-height: 50px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
 
   margin-top: var(--space-5);
 
@@ -567,4 +607,128 @@
     width: 56px;
     height: 56px;
   }
+}
+
+/* ===== ขัดเกลา: ไฟล์ / ความคืบหน้า / สำเร็จ / ขั้นตอน ===== */
+@keyframes file-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ป้าย PDF มุมไอคอนไฟล์ */
+.selected-file__badge {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+
+  padding: 1px 5px;
+
+  border-radius: 6px;
+
+  /* โหมดมืด: พื้นแดงอ่อน → ตัวอักษรเข้ม */
+  color: var(--color-on-status);
+  background: var(--color-danger);
+
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.selected-file--uploading {
+  border-color: color-mix(in srgb, var(--color-steel-blue) 40%, var(--color-border));
+}
+
+/* แถบความคืบหน้า (ไม่ทราบ %): แถบวิ่ง */
+.selected-file__progress {
+  position: relative;
+
+  height: 4px;
+  margin-top: var(--space-2);
+
+  overflow: hidden;
+
+  border-radius: var(--radius-full);
+  background: var(--color-surface-muted);
+}
+
+.selected-file__progress::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  width: 40%;
+
+  border-radius: inherit;
+  background: var(--color-steel-blue);
+
+  animation: upload-progress 1.2s var(--ease-out) infinite;
+}
+
+@keyframes upload-progress {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.upload-submit__spinner {
+  flex: 0 0 auto;
+  animation: upload-spin 0.8s linear infinite;
+}
+
+@keyframes upload-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.upload-success {
+  animation: file-in 320ms var(--ease-out);
+}
+
+.upload-success__icon {
+  animation: success-pop 520ms var(--ease-spring);
+}
+
+@keyframes success-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* ขั้นตอน: ผ่านแล้ว / ตอนนี้ / ยังไม่ถึง */
+.upload-steps li > span {
+  transition:
+    background var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.upload-steps li[data-state="active"] > span {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-steel-blue) 22%, transparent);
+}
+
+.upload-steps li[data-state="done"] > span {
+  color: var(--color-on-status);
+  background: var(--color-success);
+}
+
+.upload-steps li[data-state="done"]:not(:last-child)::after {
+  background: var(--color-success);
+}
+
+.upload-steps li[data-state="upcoming"] > span {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-muted);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+.upload-steps li[data-state="upcoming"] strong {
+  color: var(--color-text-secondary);
 }

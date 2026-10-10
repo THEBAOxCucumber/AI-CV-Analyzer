@@ -14,6 +14,7 @@ import {
 import {
   useEffect,
   useState,
+  type CSSProperties,
 } from "react"
 
 import {
@@ -66,6 +67,36 @@ import {
 } from "../components/ui/ModalDialog"
 
 import "../styles/pages/DashboardPage.css"
+
+/*
+ * แถวโครงร่างตอนโหลด (ไอคอน + 2 บรรทัด + วงคะแนน)
+ */
+function DashboardSkeletonRows({
+  count,
+}: {
+  count: number
+}) {
+  return (
+    <div aria-busy="true" aria-label="กำลังโหลดข้อมูล">
+      {Array.from({ length: count }, (_, index) => (
+        <div
+          key={index}
+          className="dashboard-skeleton-row"
+          aria-hidden="true"
+        >
+          <span className="skeleton" style={{ width: 40, height: 40 }} />
+
+          <div className="dashboard-skeleton-row__text">
+            <span className="skeleton" style={{ width: "62%", height: 14 }} />
+            <span className="skeleton" style={{ width: "38%", height: 12 }} />
+          </div>
+
+          <span className="skeleton" style={{ width: 44, height: 44, borderRadius: "50%" }} />
+        </div>
+      ))}
+    </div>
+  )
+}
 
 
 
@@ -311,7 +342,7 @@ export function DashboardPage() {
 
           <strong className="stat-card__value">
             {isLoading
-              ? "..."
+              ? <span className="skeleton" aria-hidden="true" />
               : stats.analyzedCount}
           </strong>
 
@@ -340,7 +371,7 @@ export function DashboardPage() {
 
           <strong className="stat-card__value">
             {isLoading
-              ? "..."
+              ? <span className="skeleton" aria-hidden="true" />
               : stats.averageScore ?? "—"}
 
             {!isLoading &&
@@ -370,7 +401,7 @@ export function DashboardPage() {
 
           <strong className="stat-card__value">
             {isLoading
-              ? "..."
+              ? <span className="skeleton" aria-hidden="true" />
               : stats.jobMatchCount}
           </strong>
 
@@ -399,9 +430,7 @@ export function DashboardPage() {
           </h2>
 
           {isLoading ? (
-            <div className="dashboard__state">
-              กำลังโหลดข้อมูล...
-            </div>
+            <DashboardSkeletonRows count={3} />
           ) : recentAnalyses.length === 0 ? (
             <p className="dashboard-card__empty">
               ยังไม่มีผลการวิเคราะห์
@@ -449,9 +478,10 @@ export function DashboardPage() {
                         {score !== null && (
                           <span
                             className={`score-ring score-ring--${getScoreTone(score)}`}
+                            style={{ "--score": score } as CSSProperties}
                             aria-label={`คะแนน ${score}`}
                           >
-                            {score}
+                            <span>{score}</span>
                           </span>
                         )}
                       </Link>
@@ -477,7 +507,22 @@ export function DashboardPage() {
               Top Skills
             </h2>
 
-            {topSkills.length === 0 ? (
+            {isLoading ? (
+              <div
+                className="top-skills__list"
+                aria-busy="true"
+                aria-label="กำลังโหลดทักษะ"
+              >
+                {[78, 64, 52, 40].map((width) => (
+                  <span
+                    key={width}
+                    className="skeleton"
+                    style={{ width: `${width}%`, height: 12 }}
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
+            ) : topSkills.length === 0 ? (
               <p className="dashboard-card__empty">
                 วิเคราะห์แบบ Job Match
                 เพื่อดูทักษะที่ตรงกับงาน
@@ -559,8 +604,8 @@ export function DashboardPage() {
         </div>
 
         {isLoading ? (
-          <div className="dashboard__state">
-            กำลังโหลดข้อมูล...
+          <div className="dashboard__panel-skeleton">
+            <DashboardSkeletonRows count={2} />
           </div>
         ) : recentResumes.length === 0 ? (
           <div className="dashboard__empty">

@@ -10,6 +10,7 @@ import {
 import {
   BriefcaseBusiness,
   ExternalLink,
+  LoaderCircle,
   MapPin,
   Search,
 } from "lucide-react"
@@ -385,6 +386,13 @@ const [
           type="submit"
           disabled={isLoading}
         >
+          {isLoading && (
+            <LoaderCircle
+              className="job-spinner"
+              size={18}
+              aria-hidden="true"
+            />
+          )}
           {isLoading
             ? "กำลังค้นหา..."
             : "Search Jobs"}
@@ -435,18 +443,42 @@ const [
       )}
 
       {isLoading && (
-        <section className="job-state-card">
-          <div className="job-loading-spinner" />
-
-          <h2>
-            กำลังค้นหางาน...
-          </h2>
-
-          <p>
-            กำลังโหลดตำแหน่งงานจาก
-            Careerjet
+        <>
+          <p
+            className="job-loading-note"
+            role="status"
+          >
+            <LoaderCircle
+              className="job-spinner"
+              size={16}
+              aria-hidden="true"
+            />
+            กำลังค้นหางานจาก Careerjet — อาจใช้เวลาถึง 15 วินาที
           </p>
-        </section>
+
+          <section
+            className="job-list"
+            aria-hidden="true"
+          >
+            {[0, 1, 2, 3, 4, 5].map((index) => (
+              <article key={index} className="job-card job-card--skeleton">
+                <div className="job-card__content">
+                  <span className="skeleton" style={{ width: 44, height: 44, flex: "0 0 auto" }} />
+                  <div className="job-skeleton__text">
+                    <span className="skeleton" style={{ width: "72%", height: 16 }} />
+                    <span className="skeleton" style={{ width: "45%", height: 12 }} />
+                    <span className="skeleton" style={{ width: "100%", height: 12, marginTop: 8 }} />
+                    <span className="skeleton" style={{ width: "88%", height: 12 }} />
+                  </div>
+                </div>
+                <div className="job-card__actions">
+                  <span className="skeleton" style={{ flex: 1, height: 42 }} />
+                  <span className="skeleton" style={{ width: 110, height: 42 }} />
+                </div>
+              </article>
+            ))}
+          </section>
+        </>
       )}
 
       {!isLoading &&
@@ -537,13 +569,26 @@ const [
       analyzingJobId ===
         job.externalJobId
     }
+    title={
+      selectedResumeId
+        ? undefined
+        : "เลือก Resume ด้านบนก่อน"
+    }
     onClick={() =>
       void handleAnalyzeJob(job)
     }
   >
     {analyzingJobId ===
+      job.externalJobId && (
+      <LoaderCircle
+        className="job-spinner"
+        size={16}
+        aria-hidden="true"
+      />
+    )}
+    {analyzingJobId ===
     job.externalJobId
-      ? "Analyzing..."
+      ? "กำลังวิเคราะห์..."
       : "Analyze Match"}
   </button>
 

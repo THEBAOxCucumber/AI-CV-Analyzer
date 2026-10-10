@@ -1,5 +1,6 @@
 import {
   Outlet,
+  useLocation,
 } from "react-router-dom"
 
 import {
@@ -13,6 +14,8 @@ import {
 import "../../styles/components/AppLayout.css"
 
 export function AppLayout() {
+  const location = useLocation()
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -23,7 +26,15 @@ export function AppLayout() {
           */}
         <MobileTopbar />
 
-        <Outlet />
+        {/*
+          * key ตาม path → เปลี่ยนหน้าแล้วเล่น animation ใหม่
+          */}
+        <div
+          key={location.pathname}
+          className="page-transition"
+        >
+          <Outlet />
+        </div>
       </div>
     </div>
   )

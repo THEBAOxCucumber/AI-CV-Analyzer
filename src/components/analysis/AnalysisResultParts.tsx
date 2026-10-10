@@ -1,17 +1,65 @@
 import {
+  Check,
   CheckCircle2,
+  Copy,
   Lightbulb,
   LoaderCircle,
   XCircle,
 } from "lucide-react"
 
-import type {
-  ReactNode,
+import {
+  useEffect,
+  useState,
+  type ReactNode,
 } from "react"
 
 /*
  * ชิ้นส่วนที่หน้า Analysis Result ใช้ซ้ำ
  */
+
+/*
+ * คัดลอกข้อความ — กดแล้วเป็นเครื่องหมายถูก 1.5 วินาที
+ */
+function CopyButton({
+  text,
+}: {
+  text: string
+}) {
+  const [copied, setCopied] =
+    useState(false)
+
+  useEffect(() => {
+    if (!copied) {
+      return
+    }
+
+    const timer = setTimeout(() => setCopied(false), 1500)
+    return () => clearTimeout(timer)
+  }, [copied])
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+    } catch {
+      // ไม่อนุญาต clipboard (http / สิทธิ์) — เงียบไว้
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className={copied ? "copy-button copy-button--done" : "copy-button"}
+      onClick={() => void handleCopy()}
+      aria-label={copied ? "คัดลอกแล้ว" : "คัดลอกคำแนะนำ"}
+      title={copied ? "คัดลอกแล้ว" : "คัดลอก"}
+    >
+      {copied
+        ? <Check size={15} />
+        : <Copy size={15} />}
+    </button>
+  )
+}
 
 export function AnalysisHeader({
   eyebrow,
@@ -47,6 +95,7 @@ export function AnalysisHeader({
         </span>
       ) : (
         <span className="analysis-status analysis-status--failed">
+          <XCircle size={15} />
           FAILED
         </span>
       )}
@@ -156,6 +205,8 @@ export function RecommendationsCard({
                 <span>{index + 1}</span>
 
                 <p>{recommendation}</p>
+
+                <CopyButton text={recommendation} />
               </li>
             ),
           )}

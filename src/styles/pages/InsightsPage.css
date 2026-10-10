@@ -351,6 +351,28 @@
   background: var(--color-navy);
 
   transition: width 400ms ease;
+
+  transform-origin: left center;
+  animation: insights-bar-grow 700ms var(--ease-out) both;
+}
+
+/* แถบทยอยเติมทีละแถว */
+.section-progress__item:nth-child(2) .section-progress__fill { animation-delay: 60ms; }
+.section-progress__item:nth-child(3) .section-progress__fill { animation-delay: 120ms; }
+.section-progress__item:nth-child(4) .section-progress__fill { animation-delay: 180ms; }
+.section-progress__item:nth-child(5) .section-progress__fill { animation-delay: 240ms; }
+.section-progress__item:nth-child(6) .section-progress__fill { animation-delay: 300ms; }
+.section-progress__item:nth-child(n + 7) .section-progress__fill { animation-delay: 360ms; }
+
+@keyframes insights-bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* skeleton ในการ์ด */
+.insight-stat .skeleton + .skeleton {
+  margin-top: var(--space-1);
 }
 
 /*

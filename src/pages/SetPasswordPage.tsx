@@ -25,6 +25,10 @@ import {
 } from "../components/ui/Input"
 
 import {
+  PasswordRequirements,
+} from "../components/auth/PasswordRequirements"
+
+import {
   ApiError,
 } from "../services/api"
 
@@ -161,6 +165,10 @@ export function SetPasswordPage() {
               }}
             />
 
+            <PasswordRequirements
+              password={password}
+            />
+
             <Input
               id="confirm-password"
               type="password"
@@ -168,15 +176,16 @@ export function SetPasswordPage() {
               placeholder="กรอกรหัสผ่านอีกครั้ง"
               autoComplete="new-password"
               value={confirmPassword}
+              error={
+                confirmPassword.length >= password.length &&
+                confirmPassword !== password
+                  ? "รหัสผ่านไม่ตรงกัน"
+                  : undefined
+              }
               onChange={(event) => {
                 setConfirmPassword(event.target.value)
               }}
             />
-
-            <p className="sign-in__password-hint">
-              รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร
-              และมีตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข
-            </p>
 
             {error && (
               <div

@@ -144,6 +144,106 @@ select {
   display: grid;
   place-items: center;
 
+  align-content: center;
+  gap: var(--space-4);
+
   color: var(--color-text-secondary);
   background: var(--color-background);
+}
+
+/* วงหมุนเหนือข้อความ "กำลังตรวจสอบการเข้าสู่ระบบ..." */
+.auth-loading::before {
+  content: "";
+
+  width: 32px;
+  height: 32px;
+
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-steel-blue);
+  border-radius: 50%;
+
+  animation: auth-loading-spin 0.8s linear infinite;
+}
+
+@keyframes auth-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * เปลี่ยนหน้า: เนื้อหาค่อยๆ ขึ้น (AppLayout ใส่ key ตาม path)
+ */
+.page-transition {
+  animation: page-in var(--duration-page) var(--ease-out);
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/*
+ * Skeleton ตอนโหลด — ใช้แทนข้อความ "กำลังโหลด..."
+ */
+.skeleton {
+  position: relative;
+
+  display: block;
+  overflow: hidden;
+
+  border-radius: var(--radius-sm);
+  background: var(--skeleton-base);
+}
+
+.skeleton::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+  transform: translateX(-100%);
+
+  animation: skeleton-shine 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shine {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ซ่อนจากตา แต่ screen reader ยังอ่าน */
+.sr-only {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  overflow: hidden;
+
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* ตัวเลขกว้างเท่ากันทุกหลัก (คะแนน / สถิติ ไม่กระตุกเวลาเปลี่ยน) */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * ผู้ใช้ตั้งค่าลดการเคลื่อนไหว → ปิด animation / transition ทั้งแอป
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

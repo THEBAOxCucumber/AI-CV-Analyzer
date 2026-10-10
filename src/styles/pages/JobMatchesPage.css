@@ -565,3 +565,67 @@
     gap: 0;
   }
 }
+
+/* ===== ขัดเกลา: กำลังค้นหา / ปุ่ม / การ์ดทยอยขึ้น ===== */
+.job-spinner {
+  flex: 0 0 auto;
+  animation: job-spin 0.8s linear infinite;
+}
+
+@keyframes job-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.job-search__button,
+.job-card__match {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.job-loading-note {
+  margin-bottom: var(--space-4);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.job-card--skeleton,
+.job-card--skeleton:hover {
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transform: none;
+}
+
+.job-skeleton__text {
+  min-width: 0;
+  flex: 1;
+
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* การ์ดผลลัพธ์ทยอยขึ้น */
+.job-list > .job-card:not(.job-card--skeleton) {
+  animation: job-card-in 360ms var(--ease-out) both;
+}
+
+.job-list > .job-card:nth-child(2) { animation-delay: 50ms; }
+.job-list > .job-card:nth-child(3) { animation-delay: 100ms; }
+.job-list > .job-card:nth-child(4) { animation-delay: 150ms; }
+.job-list > .job-card:nth-child(5) { animation-delay: 200ms; }
+.job-list > .job-card:nth-child(n + 6) { animation-delay: 250ms; }
+
+@keyframes job-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

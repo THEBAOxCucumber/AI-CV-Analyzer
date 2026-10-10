@@ -9,6 +9,10 @@ import type {
 } from "../../types/analysis"
 
 import {
+  useCountUp,
+} from "../../hooks/useCountUp"
+
+import {
   AnalysisHeader,
   AnalysisTagList,
   RecommendationsCard,
@@ -23,14 +27,17 @@ function MatchScoreCard({
 }: {
   score: number | null
 }) {
+  // นับขึ้นจาก 0 + แถบเติมพร้อมกัน
+  const displayed = useCountUp(score ?? 0)
+
   return (
     <div className="job-match-score-card">
       <div className="job-match-score-card__top">
         <div>
           <p>Match Score</p>
 
-          <strong>
-            {score ?? "—"}
+          <strong className="tabular-nums">
+            {score === null ? "—" : displayed}
 
             {score !== null && (
               <span>/100</span>
@@ -45,7 +52,7 @@ function MatchScoreCard({
         <progress
           className="job-match-progress"
           aria-label="Job Match Score"
-          value={clampPercent(score)}
+          value={clampPercent(displayed)}
           max={100}
         />
       )}
@@ -111,7 +118,12 @@ export function JobMatchResultView({
             <div className="job-match-skills-card__heading">
               <ThumbsUp size={20} />
 
-              <h3>Matching Skills</h3>
+              <h3>
+                Matching Skills
+                <span className="job-match-count">
+                  {jobMatch?.matchedSkills.length ?? 0}
+                </span>
+              </h3>
             </div>
 
             <AnalysisTagList
@@ -125,7 +137,12 @@ export function JobMatchResultView({
             <div className="job-match-skills-card__heading">
               <ThumbsDown size={20} />
 
-              <h3>Missing Skills</h3>
+              <h3>
+                Missing Skills
+                <span className="job-match-count">
+                  {jobMatch?.missingSkills.length ?? 0}
+                </span>
+              </h3>
             </div>
 
             <AnalysisTagList

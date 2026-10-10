@@ -122,8 +122,21 @@
 
   /* Motion */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --transition-fast: 150ms var(--ease-out);
   --transition-normal: 250ms var(--ease-out);
+  --duration-page: 280ms;
+
+  /*
+   * การ์ดตอน hover (ยกขึ้นเล็กน้อย)
+   */
+  --shadow-hover:
+    0 6px 16px rgba(30, 49, 86, 0.08),
+    0 18px 40px rgba(30, 49, 86, 0.1);
+
+  /* Skeleton ตอนโหลด */
+  --skeleton-base: #e9eef5;
+  --skeleton-shine: rgba(255, 255, 255, 0.7);
 }
 
 /*
@@ -245,6 +258,18 @@
   --focus-ring:
     0 0 0 4px rgba(143, 176, 221, 0.3);
 
+  --shadow-hover:
+
+    0 6px 16px rgba(0, 0, 0, 0.35),
+
+    0 18px 40px rgba(0, 0, 0, 0.4);
+
+
+  --skeleton-base: #1f2c49;
+
+  --skeleton-shine: rgba(255, 255, 255, 0.06);
+
+
   color-scheme: dark;
 }
 
@@ -308,6 +333,18 @@
 
     --focus-ring:
       0 0 0 4px rgba(143, 176, 221, 0.3);
+
+    --shadow-hover:
+
+      0 6px 16px rgba(0, 0, 0, 0.35),
+
+      0 18px 40px rgba(0, 0, 0, 0.4);
+
+
+    --skeleton-base: #1f2c49;
+
+    --skeleton-shine: rgba(255, 255, 255, 0.06);
+
 
     color-scheme: dark;
   }

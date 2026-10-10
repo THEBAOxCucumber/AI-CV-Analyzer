@@ -202,8 +202,10 @@
   fill: none;
   stroke: var(--color-navy);
   stroke-linecap: round;
+}
 
-  transition: stroke-dashoffset 600ms ease;
+.score-ring-gauge__label strong {
+  font-variant-numeric: tabular-nums;
 }
 
 .score-ring-gauge__label {
@@ -449,6 +451,9 @@
 }
 
 .recommendations-card li p {
+  min-width: 0;
+  flex: 1;
+
   padding-top: 2px;
 
   color: var(--color-text-secondary);
@@ -704,5 +709,131 @@
 
   .score-ring-gauge__label strong {
     font-size: 2.1rem;
+  }
+}
+/* ===== ขัดเกลา: ทยอยแสดง / คัดลอก / จำนวนทักษะ ===== */
+
+/*
+ * ส่วนหลักของหน้าทยอยขึ้นตามลำดับ
+ */
+.analysis-page > * {
+  animation: result-in 420ms var(--ease-out) both;
+}
+
+.analysis-page > :nth-child(2) { animation-delay: 60ms; }
+.analysis-page > :nth-child(3) { animation-delay: 120ms; }
+.analysis-page > :nth-child(4) { animation-delay: 180ms; }
+.analysis-page > :nth-child(5) { animation-delay: 240ms; }
+.analysis-page > :nth-child(6) { animation-delay: 300ms; }
+
+/* รายการในการ์ดทยอยขึ้นทีละข้อ */
+.feedback-list li,
+.recommendations-card li {
+  animation: result-in 360ms var(--ease-out) both;
+  animation-delay: 300ms;
+}
+
+.feedback-list li:nth-child(2),
+.recommendations-card li:nth-child(2) { animation-delay: 360ms; }
+
+.feedback-list li:nth-child(3),
+.recommendations-card li:nth-child(3) { animation-delay: 420ms; }
+
+.feedback-list li:nth-child(4),
+.recommendations-card li:nth-child(4) { animation-delay: 480ms; }
+
+.feedback-list li:nth-child(n + 5),
+.recommendations-card li:nth-child(n + 5) { animation-delay: 540ms; }
+
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* ปุ่มคัดลอกคำแนะนำ — เห็นชัดตอน hover/focus */
+.copy-button {
+  width: 32px;
+  height: 32px;
+
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+
+  color: var(--color-text-muted);
+  background: transparent;
+
+  cursor: pointer;
+
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.copy-button:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+  background: var(--color-surface);
+}
+
+.copy-button--done,
+.copy-button--done:hover {
+  color: var(--color-success);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .recommendations-card li .copy-button {
+    opacity: 0.35;
+  }
+
+  .recommendations-card li:hover .copy-button,
+  .copy-button:focus-visible,
+  .copy-button--done {
+    opacity: 1;
+  }
+}
+
+/* จำนวนทักษะข้างหัวการ์ด */
+.job-match-skills-card__heading h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.job-match-count {
+  min-width: 24px;
+  padding: 1px 8px;
+
+  border-radius: var(--radius-full);
+
+  color: var(--color-text-secondary);
+  background: var(--color-surface-muted);
+
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ป้ายทักษะทยอยขึ้น */
+.job-match-tag {
+  animation: tag-in 280ms var(--ease-out) both;
+}
+
+.job-match-tag:nth-child(2) { animation-delay: 40ms; }
+.job-match-tag:nth-child(3) { animation-delay: 80ms; }
+.job-match-tag:nth-child(4) { animation-delay: 120ms; }
+.job-match-tag:nth-child(n + 5) { animation-delay: 160ms; }
+
+@keyframes tag-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
   }
 }

@@ -199,6 +199,7 @@
 
   line-height: 1.1;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 
   white-space: nowrap;
 }
@@ -393,7 +394,15 @@
   font-size: var(--font-size-xs);
 }
 
+/*
+ * วงคะแนน: เติมตามคะแนน (--score 0–100) สีตามระดับ
+ * ตัวเลขใช้สีตัวอักษรปกติ (สีเหลือง/เขียวบนพื้นขาวอ่านยาก)
+ */
 .score-ring {
+  --tone: var(--color-steel-blue);
+
+  position: relative;
+
   width: 52px;
   height: 52px;
 
@@ -402,23 +411,78 @@
 
   flex: 0 0 auto;
 
-  border: 3px solid currentColor;
   border-radius: var(--radius-full);
+
+  color: var(--color-text-primary);
+  background:
+    conic-gradient(var(--tone) calc(var(--score, 0) * 1%), var(--color-surface-muted) 0);
 
   font-size: var(--font-size-md);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* วงในสีพื้น → เหลือเป็นเส้นหนา 4px */
+.score-ring::before {
+  content: "";
+
+  position: absolute;
+  inset: 4px;
+
+  border-radius: inherit;
+  background: var(--color-surface);
+}
+
+.score-ring > span {
+  position: relative;
+}
+
+.recent-analysis__item:hover .score-ring::before {
+  background: var(--color-surface-muted);
 }
 
 .score-ring--good {
-  color: #1f9d3a;
+  --tone: var(--color-success);
 }
 
 .score-ring--fair {
-  color: #c9a200;
+  --tone: var(--color-warning);
 }
 
 .score-ring--low {
-  color: var(--color-danger);
+  --tone: var(--color-danger);
+}
+
+/*
+ * Skeleton ตอนโหลด
+ */
+.dashboard-skeleton-row {
+  padding: var(--space-4) 0;
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.dashboard-skeleton-row + .dashboard-skeleton-row {
+  border-top: 1px solid var(--color-border);
+}
+
+.dashboard-skeleton-row__text {
+  min-width: 0;
+  flex: 1;
+
+  display: grid;
+  gap: var(--space-2);
+}
+
+.dashboard__panel-skeleton {
+  padding: 0 var(--space-6) var(--space-2);
+}
+
+.stat-card__value .skeleton {
+  width: 72px;
+  height: 2.2rem;
 }
 
 .top-skills__list {
@@ -474,6 +538,21 @@
   border-radius: var(--radius-full);
 
   background: var(--color-navy);
+
+  transform-origin: left center;
+  animation: bar-grow 700ms var(--ease-out) both;
+}
+
+/* แถบทยอยขึ้นทีละแถว */
+.top-skills__list li:nth-child(2) .top-skills__bar > div { animation-delay: 60ms; }
+.top-skills__list li:nth-child(3) .top-skills__bar > div { animation-delay: 120ms; }
+.top-skills__list li:nth-child(4) .top-skills__bar > div { animation-delay: 180ms; }
+.top-skills__list li:nth-child(5) .top-skills__bar > div { animation-delay: 240ms; }
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
 }
 
 /*

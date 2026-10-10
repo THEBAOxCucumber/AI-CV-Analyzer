@@ -150,6 +150,8 @@ export function ScoreTrendChart({
             <path
               className="trend-chart__line"
               d={linePath}
+              // ความยาวเส้น = 1 → animation วาดเส้นด้วย dashoffset ได้ง่าย
+              pathLength={1}
             />
           )}
 
@@ -174,6 +176,8 @@ export function ScoreTrendChart({
               cx={coord.x}
               cy={coord.y}
               r={4.5}
+              // จุดขึ้นตามหลังเส้นที่วาดผ่าน
+              style={{ animationDelay: `${200 + (index / Math.max(1, coords.length - 1)) * 700}ms` }}
             />
           ))}
 

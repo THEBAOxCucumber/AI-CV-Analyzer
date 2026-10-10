@@ -53,6 +53,10 @@ import {
     type TrendPoint,
 } from "../components/charts/ScoreTrendChart"
 
+import {
+    CountUp,
+} from "../components/ui/CountUp"
+
 import "../styles/pages/InsightsPage.css"
 
 const TREND_LIMIT = 10
@@ -386,10 +390,29 @@ export function InsightsPage() {
 
     if (isLoading) {
         return (
-            <main className="insights">
-                <div className="insights__state">
-                    กำลังวิเคราะห์ข้อมูล Insights...
-                </div>
+            <main className="insights" aria-busy="true">
+                <header className="insights__header">
+                    <div>
+                        <p className="insights__eyebrow">Insights</p>
+                        <h1>Resume Insights</h1>
+                        <p>กำลังรวบรวมข้อมูลจากการวิเคราะห์ของคุณ…</p>
+                    </div>
+                </header>
+
+                <section className="insights__stats" aria-hidden="true">
+                    {[0, 1, 2, 3].map((index) => (
+                        <article key={index} className="insight-stat">
+                            <span className="skeleton" style={{ width: "55%", height: 14 }} />
+                            <span className="skeleton" style={{ width: 84, height: 34 }} />
+                            <span className="skeleton" style={{ width: "40%", height: 12 }} />
+                        </article>
+                    ))}
+                </section>
+
+                <section className="insights__panel" aria-hidden="true">
+                    <span className="skeleton" style={{ width: 220, height: 18 }} />
+                    <span className="skeleton" style={{ width: "100%", height: 220, marginTop: 20 }} />
+                </section>
             </main>
         )
     }
@@ -476,7 +499,7 @@ export function InsightsPage() {
                     </span>
 
                     <strong>
-                        {latestScore ?? "—"}
+                        {latestScore === null ? "—" : <CountUp value={latestScore} />}
                         {latestScore !== null && (
                             <small>/100</small>
                         )}
@@ -503,7 +526,7 @@ export function InsightsPage() {
                     </span>
 
                     <strong>
-                        {averageScore ?? "—"}
+                        {averageScore === null ? "—" : <CountUp value={averageScore} />}
                         {averageScore !== null && (
                             <small>/100</small>
                         )}
@@ -521,8 +544,9 @@ export function InsightsPage() {
                     </span>
 
                     <strong>
-                        {highestAnalysis?.baseResumeScore ??
-                            "—"}
+                        {highestAnalysis?.baseResumeScore == null
+                            ? "—"
+                            : <CountUp value={highestAnalysis.baseResumeScore} />}
                         {highestAnalysis && (
                             <small>/100</small>
                         )}
@@ -544,7 +568,7 @@ export function InsightsPage() {
                     </span>
 
                     <strong>
-                        {averageJobMatch ?? "—"}
+                        {averageJobMatch === null ? "—" : <CountUp value={averageJobMatch} />}
                         {averageJobMatch !== null && (
                             <small>/100</small>
                         )}

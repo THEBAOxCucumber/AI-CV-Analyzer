@@ -11,6 +11,7 @@ import {
 } from "react-router-dom"
 
 import {
+  CheckCircle2,
   LockKeyhole,
 } from "lucide-react"
 
@@ -46,6 +47,7 @@ import "../styles/pages/SignInPage.css"
 
 interface LocationState {
   from?: string
+  registrationSuccess?: boolean
 }
 
 export function SignInPage() {
@@ -76,6 +78,11 @@ export function SignInPage() {
       new URLSearchParams(location.search)
         .get("oauthError"),
     )
+
+  // มาจากหน้าสมัครสมาชิกสำเร็จ
+  const registrationSuccess =
+    (location.state as LocationState | null)
+      ?.registrationSuccess === true
 
   if (isAuthLoading) {
     return (
@@ -192,6 +199,19 @@ export function SignInPage() {
               เข้าสู่บัญชีของคุณเพื่อดำเนินการต่อ
             </p>
           </div>
+
+          {registrationSuccess && !error && (
+            <div
+              className="sign-in__notice"
+              role="status"
+            >
+              <CheckCircle2
+                size={18}
+                aria-hidden="true"
+              />
+              สมัครสมาชิกสำเร็จ เข้าสู่ระบบด้วยอีเมลที่สมัครไว้ได้เลย
+            </div>
+          )}
 
           <form
             className="sign-in__form"

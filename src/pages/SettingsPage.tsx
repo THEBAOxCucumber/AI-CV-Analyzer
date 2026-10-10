@@ -75,6 +75,12 @@ import {
 } from "../hooks/useTheme"
 
 import {
+  Check,
+  CheckCircle2,
+  CircleAlert,
+  Eye,
+  EyeOff,
+  LoaderCircle,
   Monitor,
   Moon,
   Sun,
@@ -259,13 +265,182 @@ function Message({
   type: "error" | "success"
   children: ReactNode
 }) {
+  const Icon = type === "error"
+    ? CircleAlert
+    : CheckCircle2
+
   return (
     <p
       className={`settings-message settings-message--${type}`}
       role={type === "error" ? "alert" : "status"}
     >
-      {children}
+      <Icon size={16} aria-hidden="true" />
+      <span>{children}</span>
     </p>
+  )
+}
+
+function Spinner() {
+  return (
+    <LoaderCircle
+      className="settings-spinner"
+      size={16}
+      aria-hidden="true"
+    />
+  )
+}
+
+/*
+ * ปุ่ม Save: ระหว่างบันทึก = spinner
+ * บันทึกสำเร็จ = เครื่องหมายถูก จนกว่าจะแก้ข้อมูลอีกครั้ง
+ */
+function SaveButton({
+  isSaving,
+  isSaved,
+  disabled,
+}: {
+  isSaving: boolean
+  isSaved: boolean
+  disabled: boolean
+}) {
+  let label = "Save Changes"
+
+  if (isSaving) {
+    label = "กำลังบันทึก..."
+  } else if (isSaved) {
+    label = "บันทึกแล้ว"
+  }
+
+  return (
+    <button
+      type="submit"
+      className={
+        isSaved
+          ? "settings-button settings-button--primary settings-button--block settings-button--saved"
+          : "settings-button settings-button--primary settings-button--block"
+      }
+      disabled={disabled}
+      aria-busy={isSaving || undefined}
+    >
+      {isSaving && <Spinner />}
+      {isSaved && (
+        <Check size={17} aria-hidden="true" />
+      )}
+      {label}
+    </button>
+  )
+}
+
+/*
+ * ช่องรหัสผ่าน + ปุ่มแสดง/ซ่อน
+ */
+function PasswordField({
+  label,
+  value,
+  onChange,
+  autoComplete,
+  minLength,
+  maxLength,
+  hint,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  autoComplete: string
+  minLength?: number
+  maxLength?: number
+  hint?: string
+}) {
+  const [isVisible, setIsVisible] =
+    useState(false)
+
+  const toggleLabel = isVisible
+    ? "ซ่อนรหัสผ่าน"
+    : "แสดงรหัสผ่าน"
+
+  return (
+    <label className="settings-field settings-field--full">
+      <span>{label}</span>
+
+      <span className="settings-password">
+        <input
+          type={isVisible ? "text" : "password"}
+          autoComplete={autoComplete}
+          required
+          minLength={minLength}
+          maxLength={maxLength}
+          value={value}
+          onChange={(event) =>
+            onChange(event.target.value)
+          }
+        />
+
+        <button
+          type="button"
+          className="settings-password__toggle"
+          onClick={() => setIsVisible((visible) => !visible)}
+          aria-label={toggleLabel}
+          aria-pressed={isVisible}
+          title={toggleLabel}
+        >
+          {isVisible
+            ? <EyeOff size={18} />
+            : <Eye size={18} />}
+        </button>
+      </span>
+
+      {hint && <small>{hint}</small>}
+    </label>
+  )
+}
+
+function SettingsSkeleton() {
+  return (
+    <main
+      className="settings-page"
+      aria-busy="true"
+    >
+      <header className="settings-page__header">
+        <h1>Settings</h1>
+
+        <p>
+          Manage your profile, preferences
+          and account settings
+        </p>
+      </header>
+
+      <p className="sr-only" role="status">
+        กำลังโหลดข้อมูล...
+      </p>
+
+      <div
+        className="settings-card"
+        aria-hidden="true"
+      >
+        <span className="skeleton" style={{ width: 220, height: 24 }} />
+
+        <div className="profile-layout">
+          <div className="profile-layout__aside">
+            <span className="skeleton" style={{ width: 96, height: 96, borderRadius: "50%" }} />
+            <span className="skeleton" style={{ width: "100%", height: 88 }} />
+          </div>
+
+          <div className="settings-grid">
+            {[0, 1, 2, 3].map((index) => (
+              <div key={index} className="settings-skeleton__field">
+                <span className="skeleton" style={{ width: "40%", height: 12 }} />
+                <span className="skeleton" style={{ height: 46 }} />
+              </div>
+            ))}
+
+            <div className="settings-skeleton__field settings-field--full">
+              <span className="skeleton" style={{ width: "25%", height: 12 }} />
+              <span className="skeleton" style={{ height: 96 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   )
 }
 
@@ -281,8 +456,13 @@ export function SettingsPage() {
   const [loadError, setLoadError] =
     useState("")
 
-  const [isSaving, setIsSaving] =
-    useState(false)
+  /*
+   * การ์ดที่กำลังบันทึก (ปุ่มอีกการ์ด disabled แต่ไม่หมุน)
+   */
+  const [savingCard, setSavingCard] =
+    useState<"profile" | "preferences" | null>(null)
+
+  const isSaving = savingCard !== null
 
   /*
    * ข้อความแสดงในการ์ดที่กด Save
@@ -494,7 +674,7 @@ export function SettingsPage() {
     }
 
     try {
-      setIsSaving(true)
+      setSavingCard(card)
 
       const response =
         await updateProfile(payload)
@@ -518,7 +698,7 @@ export function SettingsPage() {
         ),
       })
     } finally {
-      setIsSaving(false)
+      setSavingCard(null)
     }
   }
 
@@ -666,13 +846,7 @@ export function SettingsPage() {
     )
 
   if (isLoading) {
-    return (
-      <main className="settings-page">
-        <div className="settings-page__state">
-          กำลังโหลดข้อมูล...
-        </div>
-      </main>
-    )
+    return <SettingsSkeleton />
   }
 
   return (
@@ -881,15 +1055,14 @@ export function SettingsPage() {
           </Message>
         )}
 
-        <button
-          type="submit"
-          className="settings-button settings-button--primary settings-button--block"
+        <SaveButton
+          isSaving={savingCard === "profile"}
+          isSaved={
+            saveResult?.card === "profile" &&
+            saveResult.type === "success"
+          }
           disabled={isSaving}
-        >
-          {isSaving
-            ? "กำลังบันทึก..."
-            : "Save Changes"}
-        </button>
+        />
       </form>
 
       <div className="settings-columns">
@@ -1054,15 +1227,14 @@ export function SettingsPage() {
             </Message>
           )}
 
-          <button
-            type="submit"
-            className="settings-button settings-button--primary settings-button--block"
+          <SaveButton
+            isSaving={savingCard === "preferences"}
+            isSaved={
+              saveResult?.card === "preferences" &&
+              saveResult.type === "success"
+            }
             disabled={isSaving}
-          >
-            {isSaving
-              ? "กำลังบันทึก..."
-              : "Save Changes"}
-          </button>
+          />
         </form>
 
         {/* 3. Privacy & Security */}
@@ -1082,66 +1254,44 @@ export function SettingsPage() {
           </h3>
 
           <div className="settings-grid">
-            <label className="settings-field settings-field--full">
-              <span>Current Password</span>
+            <PasswordField
+              label="Current Password"
+              autoComplete="current-password"
+              value={passwordForm.currentPassword}
+              onChange={(value) =>
+                setPasswordForm((current) => ({
+                  ...current,
+                  currentPassword: value,
+                }))
+              }
+            />
 
-              <input
-                type="password"
-                autoComplete="current-password"
-                required
-                value={passwordForm.currentPassword}
-                onChange={(event) =>
-                  setPasswordForm((current) => ({
-                    ...current,
-                    currentPassword:
-                      event.target.value,
-                  }))
-                }
-              />
-            </label>
+            <PasswordField
+              label="New Password"
+              autoComplete="new-password"
+              minLength={8}
+              maxLength={72}
+              hint="อย่างน้อย 8 ตัว มีตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข"
+              value={passwordForm.newPassword}
+              onChange={(value) =>
+                setPasswordForm((current) => ({
+                  ...current,
+                  newPassword: value,
+                }))
+              }
+            />
 
-            <label className="settings-field settings-field--full">
-              <span>New Password</span>
-
-              <input
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={8}
-                maxLength={72}
-                value={passwordForm.newPassword}
-                onChange={(event) =>
-                  setPasswordForm((current) => ({
-                    ...current,
-                    newPassword:
-                      event.target.value,
-                  }))
-                }
-              />
-
-              <small>
-                อย่างน้อย 8 ตัว มีตัวพิมพ์ใหญ่
-                ตัวพิมพ์เล็ก และตัวเลข
-              </small>
-            </label>
-
-            <label className="settings-field settings-field--full">
-              <span>Confirm New Password</span>
-
-              <input
-                type="password"
-                autoComplete="new-password"
-                required
-                value={passwordForm.confirmPassword}
-                onChange={(event) =>
-                  setPasswordForm((current) => ({
-                    ...current,
-                    confirmPassword:
-                      event.target.value,
-                  }))
-                }
-              />
-            </label>
+            <PasswordField
+              label="Confirm New Password"
+              autoComplete="new-password"
+              value={passwordForm.confirmPassword}
+              onChange={(value) =>
+                setPasswordForm((current) => ({
+                  ...current,
+                  confirmPassword: value,
+                }))
+              }
+            />
           </div>
 
           {passwordResult && (
@@ -1154,7 +1304,9 @@ export function SettingsPage() {
             type="submit"
             className="settings-button settings-button--secondary"
             disabled={isChangingPassword}
+            aria-busy={isChangingPassword || undefined}
           >
+            {isChangingPassword && <Spinner />}
             {isChangingPassword
               ? "กำลังเปลี่ยน..."
               : "Change Password"}
@@ -1241,10 +1393,12 @@ export function SettingsPage() {
                 type="button"
                 className="settings-button settings-button--outline"
                 disabled={isExporting}
+                aria-busy={isExporting || undefined}
                 onClick={() => {
                   void handleExportData()
                 }}
               >
+                {isExporting && <Spinner />}
                 {isExporting
                   ? "กำลัง Export..."
                   : "Export"}
