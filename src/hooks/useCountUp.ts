@@ -29,9 +29,16 @@ export function useCountUp(
     }
 
     let frame = 0
-    const startedAt = performance.now()
+
+    /*
+     * เริ่มนับจากเฟรมแรก ไม่ใช่ performance.now()
+     * เวลาที่ rAF ส่งมาอาจเก่ากว่าตอนเรียก → progress ติดลบ → ตัวเลขติดลบแวบหนึ่ง
+     */
+    let startedAt: number | null = null
 
     function tick(now: number) {
+      startedAt ??= now
+
       const progress = Math.min(1, (now - startedAt) / durationMs)
       // easeOutCubic
       const eased = 1 - (1 - progress) ** 3

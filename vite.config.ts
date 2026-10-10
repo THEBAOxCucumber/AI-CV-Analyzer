@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from "node:url"
-import { defineConfig } from "vite"
+import { defineConfig } from "vitest/config"
 import react from "@vitejs/plugin-react"
 
 const apiProxy = {
@@ -42,5 +42,16 @@ export default defineConfig({
     port: 4173,
     proxy: apiProxy,
     allowedHosts,
+  },
+
+  /*
+   * เทสต์ frontend: ไฟล์ *.test.ts(x) ข้างโค้ดที่ทดสอบ
+   * jsdom = มี DOM ให้ render component ได้โดยไม่ต้องเปิดเบราว์เซอร์
+   */
+  test: {
+    environment: "jsdom",
+    include: ["src/**/*.test.{ts,tsx}"],
+    setupFiles: ["./src/test/setup.ts"],
+    restoreMocks: true,
   },
 })
