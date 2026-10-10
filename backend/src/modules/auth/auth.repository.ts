@@ -1,4 +1,4 @@
-import type { ResultSetHeader } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { PoolConnection } from "mysql2/promise";
 
 import { database } from "../../config/database.js";
@@ -133,4 +133,38 @@ export async function findUserById(
   );
 
   return rows[0] ?? null;
+}
+
+/*
+ * จำนวน ADMIN ทั้งหมด (กันลบ admin คนสุดท้าย)
+ */
+export async function countAdmins(): Promise<number> {
+  const [rows] = await database.execute<(RowDataPacket & { total: number })[]>(
+    `
+      SELECT COUNT(*) AS total
+      FROM users
+      WHERE role = 'ADMIN'
+    `,
+  );
+
+  return Number(rows[0]?.total ?? 0);
+}
+
+/*
+ * ลบผู้ใช้ — ตารางลูกทั้งหมดเป็น ON DELETE CASCADE
+ * (profile, resumes, chunks, analysis runs, job descriptions, OTP, OAuth)
+ * admin_audit_logs.admin_id → SET NULL (ประวัติยังอยู่ด้วย admin_email)
+ */
+export async function deleteUserById(
+  userId: number,
+): Promise<boolean> {
+  const [result] = await database.execute<ResultSetHeader>(
+    `
+      DELETE FROM users
+      WHERE id = ?
+    `,
+    [userId],
+  );
+
+  return result.affectedRows > 0;
 }

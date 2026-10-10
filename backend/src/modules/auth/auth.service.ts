@@ -3,7 +3,9 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 import { AppError } from "../../errors/app-error.js";
 import { env } from "../../config/env.js";
 import {
+  countAdmins,
   createUser,
+  deleteUserById,
   findUserByEmail,
   findUserById,
   updateLastLoginAt,
@@ -11,7 +13,17 @@ import {
 } from "./auth.repository.js";
 import type {
   ChangePasswordBody,
+  DeleteAccountBody,
 } from "./auth.validation.js";
+import {
+  findResumesByUserId,
+} from "../resume/resume.repository.js";
+import {
+  removeResumeFile,
+} from "../resume/resume.service.js";
+import {
+  deleteUserVectors,
+} from "../embedding/vector-store.service.js";
 import {
   notifyPasswordChanged,
 } from "../password-reset/password-reset.service.js";
@@ -285,4 +297,72 @@ export async function changePassword(
     email: userRow.email,
     firstName: userRow.first_name,
   });
+}
+
+/*
+ * ลบบัญชีถาวร (PDPA: ผู้ใช้ขอลบข้อมูลตัวเองได้)
+ *
+ * ลำดับ: ตรวจสิทธิ์ → ลบ vector (ล้ม = ยังไม่ลบอะไร ลองใหม่ได้)
+ *       → ลบ user (DB cascade ข้อมูลทั้งหมด) → ลบไฟล์ PDF
+ */
+export async function deleteAccount(
+  userId: number,
+  input: DeleteAccountBody,
+): Promise<void> {
+  const userRow = await findUserById(userId);
+
+  if (!userRow) {
+    throw new AppError(
+      "ไม่พบบัญชีผู้ใช้",
+      404,
+      "USER_NOT_FOUND",
+    );
+  }
+
+  if (input.confirmEmail !== normalizeEmail(userRow.email)) {
+    throw new AppError(
+      "อีเมลที่พิมพ์ไม่ตรงกับอีเมลของบัญชี",
+      400,
+      "CONFIRM_EMAIL_MISMATCH",
+    );
+  }
+
+  const passwordMatches =
+    await bcrypt.compare(
+      input.currentPassword,
+      userRow.password_hash,
+    );
+
+  // 400 ไม่ใช่ 401 (เหตุผลเดียวกับ changePassword)
+  if (!passwordMatches) {
+    throw new AppError(
+      "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+      400,
+      "INVALID_CURRENT_PASSWORD",
+    );
+  }
+
+  if (
+    userRow.role === "ADMIN" &&
+    await countAdmins() <= 1
+  ) {
+    throw new AppError(
+      "คุณเป็น Admin คนสุดท้าย กรุณาตั้ง Admin คนอื่นก่อนลบบัญชี",
+      409,
+      "LAST_ADMIN",
+    );
+  }
+
+  // เก็บ path ไว้ก่อน — หลังลบ user แถวใน resumes จะหายไปด้วย
+  const resumes = await findResumesByUserId(userId);
+
+  await deleteUserVectors(userId);
+
+  await deleteUserById(userId);
+
+  await Promise.all(
+    resumes.map((resume) =>
+      removeResumeFile(resume.file_path),
+    ),
+  );
 }

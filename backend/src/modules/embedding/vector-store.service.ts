@@ -130,6 +130,29 @@ export async function deleteResumeVectors(
   });
 }
 
+/*
+ * ลบ vector ทุก Resume ของผู้ใช้ (ใช้ตอนลบบัญชี)
+ */
+export async function deleteUserVectors(
+  userId: number,
+): Promise<void> {
+  await ensureResumeVectorCollection();
+
+  await qdrant.delete(env.qdrant.collection, {
+    wait: true,
+    filter: {
+      must: [
+        {
+          key: "userId",
+          match: {
+            value: userId,
+          },
+        },
+      ],
+    },
+  });
+}
+
 export interface SearchResumeVectorsInput {
   vector: number[];
   userId: number;

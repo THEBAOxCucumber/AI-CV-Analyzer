@@ -8,6 +8,7 @@ import {
 import { validate } from "../../middleware/validate.middleware.js";
 import {
   changePasswordController,
+  deleteAccountController,
   forgotPasswordController,
   getMeController,
   loginController,
@@ -17,6 +18,7 @@ import {
 } from "./auth.controller.js";
 import {
   changePasswordSchema,
+  deleteAccountSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -60,6 +62,15 @@ authRouter.post(
   authenticateToken,
   validate({ body: setPasswordSchema }),
   setPasswordController,
+);
+
+// ลบบัญชีถาวร — จำกัดครั้งต่อ IP กันเดารหัสผ่านผ่าน endpoint นี้
+authRouter.delete(
+  "/account",
+  authIpRateLimit,
+  authenticateToken,
+  validate({ body: deleteAccountSchema }),
+  deleteAccountController,
 );
 
 // Google

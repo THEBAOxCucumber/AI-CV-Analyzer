@@ -87,7 +87,17 @@ export const setPasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
+// ลบบัญชี: ยืนยันด้วยรหัสผ่าน + พิมพ์อีเมลของตัวเอง
+export const deleteAccountSchema = z.object({
+  currentPassword: z
+    .string()
+    .min(1, "กรุณากรอกรหัสผ่านปัจจุบัน"),
+
+  confirmEmail: emailSchema,
+});
+
 export type SetPasswordBody = z.infer<typeof setPasswordSchema>;
+export type DeleteAccountBody = z.infer<typeof deleteAccountSchema>;
 export type RegisterBody = z.infer<typeof registerSchema>;
 export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;
