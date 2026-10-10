@@ -159,8 +159,8 @@ export function JobMatchResultView({
           <h2>คีย์เวิร์ดที่ตรง</h2>
 
           <p>
-            Keywords ที่พบทั้งใน Resume
-            และ Job Description
+            คีย์เวิร์ดที่พบทั้งใน Resume
+            และรายละเอียดงาน
           </p>
         </div>
 

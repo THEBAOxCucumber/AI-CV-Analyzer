@@ -112,7 +112,7 @@ export function JobMatchPage() {
 
     if (!description.trim()) {
       setError(
-        "กรุณาระบุ Job Description",
+        "กรุณาระบุรายละเอียดงาน",
       )
       return
     }

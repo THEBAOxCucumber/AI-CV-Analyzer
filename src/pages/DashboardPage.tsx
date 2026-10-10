@@ -305,8 +305,7 @@ export function DashboardPage() {
           </h1>
 
           <p className="dashboard__subtitle">
-            มาปรับ Resume ให้พร้อม
-            สำหรับงานที่คุณต้องการ
+            มาปรับ Resume ให้พร้อมสำหรับงานที่คุณต้องการ
           </p>
         </div>
 
