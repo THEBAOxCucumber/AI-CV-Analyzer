@@ -56,6 +56,8 @@ const ICONS = {
   retry: [["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }], ["path", { d: "M3 3v5h5" }]],
   x: [["circle", { cx: 12, cy: 12, r: 10 }], ["path", { d: "m15 9-6 6M9 9l6 6" }]],
   chart: [["path", { d: "M3 3v16a2 2 0 0 0 2 2h16" }], ["path", { d: "M18 17V9M13 17V5M8 17v-3" }]],
+  menu: [["path", { d: "M4 6h16M4 12h16M4 18h16" }]],
+  close: [["path", { d: "M18 6 6 18M6 6l12 12" }]],
 };
 
 function icon(name) {
@@ -1289,7 +1291,66 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 
 $("login-form").addEventListener("submit", handleLogin);
 $("logout-button").addEventListener("click", () => logout());
-window.addEventListener("hashchange", route);
+window.addEventListener("hashchange", () => {
+  closeMenu(false);
+  route();
+});
+
+/* ---------- เมนู ☰ ---------- */
+
+const COLLAPSED_KEY = "ai-cv-admin-sidebar-collapsed";
+
+// จอคอม: ย่อเหลือไอคอน (จำค่าไว้)
+function setCollapsed(collapsed) {
+  $("app-view").classList.toggle("app--collapsed", collapsed);
+
+  const button = $("sidebar-collapse");
+  const label = collapsed ? "ขยายเมนู" : "ย่อเมนู";
+  button.setAttribute("aria-expanded", String(!collapsed));
+  button.setAttribute("aria-label", label);
+  button.title = label;
+
+  try {
+    localStorage.setItem(COLLAPSED_KEY, collapsed ? "1" : "0");
+  } catch {
+    /* ใช้ได้เฉพาะครั้งนี้ */
+  }
+}
+
+let initialCollapsed = false;
+try {
+  initialCollapsed = localStorage.getItem(COLLAPSED_KEY) === "1";
+} catch {
+  /* ไม่มี storage */
+}
+setCollapsed(initialCollapsed);
+
+$("sidebar-collapse").addEventListener("click", () => {
+  setCollapsed(!$("app-view").classList.contains("app--collapsed"));
+});
+
+// มือถือ: เมนูเลื่อนออกจากซ้าย
+function openMenu() {
+  $("app-view").classList.add("app--menu-open");
+  $("menu-open").setAttribute("aria-expanded", "true");
+  $("menu-close").focus();
+}
+
+function closeMenu(returnFocus = true) {
+  if (!$("app-view").classList.contains("app--menu-open")) return;
+
+  $("app-view").classList.remove("app--menu-open");
+  $("menu-open").setAttribute("aria-expanded", "false");
+  if (returnFocus) $("menu-open").focus();
+}
+
+$("menu-open").addEventListener("click", openMenu);
+$("menu-close").addEventListener("click", () => closeMenu());
+$("sidebar-backdrop").addEventListener("click", () => closeMenu());
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeMenu();
+});
 
 $("users-search").addEventListener(
   "input",

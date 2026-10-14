@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
     />
     <link rel="stylesheet" href="admin.css" />
     <script src="admin.js" defer></script>
@@ -20,7 +20,8 @@
     <main id="login-view" class="login" hidden>
       <form id="login-form" class="login__card" novalidate>
         <div class="login__brand">
-          <img src="logo-white.png" alt="AI Resume Analyzer" width="160" height="69" />
+          <img class="logo logo--light" src="logo-blue.png" alt="AI Resume Analyzer" width="160" height="69" />
+          <img class="logo logo--dark" src="logo-white.png" alt="" width="160" height="69" />
           <span class="badge badge--accent">Admin Console</span>
         </div>
 
@@ -51,21 +52,46 @@
 
     <!-- แอป -->
     <div id="app-view" class="app" hidden>
-      <aside class="sidebar">
+      <!-- มือถือ: แถบบน (☰ + โลโก้) -->
+      <header class="topbar">
+        <button id="menu-open" type="button" class="round-button" aria-label="เปิดเมนู" aria-controls="admin-sidebar" aria-expanded="false">
+          <span data-icon="menu"></span>
+        </button>
+        <img class="logo logo--light" src="logo-blue.png" alt="AI Resume Analyzer" width="104" height="45" />
+        <img class="logo logo--dark" src="logo-white.png" alt="" width="104" height="45" />
+        <span class="badge badge--accent">Admin</span>
+      </header>
+
+      <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+      <aside id="admin-sidebar" class="sidebar" aria-label="เมนู">
         <div class="sidebar__brand">
-          <img src="logo-white.png" alt="AI Resume Analyzer" width="132" height="57" />
-          <span class="badge badge--accent">Admin</span>
+          <img class="logo logo--light sidebar__logo" src="logo-blue.png" alt="AI Resume Analyzer" width="132" height="57" />
+          <img class="logo logo--dark sidebar__logo" src="logo-white.png" alt="" width="132" height="57" />
+          <img class="logo logo--light sidebar__mark" src="mark-blue.png" alt="" width="40" height="40" />
+          <img class="logo logo--dark sidebar__mark" src="mark-white.png" alt="" width="40" height="40" />
+          <span class="badge badge--accent sidebar__badge">Admin</span>
+
+          <!-- จอคอม: ย่อ/ขยาย -->
+          <button id="sidebar-collapse" type="button" class="round-button sidebar__collapse" aria-label="ย่อเมนู" title="ย่อเมนู" aria-expanded="true">
+            <span data-icon="menu"></span>
+          </button>
+
+          <!-- มือถือ: ปิด -->
+          <button id="menu-close" type="button" class="round-button sidebar__close" aria-label="ปิดเมนู">
+            <span data-icon="close"></span>
+          </button>
         </div>
 
         <nav class="nav" aria-label="เมนู Admin">
           <p class="nav__label">ระบบ</p>
-          <a href="#overview" data-tab="overview"><span data-icon="dashboard"></span><span>ภาพรวม</span></a>
-          <a href="#status" data-tab="status"><span data-icon="activity"></span><span>บริการ</span></a>
+          <a href="#overview" data-tab="overview" title="ภาพรวม"><span data-icon="dashboard"></span><span>ภาพรวม</span></a>
+          <a href="#status" data-tab="status" title="บริการ"><span data-icon="activity"></span><span>บริการ</span></a>
 
           <p class="nav__label">ข้อมูล</p>
-          <a href="#users" data-tab="users"><span data-icon="users"></span><span>ผู้ใช้</span></a>
-          <a href="#analyses" data-tab="analyses"><span data-icon="file"></span><span>Analysis</span></a>
-          <a href="#audit" data-tab="audit"><span data-icon="shield"></span><span>Audit log</span></a>
+          <a href="#users" data-tab="users" title="ผู้ใช้"><span data-icon="users"></span><span>ผู้ใช้</span></a>
+          <a href="#analyses" data-tab="analyses" title="Analysis"><span data-icon="file"></span><span>Analysis</span></a>
+          <a href="#audit" data-tab="audit" title="Audit log"><span data-icon="shield"></span><span>Audit log</span></a>
         </nav>
 
         <div class="sidebar__footer">
