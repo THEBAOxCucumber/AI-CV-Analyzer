@@ -29,12 +29,13 @@
   color: var(--color-navy);
 
   font-size: clamp(
-    1.8rem,
+    1.9rem,
     3vw,
-    2.4rem
+    2.6rem
   );
 
-  font-weight: 600;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .analysis-header__description {
@@ -66,14 +67,14 @@
   color: var(--color-success);
 
   background:
-    rgba(46, 125, 91, 0.1);
+    color-mix(in srgb, var(--color-success) 10%, transparent);
 }
 
 .analysis-status--failed {
   color: var(--color-danger);
 
   background:
-    rgba(201, 76, 76, 0.08);
+    color-mix(in srgb, var(--color-danger) 8%, transparent);
 }
 
 .analysis-status--pending,
@@ -92,7 +93,7 @@
   align-items: center;
   justify-content: center;
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   text-align: center;
@@ -148,7 +149,7 @@
 .analysis-section,
 .feedback-card,
 .recommendations-card {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   background: var(--color-surface);
@@ -334,12 +335,12 @@
 
 .feedback-card__heading--strength .feedback-card__icon {
   color: var(--color-success);
-  background: rgba(46, 125, 91, 0.1);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
 }
 
 .feedback-card__heading--weakness .feedback-card__icon {
   color: var(--color-danger);
-  background: rgba(201, 76, 76, 0.1);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
 }
 
 .feedback-list {
@@ -503,66 +504,199 @@
   margin-bottom: var(--space-6);
 }
 
+/* กระจกโทนฟ้า + จุดสีเบลอ (เดิมเป็นบล็อกกรมท่าเข้ม) */
 .job-match-score-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   padding: var(--space-6);
-  border-radius: 18px;
-  background: var(--gradient-brand);
-  color: var(--color-on-brand);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-lg);
+  background: var(--gradient-accent);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-primary);
 }
 
-.job-match-score-card__top {
+.job-match-score-card::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -24px;
+  bottom: -30px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #d9cbff, #8fb0f5);
+  filter: blur(22px);
+  opacity: 0.75;
+}
+
+.job-match-score-card {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
   gap: var(--space-4);
+
+  text-align: center;
 }
 
-.job-match-score-card__top p {
-  margin: 0 0 var(--space-2);
-  color: #b0cbe6;
+.job-match-score-card__label {
+  align-self: flex-start;
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  color: var(--color-steel-blue);
+
+  font-size: var(--font-size-sm);
+  font-weight: 500;
 }
 
-.job-match-score-card__top strong {
-  font-size: 2.4rem;
+/* ระดับความเหมาะสม (ข้อความ + สี — ไม่พึ่งสีอย่างเดียว) */
+.job-match-level {
+  padding: var(--space-1) var(--space-4);
+
+  border-radius: var(--radius-full);
+
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.job-match-level--good {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+}
+
+.job-match-level--fair {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
+}
+
+.job-match-level--low {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}
+
+/*
+ * สัดส่วนทักษะที่ตรง: ตัวเลข % + แถบ 2 ส่วน + คำอธิบาย
+ */
+.skill-coverage {
+  margin-bottom: var(--space-5);
+
+  padding: var(--space-4) var(--space-5);
+
+  display: grid;
+  gap: var(--space-3);
+
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface-muted);
+}
+
+.skill-coverage__text {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+}
+
+.skill-coverage__text strong {
+  color: var(--color-navy);
+
+  font-size: var(--font-size-2xl);
   line-height: 1;
   font-weight: 600;
 }
 
-.job-match-score-card__top strong span {
-  margin-left: 4px;
-  color: #b0cbe6;
-  font-size: 1rem;
-  font-weight: 400;
+.skill-coverage__text span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
-/*
- * <progress> — ลบหน้าตาเดิมของ browser แล้ววาดใหม่
- */
-.job-match-progress {
-  display: block;
-  width: 100%;
-  height: 10px;
-  margin-top: var(--space-6);
+.skill-coverage__bar {
+  height: 12px;
+
+  display: flex;
+  gap: 3px;
+
   overflow: hidden;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  appearance: none;
+
+  border-radius: var(--radius-full);
 }
 
-.job-match-progress::-webkit-progress-bar {
-  border-radius: inherit;
-  background: rgba(255, 255, 255, 0.18);
+.skill-coverage__bar span {
+  min-width: 6px;
+
+  border-radius: var(--radius-full);
+
+  transform-origin: left;
+  animation: coverage-grow 700ms var(--ease-out) both;
 }
 
-.job-match-progress::-webkit-progress-value {
-  border-radius: inherit;
-  background: #b0cbe6;
+.skill-coverage__matched {
+  background: var(--color-success);
 }
 
-.job-match-progress::-moz-progress-bar {
-  border-radius: inherit;
-  background: #b0cbe6;
+.skill-coverage__missing {
+  background: color-mix(in srgb, var(--color-danger) 55%, transparent);
+  animation-delay: 150ms;
+}
+
+@keyframes coverage-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.skill-coverage__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.skill-coverage__legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.skill-coverage__legend li::before {
+  content: "";
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: var(--radius-full);
+}
+
+.skill-coverage__legend-matched::before {
+  background: var(--color-success);
+}
+
+.skill-coverage__legend-missing::before {
+  background: color-mix(in srgb, var(--color-danger) 55%, transparent);
+}
+
+/* คีย์เวิร์ด (รวมอยู่ในการ์ดทักษะ — ไม่แยกการ์ด) */
+.job-match-keywords {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+
+  border-top: 1px solid var(--color-border);
+}
+
+.job-match-keywords h3 {
+  margin-bottom: var(--space-3);
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+  font-weight: 500;
 }
 
 .job-match-skills-grid {
@@ -574,8 +708,8 @@
 .job-match-skills-card {
   min-width: 0;
   padding: var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
 
@@ -619,26 +753,62 @@
   color: var(--color-danger);
 }
 
-.job-match-source {
+/*
+ * ปุ่มทำต่อท้ายหน้า (แคปซูล)
+ */
+.job-match-actions {
+  margin-top: var(--space-6);
+
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  margin-top: var(--space-5);
+  gap: var(--space-3);
 }
 
-.job-match-source a {
+.job-match-action {
+  min-height: 46px;
+
+  padding: 0 var(--space-5);
+
   display: inline-flex;
   align-items: center;
-  min-height: 42px;
-  padding: 0 var(--space-4);
+  justify-content: center;
+  gap: var(--space-2);
+
   border: 1px solid var(--color-border-strong);
-  border-radius: 10px;
+  border-radius: var(--radius-full);
+
   color: var(--color-navy);
+  background: var(--color-surface);
+
+  font: inherit;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.job-match-source a:hover {
-  background: var(--color-primary-soft);
+.job-match-action:hover {
+  background: var(--color-surface-solid);
+  transform: translateY(-1px);
+}
+
+.job-match-action--primary {
+  border-color: transparent;
+
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
+
+  box-shadow: 0 10px 24px rgba(30, 49, 86, 0.24);
+}
+
+.job-match-action--primary:hover {
+  background: var(--color-brand-solid-hover);
 }
 
 @media (max-width: 900px) {
@@ -657,17 +827,12 @@
     padding: var(--space-4);
   }
 
-  .job-match-score-card__top strong {
-    font-size: 2rem;
+  .job-match-actions {
+    flex-direction: column;
   }
 
-  .job-match-source {
-    justify-content: stretch;
-  }
-
-  .job-match-source a {
+  .job-match-action {
     width: 100%;
-    justify-content: center;
   }
 }
 

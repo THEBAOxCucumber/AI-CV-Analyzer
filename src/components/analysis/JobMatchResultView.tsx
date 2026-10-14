@@ -1,16 +1,30 @@
 import {
+  BriefcaseBusiness,
+  Check,
+  Copy,
+  ExternalLink,
   Sparkles,
   ThumbsDown,
   ThumbsUp,
 } from "lucide-react"
+
+import {
+  useEffect,
+  useState,
+} from "react"
+
+import {
+  Link,
+} from "react-router-dom"
 
 import type {
   ResumeAnalysisRun,
 } from "../../types/analysis"
 
 import {
-  useCountUp,
-} from "../../hooks/useCountUp"
+  getScoreTone,
+  type ScoreTone,
+} from "../../utils/dashboard-stats"
 
 import {
   AnalysisHeader,
@@ -18,45 +32,144 @@ import {
   RecommendationsCard,
 } from "./AnalysisResultParts"
 
-function clampPercent(value: number): number {
-  return Math.min(100, Math.max(0, value))
+import {
+  ScoreRing,
+} from "./ScoreRing"
+
+const MATCH_LEVEL: Record<ScoreTone, string> = {
+  good: "เหมาะกับงานมาก",
+  fair: "เหมาะพอสมควร",
+  low: "ควรเพิ่มทักษะก่อนสมัคร",
 }
 
+/*
+ * คะแนนความเหมาะสม: วงแหวนใหญ่ + ป้ายระดับ (ข้อความ ไม่ใช่สีอย่างเดียว)
+ */
 function MatchScoreCard({
   score,
 }: {
   score: number | null
 }) {
-  // นับขึ้นจาก 0 + แถบเติมพร้อมกัน
-  const displayed = useCountUp(score ?? 0)
+  const tone =
+    score === null
+      ? null
+      : getScoreTone(score)
 
   return (
     <div className="job-match-score-card">
-      <div className="job-match-score-card__top">
-        <div>
-          <p>คะแนนความเหมาะสม</p>
+      <div className="job-match-score-card__label">
+        <Sparkles size={20} />
 
-          <strong className="tabular-nums">
-            {score === null ? "—" : displayed}
-
-            {score !== null && (
-              <span>/100</span>
-            )}
-          </strong>
-        </div>
-
-        <Sparkles size={26} />
+        <span>คะแนนความเหมาะสม</span>
       </div>
 
-      {score !== null && (
-        <progress
-          className="job-match-progress"
-          aria-label="คะแนน Job Match"
-          value={clampPercent(displayed)}
-          max={100}
-        />
+      <ScoreRing score={score} />
+
+      {tone && (
+        <span className={`job-match-level job-match-level--${tone}`}>
+          {MATCH_LEVEL[tone]}
+        </span>
       )}
     </div>
+  )
+}
+
+/*
+ * สัดส่วนทักษะที่ตรง / ทั้งหมดที่งานต้องการ
+ */
+function SkillCoverage({
+  matched,
+  missing,
+}: {
+  matched: number
+  missing: number
+}) {
+  const total = matched + missing
+
+  if (total === 0) {
+    return null
+  }
+
+  const percent = Math.round((matched / total) * 100)
+
+  return (
+    <div className="skill-coverage">
+      <div className="skill-coverage__text">
+        <strong className="tabular-nums">{percent}%</strong>
+
+        <span>
+          ทักษะตรงกับงาน {matched} จาก {total} ทักษะ
+        </span>
+      </div>
+
+      <div
+        className="skill-coverage__bar"
+        role="img"
+        aria-label={`ทักษะที่ตรง ${matched} ทักษะ ที่ยังขาด ${missing} ทักษะ`}
+      >
+        <span
+          className="skill-coverage__matched"
+          style={{ flexGrow: matched }}
+        />
+        <span
+          className="skill-coverage__missing"
+          style={{ flexGrow: missing }}
+        />
+      </div>
+
+      <ul className="skill-coverage__legend" aria-hidden="true">
+        <li className="skill-coverage__legend-matched">ตรง {matched}</li>
+        <li className="skill-coverage__legend-missing">ยังขาด {missing}</li>
+      </ul>
+    </div>
+  )
+}
+
+/*
+ * คัดลอกคำแนะนำทั้งหมดเป็นรายการลำดับเลข
+ */
+function CopyAllButton({
+  items,
+}: {
+  items: string[]
+}) {
+  const [copied, setCopied] =
+    useState(false)
+
+  useEffect(() => {
+    if (!copied) {
+      return
+    }
+
+    const timer = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(timer)
+  }, [copied])
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(
+        items.map((item, index) => `${index + 1}. ${item}`).join("\n"),
+      )
+      setCopied(true)
+    } catch {
+      // ไม่อนุญาต clipboard (http / สิทธิ์) — เงียบไว้
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="job-match-action"
+      onClick={() => void handleCopy()}
+    >
+      {copied
+        ? <Check size={17} aria-hidden="true" />
+        : <Copy size={17} aria-hidden="true" />}
+
+      {copied
+        ? "คัดลอกแล้ว"
+        : "คัดลอกคำแนะนำทั้งหมด"}
+    </button>
   )
 }
 
@@ -71,6 +184,9 @@ export function JobMatchResultView({
     analysis.jobMatchScore ??
     jobMatch?.score ??
     null
+
+  const matchedCount = jobMatch?.matchedSkills.length ?? 0
+  const missingCount = jobMatch?.missingSkills.length ?? 0
 
   const location = analysis.job?.location
     ? ` · ${analysis.job.location}`
@@ -113,6 +229,11 @@ export function JobMatchResultView({
           </p>
         </div>
 
+        <SkillCoverage
+          matched={matchedCount}
+          missing={missingCount}
+        />
+
         <div className="job-match-skills-grid">
           <article className="job-match-skills-card">
             <div className="job-match-skills-card__heading">
@@ -121,7 +242,7 @@ export function JobMatchResultView({
               <h3>
                 ทักษะที่ตรง
                 <span className="job-match-count">
-                  {jobMatch?.matchedSkills.length ?? 0}
+                  {matchedCount}
                 </span>
               </h3>
             </div>
@@ -129,7 +250,7 @@ export function JobMatchResultView({
             <AnalysisTagList
               items={jobMatch?.matchedSkills}
               variant="matched"
-              emptyText="ไม่พบ Matching Skills"
+              emptyText="ไม่พบทักษะที่ตรง"
             />
           </article>
 
@@ -140,7 +261,7 @@ export function JobMatchResultView({
               <h3>
                 ทักษะที่ยังขาด
                 <span className="job-match-count">
-                  {jobMatch?.missingSkills.length ?? 0}
+                  {missingCount}
                 </span>
               </h3>
             </div>
@@ -148,26 +269,19 @@ export function JobMatchResultView({
             <AnalysisTagList
               items={jobMatch?.missingSkills}
               variant="missing"
-              emptyText="ไม่พบ Missing Skills"
+              emptyText="ไม่มีทักษะที่ขาด"
             />
           </article>
         </div>
-      </section>
 
-      <section className="analysis-section">
-        <div className="analysis-section__heading">
-          <h2>คีย์เวิร์ดที่ตรง</h2>
+        <div className="job-match-keywords">
+          <h3>คีย์เวิร์ดที่พบทั้งใน Resume และรายละเอียดงาน</h3>
 
-          <p>
-            คีย์เวิร์ดที่พบทั้งใน Resume
-            และรายละเอียดงาน
-          </p>
+          <AnalysisTagList
+            items={jobMatch?.keywordMatches}
+            emptyText="ไม่พบคีย์เวิร์ดที่ตรง"
+          />
         </div>
-
-        <AnalysisTagList
-          items={jobMatch?.keywordMatches}
-          emptyText="ไม่พบ Keyword Matches"
-        />
       </section>
 
       <RecommendationsCard
@@ -175,17 +289,34 @@ export function JobMatchResultView({
         description="แนวทางเพิ่มความเหมาะสม กับตำแหน่งงานนี้"
       />
 
-      {analysis.job?.sourceUrl && (
-        <div className="job-match-source">
+      <nav
+        className="job-match-actions"
+        aria-label="ทำต่อ"
+      >
+        {analysis.job?.sourceUrl && (
           <a
+            className="job-match-action job-match-action--primary"
             href={analysis.job.sourceUrl}
             target="_blank"
             rel="noreferrer"
           >
+            <ExternalLink size={17} aria-hidden="true" />
             ดูประกาศงานต้นฉบับ
           </a>
-        </div>
-      )}
+        )}
+
+        <Link
+          className="job-match-action"
+          to="/jobs"
+        >
+          <BriefcaseBusiness size={17} aria-hidden="true" />
+          วิเคราะห์งานอื่น
+        </Link>
+
+        {analysis.recommendations.length > 0 && (
+          <CopyAllButton items={analysis.recommendations} />
+        )}
+      </nav>
     </main>
   )
 }
