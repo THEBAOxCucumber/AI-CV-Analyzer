@@ -8,7 +8,7 @@
   gap: 0.5rem;
 
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   cursor: pointer;
 
   font-weight: 500;
@@ -40,8 +40,8 @@
 }
 
 .button--primary {
-  color: #ffffff;
-  background: var(--gradient-brand);
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
 
   box-shadow:
     0 1px 2px rgba(16, 24, 40, 0.08),

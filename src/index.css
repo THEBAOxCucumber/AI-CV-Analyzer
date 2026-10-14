@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap");
 @import "./styles/tokens.css";
 
 *,
@@ -34,18 +34,14 @@ html {
 }
 
 /*
- * พื้นหลังมีแสงไล่สีอ่อนๆ (peach ขวาบน / ฟ้าซ้ายบน)
+ * พื้นหลังไล่สีฟ้า-ม่วงอ่อน (การ์ดกระจกวางบนนี้)
  * dvh: ไม่เพี้ยนตอนแถบ URL มือถือหด/ขยาย
  */
 body {
   min-height: 100vh;
   min-height: 100dvh;
 
-  background:
-    radial-gradient(1100px 560px at 100% -8%, var(--body-glow-peach), transparent 60%),
-    radial-gradient(900px 520px at 0% -10%, var(--body-glow-blue), transparent 60%),
-    var(--color-background);
-
+  background: var(--body-gradient), var(--color-background);
   background-attachment: fixed;
 }
 
@@ -148,7 +144,7 @@ select {
   gap: var(--space-4);
 
   color: var(--color-text-secondary);
-  background: var(--color-background);
+  background: transparent;
 }
 
 /* วงหมุนเหนือข้อความ "กำลังตรวจสอบการเข้าสู่ระบบ..." */

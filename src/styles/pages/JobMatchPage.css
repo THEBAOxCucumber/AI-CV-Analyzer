@@ -39,6 +39,11 @@
     0;
 
   color: var(--color-navy);
+
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .job-match-header p {
@@ -59,23 +64,25 @@
 
   flex: 0 0 auto;
 
-  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-full);
 
-  color: var(--color-on-accent);
-  background: var(--color-soft-peach);
+  color: var(--color-text-primary);
+  background: var(--color-surface-solid);
+
+  box-shadow: var(--shadow-sm);
 }
 
 .job-match-card {
   margin-top: var(--space-8);
   padding: var(--space-6);
 
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   background: var(--color-surface);
 
-  box-shadow:
-    0 8px 30px
-    rgba(30, 49, 86, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .job-match-form {
@@ -113,12 +120,12 @@
 
   border:
     1px solid
-    var(--color-soft-blue-gray);
+    var(--color-border-strong);
 
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
 
   color: var(--color-text-primary);
-  background: var(--color-surface);
+  background: var(--color-surface-solid);
 
   font: inherit;
 
@@ -135,6 +142,8 @@
 }
 
 .job-match-field textarea {
+  border-radius: var(--radius-lg);
+
   min-height: 220px;
 
   padding: var(--space-4);
@@ -177,10 +186,12 @@
   gap: var(--space-2);
 
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
 
-  color: var(--color-on-accent);
-  background: var(--color-soft-peach);
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
+
+  box-shadow: 0 10px 24px rgba(30, 49, 86, 0.24);
 
   cursor: pointer;
 
@@ -221,10 +232,10 @@
     var(--space-5);
 
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
 
-  color: var(--color-on-accent);
-  background: var(--color-soft-peach);
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
 
   cursor: pointer;
 

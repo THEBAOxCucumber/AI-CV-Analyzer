@@ -184,7 +184,9 @@ export function AnalysisProgress({
             </span>
 
             <span className="analysis-progress__status">
-              {analysis.status}
+              {analysis.status === "PROCESSING"
+                ? "กำลังวิเคราะห์"
+                : "รอคิว"}
             </span>
           </div>
 

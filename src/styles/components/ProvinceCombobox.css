@@ -18,16 +18,20 @@
   list-style: none;
 
   border:
-    1px solid var(--color-border);
+    1px solid var(--glass-edge);
 
   border-radius:
-    var(--radius-md);
+    var(--radius-lg);
 
+  /* ลอยทับเนื้อหา → เกือบทึบ + เบลอ */
   background:
-    var(--color-surface);
+    color-mix(in srgb, var(--color-surface-solid) 94%, transparent);
+
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 
   box-shadow:
-    0 12px 28px rgba(30, 49, 86, 0.14);
+    var(--shadow-lg);
 }
 
 .province-combobox__option {

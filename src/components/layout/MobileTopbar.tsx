@@ -1,6 +1,7 @@
 import {
   Clock3,
   LogOut,
+  Menu,
   Moon,
   Settings,
   Sun,
@@ -36,10 +37,16 @@ import {
 } from "../../utils/session"
 
 /*
- * แถบบนสำหรับ ≤900px (sidebar กลายเป็นแถบล่าง)
- * มีเมนูผู้ใช้ + ออกจากระบบ ที่ sidebar ซ่อนไป
+ * แถบบนสำหรับ ≤900px
+ * ☰ เปิดเมนูหลัก (sidebar เลื่อนออกจากซ้าย) + เมนูผู้ใช้ทางขวา
  */
-export function MobileTopbar() {
+export function MobileTopbar({
+  menuOpen,
+  onOpenMenu,
+}: {
+  menuOpen: boolean
+  onOpenMenu: () => void
+}) {
   const {
     user,
     logout,
@@ -137,6 +144,18 @@ export function MobileTopbar() {
 
   return (
     <header className="mobile-topbar">
+      <button
+        id="menu-toggle"
+        type="button"
+        className="mobile-topbar__hamburger"
+        onClick={onOpenMenu}
+        aria-label="เปิดเมนู"
+        aria-controls="app-sidebar"
+        aria-expanded={menuOpen}
+      >
+        <Menu size={22} />
+      </button>
+
       <Link
         to="/dashboard"
         className="mobile-topbar__brand"

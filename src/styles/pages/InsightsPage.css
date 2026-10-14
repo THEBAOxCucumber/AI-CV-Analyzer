@@ -24,7 +24,7 @@
   color: var(--color-steel-blue);
 
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .insights__header h1 {
@@ -32,11 +32,12 @@
 
   font-size:
     clamp(1.9rem,
-      3.4vw,
-      2.5rem);
+      3vw,
+      2.6rem);
 
-  line-height: 1.25;
-  font-weight: 700;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .insights__header > div > p:last-child {
@@ -55,11 +56,13 @@
 
   flex: 0 0 auto;
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-full);
 
   color: var(--color-steel-blue);
   background: var(--color-surface);
+
+  box-shadow: var(--shadow-sm);
 
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -82,7 +85,12 @@
 }
 
 .insight-stat {
+  position: relative;
+  isolation: isolate;
+
   min-width: 0;
+
+  overflow: hidden;
 
   padding:
     var(--space-5) var(--space-6);
@@ -91,12 +99,44 @@
   flex-direction: column;
   gap: var(--space-2);
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   background: var(--color-surface);
 
   box-shadow: var(--shadow-sm);
+}
+
+/* จุดสีพาสเทลเบลอ (ชุดเดียวกับ Dashboard) */
+.insight-stat::after {
+  content: "";
+
+  position: absolute;
+  z-index: -1;
+  right: -18px;
+  bottom: -22px;
+
+  width: 90px;
+  height: 90px;
+
+  border-radius: var(--radius-full);
+
+  background: radial-gradient(circle at 35% 35%, #b9d3ff, #7aa7f5);
+
+  filter: blur(18px);
+  opacity: 0.65;
+}
+
+.insight-stat:nth-child(2)::after {
+  background: radial-gradient(circle at 35% 35%, #d9cbff, #a58cf2);
+}
+
+.insight-stat:nth-child(3)::after {
+  background: radial-gradient(circle at 35% 35%, #ffe7b3, #f2c66d);
+}
+
+.insight-stat:nth-child(4)::after {
+  background: radial-gradient(circle at 35% 35%, #c9f0dd, #7fd1ae);
 }
 
 .insight-stat__label {
@@ -119,7 +159,7 @@
       2.6rem);
 
   line-height: 1.1;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .insight-stat strong small {
@@ -163,7 +203,7 @@
 }
 
 .delta-badge--up {
-  background: rgba(46, 125, 91, 0.12);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 
 .delta-badge--up svg {
@@ -171,7 +211,7 @@
 }
 
 .delta-badge--down {
-  background: rgba(201, 76, 76, 0.1);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
 }
 
 .delta-badge--down svg {
@@ -195,7 +235,7 @@
   padding:
     var(--space-6) var(--space-8);
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   background: var(--color-surface);
@@ -278,12 +318,12 @@
 
 .insights__panel-title--strength .insights__panel-icon {
   color: var(--color-success);
-  background: rgba(46, 125, 91, 0.1);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
 }
 
 .insights__panel-title--weakness .insights__panel-icon {
   color: var(--color-danger);
-  background: rgba(201, 76, 76, 0.1);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
 }
 
 .insights__panel-title--tip .insights__panel-icon {
@@ -516,7 +556,7 @@
   padding:
     var(--space-12) var(--space-6);
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   text-align: center;
@@ -530,7 +570,7 @@
 
 .insights__error {
   color: var(--color-danger);
-  background: rgba(201, 76, 76, 0.06);
+  background: color-mix(in srgb, var(--color-danger) 6%, transparent);
 }
 
 .insights__empty {

@@ -7,7 +7,10 @@
     var(--sidebar-width)
     minmax(0, 1fr);
 
-  background: var(--color-background);
+  transition: grid-template-columns var(--transition-normal);
+
+  /* โปร่ง → เห็นพื้นไล่สีของ body */
+  background: transparent;
 }
 
 .app-layout__main {
@@ -25,11 +28,23 @@
     display: block;
   }
 
-  /*
-   * แถบล่างลอยสูง --space-2 จากขอบ
-   */
+  /* ไม่มีแถบล่างแล้ว (เมนูอยู่ใน ☰) — เว้นแค่ safe area ของ iPhone */
   .app-layout__main {
-    padding-bottom:
-      calc(var(--bottom-nav-height) + var(--safe-bottom) + var(--space-2) + var(--space-4));
+    padding-bottom: var(--safe-bottom);
+  }
+}
+
+/* จอคอม: ย่อเมนู (☰) */
+@media (min-width: 901px) {
+  .app-layout--collapsed {
+    grid-template-columns:
+      var(--sidebar-collapsed-width)
+      minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-layout {
+    transition: none;
   }
 }

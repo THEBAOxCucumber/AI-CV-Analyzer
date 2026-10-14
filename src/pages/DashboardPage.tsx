@@ -301,7 +301,7 @@ export function DashboardPage() {
       <header className="dashboard__header">
         <div>
           <h1>
-            สวัสดี, {user?.firstName}
+            สวัสดี, <strong>{user?.firstName}</strong>
           </h1>
 
           <p className="dashboard__subtitle">

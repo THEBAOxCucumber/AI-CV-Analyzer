@@ -9,73 +9,43 @@
 }
 
 /*
- * แบนเนอร์ต้อนรับ
+ * ส่วนหัว (สไตล์กระจก): ชื่อใหญ่ตัวบาง + ปุ่มแคปซูลกรมท่า
  */
 .dashboard__header {
-  position: relative;
-
-  padding:
-    clamp(var(--space-6), 3vw, var(--space-8))
-    clamp(var(--space-6), 3.5vw, var(--space-10));
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-6);
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
 
-  overflow: hidden;
-
-  border-radius: var(--radius-xl);
-
-  color: #ffffff;
-
-  background:
-    radial-gradient(420px 260px at 100% 0%, rgba(253, 214, 205, 0.28), transparent 70%),
-    var(--gradient-brand);
-
-  box-shadow: var(--shadow-md);
-}
-
-.dashboard__header::before {
-  content: "";
-
-  position: absolute;
-  inset: 0;
-
-  background-image:
-    radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
-
-  background-size: 20px 20px;
-
-  mask-image: linear-gradient(110deg, transparent 35%, #000 100%);
-
-  pointer-events: none;
-}
-
-.dashboard__header > * {
-  position: relative;
+  color: var(--color-text-primary);
 }
 
 .dashboard__header h1 {
-  font-size: clamp(1.6rem, 2.6vw, 2.3rem);
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
 
-  line-height: 1.25;
-  font-weight: 700;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.dashboard__header h1 strong {
+  font-weight: 600;
 }
 
 .dashboard__subtitle {
   margin-top: var(--space-2);
 
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--color-text-secondary);
 
-  font-size: clamp(var(--font-size-sm), 1.3vw, var(--font-size-lg));
+  font-size: clamp(var(--font-size-sm), 1.2vw, var(--font-size-md));
 }
 
 .dashboard__upload-button,
 .dashboard__empty-link {
-  min-height: 46px;
+  min-height: 48px;
 
-  padding: 0 var(--space-5);
+  padding: 0 var(--space-6);
 
   display: inline-flex;
   align-items: center;
@@ -84,7 +54,12 @@
 
   flex: 0 0 auto;
 
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
+
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
+
+  box-shadow: 0 10px 24px rgba(30, 49, 86, 0.24);
 
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -95,25 +70,11 @@
     transform var(--transition-fast);
 }
 
-.dashboard__upload-button {
-  color: var(--color-on-accent);
-  background: var(--color-soft-peach);
-
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-}
-
-.dashboard__empty-link {
-  color: #ffffff;
-  background: var(--gradient-brand);
-}
-
 .dashboard__upload-button:hover,
 .dashboard__empty-link:hover {
+  background: var(--color-brand-solid-hover);
+  box-shadow: 0 14px 28px rgba(30, 49, 86, 0.3);
   transform: translateY(-1px);
-}
-
-.dashboard__upload-button:hover {
-  background: var(--color-accent-strong);
 }
 
 .dashboard__error {
@@ -141,7 +102,12 @@
 }
 
 .stat-card {
+  position: relative;
+  isolation: isolate;
+
   min-width: 0;
+
+  overflow: hidden;
 
   padding: var(--space-5) var(--space-6);
 
@@ -149,7 +115,7 @@
   flex-direction: column;
   gap: var(--space-3);
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   background: var(--color-surface);
@@ -159,6 +125,34 @@
   transition:
     box-shadow var(--transition-normal),
     transform var(--transition-normal);
+}
+
+/* จุดสีพาสเทลเบลอ (เหมือนการ์ดนัดหมายใน MindBridge) */
+.stat-card::after {
+  content: "";
+
+  position: absolute;
+  z-index: -1;
+  right: -18px;
+  bottom: -22px;
+
+  width: 96px;
+  height: 96px;
+
+  border-radius: var(--radius-full);
+
+  background: radial-gradient(circle at 35% 35%, #b9d3ff, #7aa7f5);
+
+  filter: blur(18px);
+  opacity: 0.7;
+}
+
+.stat-card:nth-child(2)::after {
+  background: radial-gradient(circle at 35% 35%, #d9cbff, #a58cf2);
+}
+
+.stat-card:nth-child(3)::after {
+  background: radial-gradient(circle at 35% 35%, #c9f0dd, #7fd1ae);
 }
 
 .stat-card:hover {
@@ -186,10 +180,13 @@
 
   flex: 0 0 auto;
 
-  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-full);
 
-  color: var(--color-on-accent);
-  background: var(--color-soft-peach);
+  color: var(--color-text-primary);
+  background: var(--color-surface-solid);
+
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-card__value {
@@ -198,7 +195,7 @@
   font-size: clamp(1.9rem, 2.8vw, 2.6rem);
 
   line-height: 1.1;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 
   white-space: nowrap;
@@ -242,7 +239,7 @@
 
   background: var(--color-success);
 
-  box-shadow: 0 0 0 3px rgba(46, 125, 91, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 18%, transparent);
 }
 
 /*
@@ -273,7 +270,7 @@
   display: flex;
   flex-direction: column;
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   background: var(--color-surface);
@@ -285,7 +282,7 @@
   color: var(--color-navy);
 
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .dashboard-card__empty {
@@ -430,7 +427,9 @@
   inset: 4px;
 
   border-radius: inherit;
-  background: var(--color-surface);
+
+  /* ทึบ — พื้นการ์ดโปร่ง ถ้าใช้ surface สีวงจะทะลุขึ้นมา */
+  background: var(--color-surface-solid);
 }
 
 .score-ring > span {
@@ -438,7 +437,7 @@
 }
 
 .recent-analysis__item:hover .score-ring::before {
-  background: var(--color-surface-muted);
+  background: var(--color-surface-solid);
 }
 
 .score-ring--good {
@@ -609,7 +608,7 @@
 
   overflow: hidden;
 
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-edge);
   border-radius: var(--radius-lg);
 
   background: var(--color-surface);
@@ -717,7 +716,7 @@
 }
 
 .resume-list__item:hover {
-  background: rgba(240, 243, 248, 0.6);
+  background: var(--color-surface-muted);
 }
 
 .resume-list__item:last-child {

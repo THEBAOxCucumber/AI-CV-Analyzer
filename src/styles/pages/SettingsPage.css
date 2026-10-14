@@ -20,10 +20,11 @@
   font-size:
     clamp(1.9rem,
       3.4vw,
-      2.75rem);
+      2.6rem);
 
-  line-height: 1.25;
-  font-weight: 700;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .settings-page__header p {
@@ -68,7 +69,7 @@
   gap: var(--space-5);
 
   border:
-    1px solid var(--color-border);
+    1px solid var(--glass-edge);
 
   border-radius:
     var(--radius-lg);
@@ -98,13 +99,15 @@
   border-radius:
     var(--radius-full);
 
-  color: #ffffff;
+  color: var(--color-on-brand);
 
   background:
-    var(--color-soft-blue-gray);
+    var(--color-brand-solid);
+
+  box-shadow: 0 8px 18px rgba(30, 49, 86, 0.22);
 
   font-size:
-    var(--font-size-xl);
+    var(--font-size-lg);
 
   font-weight: 600;
 }
@@ -295,10 +298,10 @@
   width: 100%;
 
   border:
-    1px solid var(--color-border);
+    1px solid var(--color-border-strong);
 
   border-radius:
-    var(--radius-md);
+    var(--radius-full);
 
   outline: none;
 
@@ -306,10 +309,10 @@
     var(--color-navy);
 
   background:
-    var(--color-surface);
+    var(--color-surface-solid);
 
   box-shadow:
-    0 2px 4px rgba(30, 49, 86, 0.08);
+    0 2px 6px rgba(40, 70, 140, 0.05);
 
   font: inherit;
 
@@ -327,6 +330,8 @@
 }
 
 .settings-field textarea {
+  border-radius: var(--radius-lg);
+
   min-height: 130px;
 
   padding: var(--space-4);
@@ -392,7 +397,7 @@
     var(--color-danger);
 
   background:
-    rgba(201, 76, 76, 0.08);
+    color-mix(in srgb, var(--color-danger) 8%, transparent);
 }
 
 .settings-message--success {
@@ -400,7 +405,7 @@
     var(--color-success);
 
   background:
-    rgba(46, 125, 91, 0.1);
+    color-mix(in srgb, var(--color-success) 10%, transparent);
 }
 
 /*
@@ -419,7 +424,7 @@
   border: 1px solid transparent;
 
   border-radius:
-    var(--radius-md);
+    var(--radius-full);
 
   color:
     var(--color-navy);
@@ -444,14 +449,17 @@
 
 .settings-button--primary {
   color:
-    var(--color-on-accent);
+    var(--color-on-brand);
 
   background:
-    var(--color-soft-peach);
+    var(--color-brand-solid);
+
+  box-shadow: 0 10px 24px rgba(30, 49, 86, 0.22);
 }
 
 .settings-button--primary:hover:not(:disabled) {
-  filter: brightness(0.96);
+  background:
+    var(--color-brand-solid-hover);
 }
 
 .settings-button--block {
@@ -531,13 +539,19 @@
     repeat(3,
       minmax(0, 1fr));
 
+  gap: 4px;
+
+  padding: 4px;
+
   overflow: hidden;
 
   border:
-    1px solid var(--color-border);
+    1px solid var(--glass-edge);
 
   border-radius:
-    var(--radius-md);
+    var(--radius-full);
+
+  background: var(--color-surface-muted);
 }
 
 .segmented__option {
@@ -551,31 +565,31 @@
   gap: var(--space-2);
 
   border: 0;
+  border-radius: var(--radius-full);
 
   color:
     var(--color-text-secondary);
 
-  background:
-    var(--color-surface);
+  background: transparent;
 
   font: inherit;
   font-size:
     var(--font-size-sm);
 
   cursor: pointer;
-}
 
-.segmented__option + .segmented__option {
-  border-left:
-    1px solid var(--color-border);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .segmented__option--active {
   color:
     var(--color-navy);
 
-  background:
-    rgba(165, 181, 210, 0.3);
+  background: var(--color-surface-solid);
+
+  box-shadow: var(--shadow-sm);
 
   font-weight: 600;
 }

@@ -23,3 +23,17 @@
   background: var(--color-overlay, rgba(21, 35, 63, 0.5));
   backdrop-filter: blur(4px);
 }
+
+/*
+ * การ์ดใน dialog ทุกอัน = กระจกเกือบทึบ (อ่านง่ายบนพื้นมืดของ backdrop)
+ * :first-child เพิ่มความเจาะจง ให้ชนะ background ของแต่ละหน้า
+ */
+.modal-dialog > :first-child {
+  border: 1px solid var(--glass-edge);
+
+  background: color-mix(in srgb, var(--color-surface-solid) 94%, transparent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+
+  box-shadow: var(--shadow-lg);
+}

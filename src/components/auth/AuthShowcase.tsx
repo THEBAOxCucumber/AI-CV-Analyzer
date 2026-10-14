@@ -7,6 +7,11 @@ import {
   CheckCircle2,
 } from "lucide-react"
 
+import {
+  useTheme,
+} from "../../hooks/useTheme"
+
+import logoBlue from "../../assets/brand/logo-blue.png"
 import logoWhite from "../../assets/brand/logo-white.png"
 
 const FEATURES = [
@@ -29,12 +34,18 @@ export function AuthShowcase({
   title: ReactNode
   description: ReactNode
 }) {
+  const { resolvedTheme } = useTheme()
+
   return (
     <section className="sign-in__brand">
       <div className="sign-in__brand-content">
         <img
           className="sign-in__logo"
-          src={logoWhite}
+          src={
+            resolvedTheme === "dark"
+              ? logoWhite
+              : logoBlue
+          }
           alt="AI Resume Analyzer"
           width={480}
           height={208}
