@@ -183,6 +183,28 @@ export const env = {
       "OLLAMA_TIMEOUT_MS",
       240_000,
     ),
+
+  /*
+   * ความเร็ว (ดู modules/analysis/ollama-options.ts)
+   * OLLAMA_NUM_GPU: บังคับจำนวน layer บน GPU — ไม่ตั้ง = ให้ Ollama เลือกเอง
+   *   GPU 4GB + โมเดล 4B: ตั้ง 99 (ทุก layer) เร็วขึ้น ~6 เท่า
+   *   โหลดไม่ขึ้นเพราะ VRAM ไม่พอ → ลองใหม่แบบอัตโนมัติให้เอง
+   */
+  numGpu:
+    process.env.OLLAMA_NUM_GPU
+      ? getNumberEnv("OLLAMA_NUM_GPU", 0)
+      : null,
+
+  minContext:
+    getNumberEnv("OLLAMA_MIN_CONTEXT", 3072),
+
+  maxContext:
+    getNumberEnv("OLLAMA_MAX_CONTEXT", 8192),
+
+  // คงโมเดลไว้ในหน่วยความจำ — ไม่ต้องโหลดใหม่ (~7–13 วินาที) ทุกครั้ง
+  keepAlive:
+    process.env.OLLAMA_KEEP_ALIVE ??
+    "30m",
 },
 
   /*

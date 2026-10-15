@@ -95,6 +95,7 @@ Configure `backend/.env`. Main variables:
 | Redis / Qdrant | `REDIS_HOST`, `REDIS_PORT`, `QDRANT_URL`, `QDRANT_COLLECTION` |
 | Auth | `JWT_SECRET`, `JWT_EXPIRES_IN` |
 | AI | `OLLAMA_HOST`, `OLLAMA_MODEL`, `GEMINI_API_KEY` |
+| AI speed (optional) | `OLLAMA_NUM_GPU`, `OLLAMA_KEEP_ALIVE` (default `30m`), `OLLAMA_MIN_CONTEXT` / `OLLAMA_MAX_CONTEXT` (default 3072 / 8192) |
 | Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` |
 | Jobs | `CAREERJET_API_KEY` |
 | Google sign-in (optional) | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — see [`backend/docs/OAUTH_SETUP.md`](backend/docs/OAUTH_SETUP.md) |
@@ -144,14 +145,14 @@ npm run type-check
 npm test
 ```
 
-Current automated test suite: **144 backend tests** (20 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
+Current automated test suite: **173 backend tests** (23 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `main`: frontend lint, typecheck + build, and tests; backend typecheck, then the full backend suite against MySQL, Redis, and Qdrant service containers with the schema built from migrations (Ollama is mocked; external API keys are dummies).
 
 ## Known Issues
 
 - Careerjet is slow (typically 5–14 s per search); the request timeout is 25 s.
-- Ollama analysis takes about 1–2 minutes per run on a local machine.
+- Ollama speed depends on whether the model fits in GPU memory. On a 4 GB GPU, Ollama's default puts ~1 GB of `qwen3:4b-instruct` on the CPU (≈6 tokens/s, ~2 minutes per analysis). Setting `OLLAMA_NUM_GPU=99` keeps every layer on the GPU (≈48 tokens/s, ~20 s warm / ~35 s cold); if VRAM is short at load time the worker retries once with automatic offload. The context size is computed per prompt, and the model stays loaded for `OLLAMA_KEEP_ALIVE`.
 - Google sign-in only works on origins registered in Google Cloud (e.g. `http://localhost:5173`), not on random Cloudflare quick-tunnel URLs.
 
 ## Project Status

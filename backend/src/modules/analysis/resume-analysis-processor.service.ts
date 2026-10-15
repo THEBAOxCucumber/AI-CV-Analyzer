@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { Ollama } from "ollama";
 
+import {
+  buildOllamaOptions,
+  withGpuFallback,
+} from "./ollama-options.js";
+
 import { env } from "../../config/env.js";
 import { AppError } from "../../errors/app-error.js";
 
@@ -181,28 +186,54 @@ export async function processResumeAnalysis(
    */
   let response;
 
-  try {
-    response =
-      await ollama.chat({
-        model:
-          env.ollama.model,
+  const requestAnalysis = (
+    numGpu: number | null,
+  ) =>
+    ollama.chat({
+      model:
+        env.ollama.model,
 
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-
-        stream: false,
-
-        format:
-          jsonSchema,
-
-        options: {
-          temperature: 0.1,
+      messages: [
+        {
+          role: "user",
+          content: prompt,
         },
-      });
+      ],
+
+      stream: false,
+
+      format:
+        jsonSchema,
+
+      keep_alive:
+        env.ollama.keepAlive,
+
+      options:
+        buildOllamaOptions(
+          prompt.length,
+          { ...env.ollama, numGpu },
+        ),
+    });
+
+  try {
+    /*
+     * บังคับ num_gpu แล้ว VRAM ไม่พอ → ให้ Ollama แบ่ง GPU/CPU เอง
+     */
+    response =
+      await withGpuFallback(
+        env.ollama.numGpu,
+        requestAnalysis,
+        () =>
+          console.warn(
+            "Ollama GPU memory full, retrying with automatic offload:",
+            {
+              analysisRunId:
+                jobData.analysisRunId,
+              numGpu:
+                env.ollama.numGpu,
+            },
+          ),
+      );
   } catch (error) {
     console.error(
       "Ollama analysis request failed:",
@@ -276,6 +307,11 @@ export async function processResumeAnalysis(
   const normalizedResult =
     normalizeResumeAnalysisResult(
       rawResult,
+      {
+        resumeText: chunks
+          .map((chunk) => chunk.content)
+          .join("\n"),
+      },
     );
 
   /*
