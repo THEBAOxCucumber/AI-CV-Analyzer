@@ -2142,3 +2142,12 @@ tbody tr:not(.row--skeleton) {
     transition: none;
   }
 }
+
+/* ลดความโปร่งใส (ตั้งค่าระบบ) → ไม่เบลอ + พื้นทึบ */
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  :root[data-theme] {
+    --glass-blur: none;
+    --surface: var(--surface-solid);
+  }
+}

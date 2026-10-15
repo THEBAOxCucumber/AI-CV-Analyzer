@@ -37,3 +37,9 @@
 
   box-shadow: var(--shadow-lg);
 }
+
+@media (prefers-reduced-transparency: reduce) {
+  .modal-dialog::backdrop {
+    backdrop-filter: none;
+  }
+}

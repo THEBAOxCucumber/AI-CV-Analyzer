@@ -397,3 +397,15 @@
     color-scheme: dark;
   }
 }
+
+/*
+ * ผู้ใช้ตั้ง "ลดความโปร่งใส" ในระบบ (หรือเครื่องแรงไม่พอ)
+ * → ปิดเบลอ + พื้นการ์ดทึบ (ค่า solid ของแต่ละธีมตั้งไว้แล้วข้างบน)
+ */
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  :root[data-theme] {
+    --glass-blur: none;
+    --color-surface: var(--color-surface-solid);
+  }
+}
