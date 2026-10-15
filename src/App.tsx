@@ -48,9 +48,9 @@ import {
   SetPasswordPage,
 } from "./pages/SetPasswordPage"
 
-// import {
-//   JobMatchPage,
-// } from "./pages/JobMatchPage"
+import {
+  PrivacyPage,
+} from "./pages/PrivacyPage"
 
 import {
   JobMatchesPage,
@@ -96,6 +96,12 @@ function App() {
         element={<ForgotPasswordPage />}
       />
 
+      {/* สาธารณะ — เปิดได้ทั้งก่อนและหลังเข้าสู่ระบบ */}
+      <Route
+        path="/privacy"
+        element={<PrivacyPage />}
+      />
+
       {/* กลับมาจาก Google */}
       <Route
         path="/auth/callback"
@@ -133,11 +139,6 @@ function App() {
           path="/history"
           element={<HistoryPage />}
         />
-
-        {/* <Route
-          path="/job-match"
-          element={<JobMatchPage />}
-        /> */}
 
         <Route
           path="/jobs"

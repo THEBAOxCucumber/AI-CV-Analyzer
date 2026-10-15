@@ -42,6 +42,10 @@ import {
 } from "../components/auth/OAuthButtons"
 
 import {
+  AuthLegalNote,
+} from "../components/auth/AuthLegalNote"
+
+import {
   PasswordRequirements,
 } from "../components/auth/PasswordRequirements"
 
@@ -328,6 +332,13 @@ export function RegisterPage() {
             >
               สมัครสมาชิก
             </Button>
+
+            {/* แจ้งก่อนเก็บข้อมูล (PDPA) — ครอบคลุมการสมัครด้วย Google ด้านล่างด้วย */}
+            <p className="sign-in__consent">
+              การสมัครสมาชิกถือว่าคุณได้อ่านและรับทราบ{" "}
+              <Link to="/privacy">นโยบายความเป็นส่วนตัว</Link>
+              {" "}รวมถึงการส่งข้อความใน Resume ไปประมวลผลตามที่ระบุไว้
+            </p>
           </form>
 
           <OAuthButtons dividerLabel="หรือสมัครด้วย" />
@@ -341,6 +352,8 @@ export function RegisterPage() {
               เข้าสู่ระบบ
             </Link>
           </p>
+
+          <AuthLegalNote />
         </div>
       </section>
     </main>

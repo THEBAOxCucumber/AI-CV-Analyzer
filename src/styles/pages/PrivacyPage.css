@@ -1,0 +1,403 @@
+/*
+ * นโยบายความเป็นส่วนตัว — หน้าสาธารณะ (ไม่มีเมนู) อ่านง่ายเป็นหลัก
+ */
+.privacy-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.privacy-topbar {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+
+  padding:
+    calc(var(--space-3) + env(safe-area-inset-top, 0px))
+    var(--page-padding-x)
+    var(--space-3);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+
+  border-bottom: 1px solid var(--glass-edge);
+
+  background: color-mix(in srgb, var(--color-surface-solid) 70%, transparent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.privacy-topbar__logo {
+  width: auto;
+  height: 40px;
+}
+
+.privacy-back {
+  min-height: 42px;
+
+  padding: 0 var(--space-4);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-full);
+
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+
+  box-shadow: var(--shadow-sm);
+
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.privacy-back:hover {
+  background: var(--color-surface-solid);
+}
+
+.privacy-main {
+  width: min(100%, 860px);
+
+  margin-inline: auto;
+
+  padding:
+    var(--page-padding-y)
+    var(--page-padding-x)
+    var(--space-12);
+
+  display: grid;
+  gap: var(--space-5);
+}
+
+.privacy-hero h1 {
+  color: var(--color-navy);
+
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.privacy-eyebrow {
+  margin-bottom: var(--space-2);
+
+  color: var(--color-steel-blue);
+
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.privacy-hero > p:last-child {
+  margin-top: var(--space-3);
+
+  max-width: 68ch;
+
+  color: var(--color-text-secondary);
+
+  line-height: 1.8;
+}
+
+/* ข้อความรายวิชา — เด่นเป็นอันดับแรก */
+.privacy-course {
+  padding: var(--space-5);
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-lg);
+
+  background: var(--gradient-accent);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.privacy-course__icon {
+  width: 44px;
+  height: 44px;
+
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+
+  border-radius: var(--radius-full);
+
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
+}
+
+.privacy-course strong {
+  color: var(--color-navy);
+
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.privacy-course p {
+  margin-top: var(--space-2);
+
+  color: var(--color-text-secondary);
+
+  font-size: var(--font-size-sm);
+  line-height: 1.7;
+}
+
+/* การ์ดเนื้อหา */
+.privacy-toc,
+.privacy-section {
+  padding: var(--space-6);
+
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.privacy-section {
+  /* เลื่อนจากสารบัญแล้วหัวข้อไม่ถูกแถบบนบัง */
+  scroll-margin-top: 88px;
+
+  display: grid;
+  gap: var(--space-4);
+
+  color: var(--color-text-secondary);
+
+  line-height: 1.8;
+}
+
+.privacy-toc h2 {
+  margin-bottom: var(--space-3);
+
+  color: var(--color-navy);
+
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.privacy-toc ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--space-1) var(--space-5);
+
+  padding-left: var(--space-5);
+
+  list-style: decimal;
+
+  color: var(--color-text-muted);
+}
+
+.privacy-toc a {
+  color: var(--color-steel-blue);
+
+  line-height: 2;
+}
+
+.privacy-toc a:hover {
+  text-decoration: underline;
+}
+
+.privacy-section h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  color: var(--color-navy);
+
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+}
+
+.privacy-section h2 span {
+  width: 32px;
+  height: 32px;
+
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+
+  border-radius: var(--radius-full);
+
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
+
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.privacy-section strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.privacy-list {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.privacy-list dt {
+  margin-top: var(--space-2);
+
+  color: var(--color-text-primary);
+
+  font-weight: 600;
+}
+
+.privacy-list dt:first-child {
+  margin-top: 0;
+}
+
+.privacy-list dd {
+  margin: 0;
+}
+
+.privacy-bullets {
+  display: grid;
+  gap: var(--space-2);
+
+  padding-left: var(--space-5);
+
+  list-style: disc;
+}
+
+.privacy-note {
+  padding: var(--space-3) var(--space-4);
+
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface-muted);
+
+  font-size: var(--font-size-sm);
+}
+
+/* ตาราง: มือถือเลื่อนแนวนอนในกรอบ ไม่ให้ทั้งหน้าล้น */
+.privacy-table-wrap {
+  overflow-x: auto;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.privacy-table {
+  width: 100%;
+  min-width: 560px;
+
+  border-collapse: collapse;
+
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.privacy-table th,
+.privacy-table td {
+  padding: var(--space-3) var(--space-4);
+
+  border-bottom: 1px solid var(--color-border);
+
+  text-align: left;
+  vertical-align: top;
+}
+
+.privacy-table th {
+  color: var(--color-text-primary);
+  background: var(--color-surface-muted);
+
+  font-weight: 600;
+}
+
+.privacy-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.privacy-table td:first-child {
+  color: var(--color-text-primary);
+
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.privacy-contact {
+  justify-self: start;
+
+  min-height: 46px;
+
+  padding: 0 var(--space-5);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  border-radius: var(--radius-full);
+
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
+
+  box-shadow: 0 10px 24px rgba(30, 49, 86, 0.22);
+
+  font-weight: 500;
+}
+
+.privacy-contact:hover {
+  background: var(--color-brand-solid-hover);
+}
+
+.privacy-footer {
+  margin-top: auto;
+
+  padding: var(--space-5) var(--page-padding-x) calc(var(--space-5) + var(--safe-bottom));
+
+  color: var(--color-text-muted);
+
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .privacy-topbar__logo {
+    height: 34px;
+  }
+
+  .privacy-toc,
+  .privacy-section {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .privacy-course {
+    padding: var(--space-4);
+  }
+
+  .privacy-contact {
+    justify-self: stretch;
+    justify-content: center;
+  }
+}
+
+/* จอเล็กมาก: ปุ่มกลับเหลือไอคอน (ชื่อยังอยู่ให้ screen reader) */
+@media (max-width: 420px) {
+  .privacy-back {
+    width: 42px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .privacy-back__label {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    overflow: hidden;
+
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}

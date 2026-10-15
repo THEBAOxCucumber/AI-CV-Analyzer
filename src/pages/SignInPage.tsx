@@ -40,6 +40,10 @@ import {
 } from "../components/auth/OAuthButtons"
 
 import {
+  AuthLegalNote,
+} from "../components/auth/AuthLegalNote"
+
+import {
   getOAuthErrorMessage,
 } from "../utils/oauth-errors"
 
@@ -290,6 +294,8 @@ export function SignInPage() {
               สมัครสมาชิก
             </Link>
           </p>
+
+          <AuthLegalNote />
         </div>
       </section>
     </main>

@@ -1502,6 +1502,22 @@ export function SettingsPage() {
                   : "ดาวน์โหลด"}
               </button>
             </li>
+
+            <li>
+              <div>
+                <strong>นโยบายความเป็นส่วนตัว</strong>
+                <span>
+                  ข้อมูลที่เก็บ ส่งต่อให้ใคร และสิทธิ์ของคุณ
+                </span>
+              </div>
+
+              <Link
+                className="settings-button settings-button--outline"
+                to="/privacy"
+              >
+                อ่าน
+              </Link>
+            </li>
           </ul>
 
           {exportError && (
