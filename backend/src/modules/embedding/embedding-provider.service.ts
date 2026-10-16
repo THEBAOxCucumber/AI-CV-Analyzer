@@ -1,3 +1,5 @@
+import { Ollama } from "ollama";
+
 import { env } from "../../config/env.js";
 import { gemini } from "../../config/gemini.js";
 import { AppError } from "../../errors/app-error.js";
@@ -28,31 +30,29 @@ function getGeminiErrorDetails(
   return error as GeminiErrorDetails;
 }
 
-async function embedTexts(
+/*
+ * qwen3-embedding: คำค้นต้องมีคำสั่งนำหน้า เอกสารไม่ต้อง (ตามคู่มือโมเดล)
+ * โมเดลอื่นที่ไม่ต้องใช้ก็ไม่เสียหาย — ใช้เฉพาะฝั่ง query
+ */
+const OLLAMA_QUERY_INSTRUCTION =
+  "Instruct: Given a question about a candidate, retrieve resume passages that answer it\nQuery: ";
+
+let ollamaClient: Ollama | null = null;
+
+function getOllama(): Ollama {
+  ollamaClient ??= new Ollama({ host: env.ollama.host });
+  return ollamaClient;
+}
+
+async function embedWithGemini(
   texts: string[],
   taskType: EmbeddingTaskType,
-): Promise<EmbeddingResult[]> {
-  if (texts.length === 0) {
-    return [];
-  }
-
-  const normalizedTexts = texts.map((text) =>
-    text.trim(),
-  );
-
-  if (normalizedTexts.some((text) => !text)) {
-    throw new AppError(
-      "พบข้อความว่างสำหรับสร้าง Embedding",
-      422,
-      "EMPTY_EMBEDDING_INPUT",
-    );
-  }
-
+): Promise<number[][]> {
   try {
     const response =
       await gemini.models.embedContent({
         model: env.embedding.model,
-        contents: normalizedTexts,
+        contents: texts,
         config: {
           taskType,
           outputDimensionality:
@@ -60,24 +60,8 @@ async function embedTexts(
         },
       });
 
-    const embeddings = response.embeddings ?? [];
-
-    if (embeddings.length !== normalizedTexts.length) {
-      throw new AppError(
-        "จำนวน Embedding ไม่ตรงกับจำนวนข้อความ",
-        500,
-        "EMBEDDING_RESULT_COUNT_MISMATCH",
-        {
-          expected: normalizedTexts.length,
-          received: embeddings.length,
-        },
-      );
-    }
-
-    return embeddings.map((item, index) => {
-      const values = item.values;
-
-      if (!values) {
+    return (response.embeddings ?? []).map((item, index) => {
+      if (!item.values) {
         throw new AppError(
           `ไม่พบ Vector ของข้อความลำดับที่ ${index}`,
           500,
@@ -85,26 +69,7 @@ async function embedTexts(
         );
       }
 
-      if (
-        values.length !==
-        env.embedding.dimensions
-      ) {
-        throw new AppError(
-          "ขนาด Embedding ไม่ตรงกับที่กำหนด",
-          500,
-          "EMBEDDING_DIMENSION_MISMATCH",
-          {
-            expected: env.embedding.dimensions,
-            received: values.length,
-          },
-        );
-      }
-
-      return {
-        embedding: values,
-        model: env.embedding.model,
-        dimensions: values.length,
-      };
+      return item.values;
     });
   } catch (error) {
     if (error instanceof AppError) {
@@ -140,6 +105,125 @@ async function embedTexts(
       "EMBEDDING_API_FAILED",
     );
   }
+}
+
+async function embedWithOllama(
+  texts: string[],
+  taskType: EmbeddingTaskType,
+): Promise<number[][]> {
+  const input =
+    taskType === "RETRIEVAL_QUERY"
+      ? texts.map((text) => OLLAMA_QUERY_INSTRUCTION + text)
+      : texts;
+
+  try {
+    const response =
+      await getOllama().embed({
+        model: env.embedding.model,
+        input,
+        truncate: true,
+        keep_alive: env.ollama.keepAlive,
+        options: {
+          num_gpu: env.embedding.ollamaNumGpu,
+        },
+      });
+
+    return response.embeddings;
+  } catch (error) {
+    console.error("Ollama embedding error:", error);
+
+    const message =
+      error instanceof Error ? error.message : String(error);
+
+    if (/not found|pull/i.test(message)) {
+      throw new AppError(
+        `ไม่พบโมเดล Embedding ใน Ollama — รัน: ollama pull ${env.embedding.model}`,
+        502,
+        "EMBEDDING_MODEL_NOT_FOUND",
+      );
+    }
+
+    throw new AppError(
+      "ไม่สามารถสร้าง Embedding ด้วย Ollama ได้ (ตรวจว่า Ollama ทำงานอยู่)",
+      502,
+      "EMBEDDING_API_FAILED",
+    );
+  }
+}
+
+async function embedTexts(
+  texts: string[],
+  taskType: EmbeddingTaskType,
+): Promise<EmbeddingResult[]> {
+  if (texts.length === 0) {
+    return [];
+  }
+
+  const normalizedTexts = texts.map((text) =>
+    text.trim(),
+  );
+
+  if (normalizedTexts.some((text) => !text)) {
+    throw new AppError(
+      "พบข้อความว่างสำหรับสร้าง Embedding",
+      422,
+      "EMPTY_EMBEDDING_INPUT",
+    );
+  }
+
+  let vectors: number[][];
+
+  switch (env.embedding.provider) {
+    case "gemini":
+      vectors = await embedWithGemini(normalizedTexts, taskType);
+      break;
+
+    case "ollama":
+      vectors = await embedWithOllama(normalizedTexts, taskType);
+      break;
+
+    default:
+      throw new AppError(
+        `EMBEDDING_PROVIDER ไม่รองรับ: ${env.embedding.provider} (ใช้ gemini หรือ ollama)`,
+        500,
+        "EMBEDDING_PROVIDER_UNSUPPORTED",
+      );
+  }
+
+  if (vectors.length !== normalizedTexts.length) {
+    throw new AppError(
+      "จำนวน Embedding ไม่ตรงกับจำนวนข้อความ",
+      500,
+      "EMBEDDING_RESULT_COUNT_MISMATCH",
+      {
+        expected: normalizedTexts.length,
+        received: vectors.length,
+      },
+    );
+  }
+
+  return vectors.map((values) => {
+    if (
+      values.length !==
+      env.embedding.dimensions
+    ) {
+      throw new AppError(
+        "ขนาด Embedding ไม่ตรงกับที่กำหนด (ตรวจ EMBEDDING_DIMENSIONS)",
+        500,
+        "EMBEDDING_DIMENSION_MISMATCH",
+        {
+          expected: env.embedding.dimensions,
+          received: values.length,
+        },
+      );
+    }
+
+    return {
+      embedding: values,
+      model: env.embedding.model,
+      dimensions: values.length,
+    };
+  });
 }
 
 /**

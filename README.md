@@ -95,6 +95,7 @@ Configure `backend/.env`. Main variables:
 | Redis / Qdrant | `REDIS_HOST`, `REDIS_PORT`, `QDRANT_URL`, `QDRANT_COLLECTION` |
 | Auth | `JWT_SECRET`, `JWT_EXPIRES_IN` |
 | AI | `OLLAMA_HOST`, `OLLAMA_MODEL`, `GEMINI_API_KEY` |
+| Embeddings | `EMBEDDING_PROVIDER` (`gemini` or `ollama`), `EMBEDDING_MODEL`, `EMBEDDING_DIMENSIONS`, `QDRANT_COLLECTION`, `EMBEDDING_NUM_GPU` (default 0 = CPU) |
 | AI speed (optional) | `OLLAMA_NUM_GPU`, `OLLAMA_KEEP_ALIVE` (default `30m`), `OLLAMA_MIN_CONTEXT` / `OLLAMA_MAX_CONTEXT` (default 3072 / 8192) |
 | Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` |
 | Jobs | `CAREERJET_API_KEY` |
@@ -126,6 +127,32 @@ or ask an existing admin to use **Promote by email** on the admin page.
 
 `npm run share` builds and serves the app on port 4173 (also proxying `/api`), which can be exposed with a Cloudflare quick tunnel. The admin page is not reachable through the tunnel, and Google sign-in needs a fixed domain (see the OAuth guide).
 
+### Offline embeddings (recommended)
+
+By default, resume chunks are embedded with Google Gemini, which needs internet access and an API key. To run everything on your machine (only job search needs the internet):
+
+```bash
+ollama pull qwen3-embedding:0.6b   # multilingual (Thai + English), 1024 dimensions
+```
+
+In `backend/.env`:
+
+```bash
+EMBEDDING_PROVIDER=ollama
+EMBEDDING_MODEL=qwen3-embedding:0.6b
+EMBEDDING_DIMENSIONS=1024
+QDRANT_COLLECTION=resume_chunks_ollama_qwen3_1024   # new collection: vector size changed
+```
+
+Then re-embed existing resumes into the new collection (the old collection is left untouched, so you can switch back):
+
+```bash
+cd backend
+npm run embeddings:rebuild
+```
+
+The embedding model runs on the CPU by default (`EMBEDDING_NUM_GPU=0`) so it does not take GPU memory from the analysis model. The privacy page reads the active provider from `GET /api/privacy`.
+
 ## Testing
 
 Frontend unit and component tests use Vitest with jsdom. Test files live next to the code they cover (`*.test.ts` / `*.test.tsx`):
@@ -145,7 +172,7 @@ npm run type-check
 npm test
 ```
 
-Current automated test suite: **173 backend tests** (23 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
+Current automated test suite: **179 backend tests** (24 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `main`: frontend lint, typecheck + build, and tests; backend typecheck, then the full backend suite against MySQL, Redis, and Qdrant service containers with the schema built from migrations (Ollama is mocked; external API keys are dummies).
 

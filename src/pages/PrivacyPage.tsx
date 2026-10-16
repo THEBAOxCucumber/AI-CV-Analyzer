@@ -4,9 +4,15 @@ import {
   Mail,
 } from "lucide-react"
 
-import type {
-  ReactNode,
+import {
+  useEffect,
+  useState,
+  type ReactNode,
 } from "react"
+
+import {
+  apiRequest,
+} from "../services/api"
 
 import {
   Link,
@@ -29,7 +35,7 @@ import "../styles/pages/PrivacyPage.css"
  * นโยบายความเป็นส่วนตัว (PDPA)
  *
  * เนื้อหาอ้างอิงการทำงานจริงของระบบ ณ วันที่ปรับปรุง — แก้ระบบแล้วต้องแก้หน้านี้ด้วย เช่น
- *   - EMBEDDING_PROVIDER / LLM_PROVIDER (ส่งข้อความ Resume ไปบริการใด)
+ *   - EMBEDDING_PROVIDER: หน้านี้อ่านจาก GET /api/privacy เอง (ส่วน "ข้อมูลที่ส่งไปยังบริการภายนอก")
  *   - ผู้ให้บริการค้นหางาน (ตอนนี้ Careerjet)
  *   - JWT_EXPIRES_IN, PASSWORD_RESET_OTP_TTL_MINUTES, rate limit window
  */
@@ -75,9 +81,39 @@ function Section({
   )
 }
 
+/*
+ * ข้อความ Resume สร้าง vector ที่ไหน — อ่านจากการตั้งค่าจริงของเซิร์ฟเวอร์
+ * โหลดไม่สำเร็จ / ยังไม่ได้คำตอบ → แสดงแบบเปิดเผยมากที่สุด (ส่งไป Gemini)
+ */
+function useEmbeddingIsLocal(): boolean {
+  const [isLocal, setIsLocal] =
+    useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    apiRequest<{ data: { embeddingProvider: string } }>("/privacy")
+      .then((response) => {
+        if (!cancelled) {
+          setIsLocal(response.data.embeddingProvider === "ollama")
+        }
+      })
+      .catch(() => {
+        /* คงค่าแบบเปิดเผย */
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return isLocal
+}
+
 export function PrivacyPage() {
   const { isAuthenticated } = useAuth()
   const { resolvedTheme } = useTheme()
+  const embeddingIsLocal = useEmbeddingIsLocal()
 
   const backTo = isAuthenticated ? "/settings" : "/sign-in"
   const backLabel = isAuthenticated ? "กลับไปหน้าตั้งค่า" : "กลับไปหน้าเข้าสู่ระบบ"
@@ -207,11 +243,19 @@ export function PrivacyPage() {
         </Section>
 
         <Section id="share" number={3}>
-          <p>
-            <strong>การวิเคราะห์ด้วย AI ทำงานบนเครื่องเซิร์ฟเวอร์ของโครงงาน</strong>{" "}
-            (โมเดล qwen3 ผ่าน Ollama) เนื้อหา Resume ที่ใช้วิเคราะห์จึงไม่ถูกส่งไปยังบริการ AI ภายนอก
-            ยกเว้นการสร้าง vector ตามตารางด้านล่าง
-          </p>
+          {embeddingIsLocal ? (
+            <p>
+              <strong>Resume ของคุณประมวลผลบนเครื่องเซิร์ฟเวอร์ของโครงงานทั้งหมด</strong>{" "}
+              ทั้งการวิเคราะห์ (โมเดล qwen3) และการสร้าง vector (โมเดล qwen3-embedding) ผ่าน Ollama
+              เนื้อหา Resume จึงไม่ถูกส่งไปยังบริการ AI ภายนอก
+            </p>
+          ) : (
+            <p>
+              <strong>การวิเคราะห์ด้วย AI ทำงานบนเครื่องเซิร์ฟเวอร์ของโครงงาน</strong>{" "}
+              (โมเดล qwen3 ผ่าน Ollama) เนื้อหา Resume ที่ใช้วิเคราะห์จึงไม่ถูกส่งไปยังบริการ AI ภายนอก
+              ยกเว้นการสร้าง vector ตามตารางด้านล่าง
+            </p>
+          )}
 
           <div className="privacy-table-wrap">
             <table className="privacy-table">
@@ -224,11 +268,13 @@ export function PrivacyPage() {
               </thead>
 
               <tbody>
-                <tr>
-                  <td>Google Gemini API</td>
-                  <td>ข้อความใน Resume (แบ่งเป็นส่วนย่อย)</td>
-                  <td>หลังอัปโหลด — แปลงข้อความเป็น vector สำหรับค้นหาเนื้อหาที่เกี่ยวข้อง</td>
-                </tr>
+                {!embeddingIsLocal && (
+                  <tr>
+                    <td>Google Gemini API</td>
+                    <td>ข้อความใน Resume (แบ่งเป็นส่วนย่อย)</td>
+                    <td>หลังอัปโหลด — แปลงข้อความเป็น vector สำหรับค้นหาเนื้อหาที่เกี่ยวข้อง</td>
+                  </tr>
+                )}
 
                 <tr>
                   <td>Careerjet</td>

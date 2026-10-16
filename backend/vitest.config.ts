@@ -32,6 +32,16 @@ export default defineConfig({
       QDRANT_COLLECTION:
         "resume_chunks_test",
 
+      // ตรึงค่า Embedding ของเทสต์ — ไม่ขึ้นกับ .env ของแต่ละเครื่อง (ขนาดต้องตรงกับ collection ข้างบน)
+      EMBEDDING_PROVIDER:
+        "gemini",
+
+      EMBEDDING_MODEL:
+        "gemini-embedding-001",
+
+      EMBEDDING_DIMENSIONS:
+        "1536",
+
       UPLOAD_DIR:
         "uploads/test",
 

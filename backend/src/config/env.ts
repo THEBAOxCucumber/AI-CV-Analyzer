@@ -143,6 +143,18 @@ export const env = {
         "EMBEDDING_BATCH_SIZE",
         20,
       ),
+
+    /*
+     * EMBEDDING_PROVIDER=ollama: สร้าง vector บนเครื่อง (ไม่ต้องใช้อินเทอร์เน็ต)
+     * ใช้ OLLAMA_HOST เดียวกับการวิเคราะห์
+     * EMBEDDING_NUM_GPU: ค่าเริ่มต้น 0 = รันบน CPU — โมเดลเล็ก เร็วพอ
+     *   และไม่แย่ง VRAM จากโมเดลวิเคราะห์ (GPU 4GB ใส่ได้ทีละโมเดล)
+     */
+    ollamaNumGpu:
+      getNumberEnv(
+        "EMBEDDING_NUM_GPU",
+        0,
+      ),
   },
 
   gemini: {

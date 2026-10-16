@@ -35,8 +35,33 @@ export async function ensureResumeVectorCollection(): Promise<void> {
   const collectionName = env.qdrant.collection;
 
   try {
-    await qdrant.getCollection(collectionName);
+    const info = await qdrant.getCollection(collectionName);
+
+    /*
+     * เปลี่ยนโมเดล Embedding แล้วขนาด vector ไม่เท่าเดิม → ใช้ collection เดิมไม่ได้
+     * ตั้ง QDRANT_COLLECTION ชื่อใหม่ แล้วรัน npm run embeddings:rebuild
+     */
+    const vectors = info.config?.params?.vectors;
+    const existingSize =
+      vectors && "size" in vectors
+        ? Number(vectors.size)
+        : null;
+
+    if (
+      existingSize !== null &&
+      existingSize !== env.embedding.dimensions
+    ) {
+      throw new AppError(
+        `Qdrant collection "${collectionName}" มีขนาด vector ${existingSize} แต่ตั้งค่าไว้ ${env.embedding.dimensions} — ตั้ง QDRANT_COLLECTION ใหม่แล้วรัน npm run embeddings:rebuild`,
+        500,
+        "VECTOR_DIMENSION_MISMATCH",
+      );
+    }
   } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
     if (!isQdrantNotFoundError(error)) {
       throw error;
     }

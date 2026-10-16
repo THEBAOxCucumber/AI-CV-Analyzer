@@ -16,6 +16,7 @@ import {
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { profileRouter } from "./modules/profile/profile.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
+import { privacyRouter } from "./routes/privacy.routes.js";
 import { resumeRouter } from "./modules/resume/resume.routes.js";
 import {
   semanticSearchRouter,
@@ -73,6 +74,7 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/health", healthRouter);
+app.use("/api/privacy", privacyRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/resumes", resumeRouter);

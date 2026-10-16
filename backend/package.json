@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:db:setup": "bash scripts/setup-test-db.sh",
-    "db:create-schema": "node scripts/create-schema.mjs"
+    "db:create-schema": "node scripts/create-schema.mjs",
+    "embeddings:rebuild": "tsx scripts/rebuild-embeddings.ts"
   },
   "keywords": [],
   "author": "",
