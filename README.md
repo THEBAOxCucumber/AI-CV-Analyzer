@@ -174,6 +174,15 @@ npm test
 
 Current automated test suite: **179 backend tests** (24 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
 
+End-to-end tests (Playwright, using the installed Microsoft Edge) drive the real app: register → sign in → delete account, the hamburger menu on desktop and mobile, the public privacy page, and a full upload → AI analysis → result flow. They also run axe (WCAG 2.1 A/AA) on every page in light and dark themes; because axe cannot measure contrast over gradients, the scan swaps the background for each theme's worst-case solid color. Start Docker, Ollama, the backend and the frontend, seed the demo account (used by the signed-in accessibility scans), then:
+
+```bash
+cd backend && npm run demo:seed && cd ..
+npm run test:e2e              # E2E_SKIP_AI=1 skips the slow AI analysis test
+```
+
+E2E is not part of CI (it needs Ollama and a GPU). See `docs/DEMO.md` for the presentation checklist (`npm run demo:seed`, `npm run demo:check`).
+
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `main`: frontend lint, typecheck + build, and tests; backend typecheck, then the full backend suite against MySQL, Redis, and Qdrant service containers with the schema built from migrations (Ollama is mocked; external API keys are dummies).
 
 ## Known Issues
