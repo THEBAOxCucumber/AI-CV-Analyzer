@@ -2,6 +2,7 @@
 //   npm run demo:check
 import "dotenv/config";
 import net from "node:net";
+import os from "node:os";
 import { execFileSync } from "node:child_process";
 
 const API = process.env.API_URL ?? "http://localhost:5000/api";
@@ -12,6 +13,7 @@ const ANALYSIS_MODEL = process.env.OLLAMA_MODEL ?? "qwen3:4b-instruct";
 const EMBEDDING_PROVIDER = process.env.EMBEDDING_PROVIDER ?? "gemini";
 const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? "gemini-embedding-001";
 const KEEP_ALIVE = process.env.OLLAMA_KEEP_ALIVE ?? "30m";
+const EMBEDDING_KEEP_ALIVE = process.env.EMBEDDING_KEEP_ALIVE ?? "2m";
 const DEMO_EMAIL = process.env.DEMO_EMAIL ?? "demo@example.com";
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "Demo12345";
 
@@ -78,9 +80,9 @@ if (tags?.ok && installed.has(ANALYSIS_MODEL)) {
 if (EMBEDDING_PROVIDER === "ollama" && installed.has(EMBEDDING_MODEL)) {
   const warm = await getJson(`${OLLAMA}/api/embed`, {
     method: "POST",
-    body: JSON.stringify({ model: EMBEDDING_MODEL, input: "warm up", keep_alive: KEEP_ALIVE, options: { num_gpu: Number(process.env.EMBEDDING_NUM_GPU ?? 0) } }),
+    body: JSON.stringify({ model: EMBEDDING_MODEL, input: "warm up", keep_alive: EMBEDDING_KEEP_ALIVE, options: { num_gpu: Number(process.env.EMBEDDING_NUM_GPU ?? 0) } }),
   }).catch((error) => ({ ok: false, json: { error: error.message } }));
-  report(warm.ok, "โหลดโมเดล Embedding ค้างไว้", warm.ok ? "" : warm.json.error);
+  report(warm.ok, "โมเดล Embedding ทำงานได้", warm.ok ? `ปล่อยหน่วยความจำหลังใช้ ${EMBEDDING_KEEP_ALIVE}` : warm.json.error);
 }
 
 // ---------- GPU (ถ้ามี NVIDIA) ----------
@@ -97,6 +99,19 @@ try {
 } catch {
   /* ไม่มี nvidia-smi */
 }
+
+// ---------- หน่วยความจำ ----------
+/*
+ * RAM เหลือน้อย → Windows เริ่มย้ายไปดิสก์ → Ollama ค้างจนหมดเวลา (เคยเจอ: เหลือ 0.3 GB วิเคราะห์ค้าง 4 นาที)
+ * โมเดลวิเคราะห์อยู่บน GPU แต่ยังต้องใช้ RAM ระหว่างทำงาน
+ */
+const freeGb = os.freemem() / 1024 ** 3;
+const totalGb = os.totalmem() / 1024 ** 3;
+report(
+  freeGb >= 1.5,
+  "RAM ว่างพอ",
+  `ว่าง ${freeGb.toFixed(1)} จาก ${totalGb.toFixed(1)} GB${freeGb >= 1.5 ? "" : " — ปิด Chrome / LINE / แอปอื่นก่อนสาธิต (ควรว่าง ≥ 1.5 GB)"}`,
+);
 
 // ---------- บัญชีสาธิต ----------
 if (backend?.ok) {

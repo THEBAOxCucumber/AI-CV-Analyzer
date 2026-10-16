@@ -155,6 +155,14 @@ export const env = {
         "EMBEDDING_NUM_GPU",
         0,
       ),
+
+    /*
+     * ใช้แค่ไม่กี่วินาทีตอนอัปโหลด → ปล่อยหน่วยความจำเร็ว
+     * (โมเดลบน CPU กิน RAM ~1.2 GB — เครื่อง RAM 8 GB ค้างไว้นานแล้วโมเดลวิเคราะห์ช้า/ค้าง)
+     */
+    keepAlive:
+      process.env.EMBEDDING_KEEP_ALIVE ??
+      "2m",
   },
 
   gemini: {

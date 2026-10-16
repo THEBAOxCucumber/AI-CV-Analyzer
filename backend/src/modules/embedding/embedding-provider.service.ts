@@ -122,7 +122,7 @@ async function embedWithOllama(
         model: env.embedding.model,
         input,
         truncate: true,
-        keep_alive: env.ollama.keepAlive,
+        keep_alive: env.embedding.keepAlive,
         options: {
           num_gpu: env.embedding.ollamaNumGpu,
         },

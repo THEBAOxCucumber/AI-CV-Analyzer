@@ -18,6 +18,7 @@ const { mockEmbed, mockEnv } = vi.hoisted(() => ({
       dimensions: 4,
       batchSize: 20,
       ollamaNumGpu: 0,
+      keepAlive: "2m",
     },
     ollama: {
       host: "http://127.0.0.1:11434",
@@ -56,7 +57,7 @@ describe("Ollama embeddings", () => {
         model: "qwen3-embedding:0.6b",
         input: ["ประสบการณ์ Node.js", "SQL"],
         truncate: true,
-        keep_alive: "30m",
+        keep_alive: "2m",
         options: { num_gpu: 0 },
       }),
     );
