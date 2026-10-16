@@ -1,7 +1,7 @@
 import { Ollama } from "ollama";
 
 import { env } from "../../config/env.js";
-import { gemini } from "../../config/gemini.js";
+import { getGemini } from "../../config/gemini.js";
 import { AppError } from "../../errors/app-error.js";
 
 export type EmbeddingTaskType =
@@ -50,7 +50,7 @@ async function embedWithGemini(
 ): Promise<number[][]> {
   try {
     const response =
-      await gemini.models.embedContent({
+      await getGemini().models.embedContent({
         model: env.embedding.model,
         contents: texts,
         config: {

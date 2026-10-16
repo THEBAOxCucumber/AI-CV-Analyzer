@@ -44,7 +44,7 @@ AI CV Analyzer is a full-stack web application for uploading, analyzing, and man
 
 **AI & integrations**
 - Ollama (`qwen3:4b-instruct`) — resume and job-match analysis
-- Google Gemini — embeddings for semantic search
+- Ollama (`qwen3-embedding:0.6b`) or Google Gemini — embeddings for semantic search (`EMBEDDING_PROVIDER`)
 - Careerjet — job search
 - Gmail SMTP (Nodemailer) — OTP and notification emails
 - Google OAuth 2.0 / OpenID Connect — sign-in
@@ -54,7 +54,7 @@ AI CV Analyzer is a full-stack web application for uploading, analyzing, and man
 ```text
 Browser ──> Vite (5173) ──/api proxy──> Express API (5000) ──> MySQL
                                               │                Redis ── BullMQ worker ──> Ollama
-                                              │                Qdrant <── Gemini embeddings
+                                              │                Qdrant <── embeddings (Ollama or Gemini)
                                               ├──> Careerjet / Gmail SMTP / Google OAuth
                                               └── /admin (static admin console)
 ```
@@ -94,7 +94,7 @@ Configure `backend/.env`. Main variables:
 | Database | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` |
 | Redis / Qdrant | `REDIS_HOST`, `REDIS_PORT`, `QDRANT_URL`, `QDRANT_COLLECTION` |
 | Auth | `JWT_SECRET`, `JWT_EXPIRES_IN` |
-| AI | `OLLAMA_HOST`, `OLLAMA_MODEL`, `GEMINI_API_KEY` |
+| AI | `OLLAMA_HOST`, `OLLAMA_MODEL`, `GEMINI_API_KEY` (only when `EMBEDDING_PROVIDER=gemini`) |
 | Embeddings | `EMBEDDING_PROVIDER` (`gemini` or `ollama`), `EMBEDDING_MODEL`, `EMBEDDING_DIMENSIONS`, `QDRANT_COLLECTION`, `EMBEDDING_NUM_GPU` (default 0 = CPU), `EMBEDDING_KEEP_ALIVE` (default `2m`) |
 | AI speed (optional) | `OLLAMA_NUM_GPU`, `OLLAMA_KEEP_ALIVE` (default `30m`), `OLLAMA_MIN_CONTEXT` / `OLLAMA_MAX_CONTEXT` (default 3072 / 8192) |
 | Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` |
@@ -172,7 +172,7 @@ npm run type-check
 npm test
 ```
 
-Current automated test suite: **179 backend tests** (24 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
+Current automated test suite: **180 backend tests** (24 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
 
 End-to-end tests (Playwright, using the installed Microsoft Edge) drive the real app: register → sign in → delete account, the hamburger menu on desktop and mobile, the public privacy page, and a full upload → AI analysis → result flow. They also run axe (WCAG 2.1 A/AA) on every page in light and dark themes; because axe cannot measure contrast over gradients, the scan swaps the background for each theme's worst-case solid color. Start Docker, Ollama, the backend and the frontend, seed the demo account (used by the signed-in accessibility scans), then:
 

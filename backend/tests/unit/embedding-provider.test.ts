@@ -34,7 +34,7 @@ vi.mock("ollama", () => ({
 }));
 
 vi.mock("../../src/config/env.js", () => ({ env: mockEnv }));
-vi.mock("../../src/config/gemini.js", () => ({ gemini: {} }));
+vi.mock("../../src/config/gemini.js", () => ({ getGemini: () => ({}) }));
 
 import {
   createDocumentEmbeddings,

@@ -20,18 +20,3 @@ export const semanticSearchBodySchema = z.object({
     .max(1)
     .optional(),
 });
-
-export const resumeQuestionBodySchema = z.object({
-  question: z
-    .string()
-    .trim()
-    .min(2, "คำถามต้องมีอย่างน้อย 2 ตัวอักษร")
-    .max(1_000, "คำถามต้องไม่เกิน 1,000 ตัวอักษร"),
-
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(10)
-    .optional(),
-});

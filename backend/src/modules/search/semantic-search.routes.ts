@@ -10,11 +10,9 @@ import {
   resumeIdParamsSchema,
 } from "../resume/resume.validation.js";
 import {
-  askResumeController,
   searchResumeController,
 } from "./semantic-search.controller.js";
 import {
-  resumeQuestionBodySchema,
   semanticSearchBodySchema,
 } from "./semantic-search.validation.js";
 
@@ -30,12 +28,4 @@ semanticSearchRouter.post(
   searchResumeController,
 );
 
-semanticSearchRouter.post(
-  "/:resumeId/ask",
-  authenticateToken,
-  validate({
-    params: resumeIdParamsSchema,
-    body: resumeQuestionBodySchema,
-  }),
-  askResumeController,
-);
+// /:resumeId/ask (ถาม-ตอบด้วย Gemini) ถูกเอาออก — ส่ง Resume ออกนอกเครื่อง และหน้าเว็บไม่ได้ใช้

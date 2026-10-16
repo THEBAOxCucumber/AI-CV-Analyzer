@@ -166,10 +166,12 @@ export const env = {
   },
 
   gemini: {
+    /*
+     * ต้องมีเฉพาะเมื่อ EMBEDDING_PROVIDER=gemini (ตรวจตอนเรียกใช้)
+     * ใช้ Ollama ทั้งหมด → ไม่ต้องมี key ระบบทำงานได้ไม่ต้องใช้อินเทอร์เน็ต
+     */
     apiKey:
-      getRequiredEnv(
-        "GEMINI_API_KEY",
-      ),
+      process.env.GEMINI_API_KEY ?? "",
 
     generationModel:
       process.env

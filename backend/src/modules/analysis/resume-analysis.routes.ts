@@ -1,72 +1,42 @@
 import { Router } from "express";
 
 import type {
-  NextFunction,
   Request,
   Response,
 } from "express";
 
-import {
-  authenticateToken,
-} from "../../middleware/auth.middleware.js";
-import {
-  validate,
-} from "../../middleware/validate.middleware.js";
-import {
-  resumeIdParamsSchema,
-} from "../resume/resume.validation.js";
-import {
-  analyzeResumeController,
-  getResumeAnalysisController,
-} from "./resume-analysis.controller.js";
-import {
-  analyzeResumeBodySchema,
-} from "./resume-analysis.validation.js";
-
-
+/*
+ * เส้นทางวิเคราะห์แบบเก่า (ส่ง Resume ไป Gemini โดยตรง) — ปิดแล้ว
+ * ใช้ POST/GET /api/resumes/:resumeId/analyses แทน (คิว + Ollama บนเครื่อง)
+ *
+ * ตอบ 410 Gone + ชี้ทางใหม่ แทน 404 — client เก่ารู้ว่าต้องย้ายไปไหน
+ */
 export const resumeAnalysisRouter =
   Router();
 
-function legacyAnalysisDeprecation(
+function analysisRouteGone(
   _req: Request,
   res: Response,
-  next: NextFunction,
 ): void {
-  res.setHeader(
-    "Deprecation",
-    "true",
-  );
-
-  res.setHeader(
-    "Sunset",
-    "Wed, 31 Dec 2026 23:59:59 GMT",
-  );
-
   res.setHeader(
     "Link",
     '</api/resumes/:resumeId/analyses>; rel="successor-version"',
   );
 
-  next();
+  res.status(410).json({
+    success: false,
+    message:
+      "เส้นทางนี้ถูกปิดแล้ว ใช้ /api/resumes/:resumeId/analyses แทน",
+    code: "ENDPOINT_REMOVED",
+  });
 }
 
 resumeAnalysisRouter.post(
   "/:resumeId/analyze",
-  legacyAnalysisDeprecation,
-  authenticateToken,
-  validate({
-    params: resumeIdParamsSchema,
-    body: analyzeResumeBodySchema,
-  }),
-  analyzeResumeController,
+  analysisRouteGone,
 );
 
 resumeAnalysisRouter.get(
   "/:resumeId/analysis",
-  legacyAnalysisDeprecation,
-  authenticateToken,
-  validate({
-    params: resumeIdParamsSchema,
-  }),
-  getResumeAnalysisController,
+  analysisRouteGone,
 );
