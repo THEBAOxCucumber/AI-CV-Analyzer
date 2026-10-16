@@ -2,7 +2,7 @@
   /* Brand colors (Figma) */
   --color-navy: #1e3156;
   --color-navy-deep: #15233f;
-  --color-steel-blue: #496995;
+  --color-steel-blue: #3f5f8a;
   --color-soft-blue-gray: #a5b5d2;
   --color-light-blue: #b0cbe6;
 
@@ -31,7 +31,7 @@
 
   --color-text-primary: #1e3156;
   --color-text-secondary: #44546f;
-  --color-text-muted: #56688a;
+  --color-text-muted: #4f6184;
 
   --color-border: rgba(30, 49, 86, 0.08);
   --color-border-strong: rgba(30, 49, 86, 0.16);
@@ -47,9 +47,9 @@
     radial-gradient(700px 500px at 60% 110%, rgba(140, 200, 255, 0.35), transparent 60%),
     linear-gradient(160deg, #e6effd 0%, #dde8fb 45%, #e8e6fb 100%);
 
-  --color-success: #2e7d5b;
-  --color-warning: #b7791f;
-  --color-danger: #c94c4c;
+  --color-success: #276b4e;
+  --color-warning: #7f520f;
+  --color-danger: #b03a3a;
 
   /* Gradients */
   --gradient-brand:

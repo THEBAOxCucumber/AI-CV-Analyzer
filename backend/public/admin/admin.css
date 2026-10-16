@@ -20,17 +20,17 @@
   --surface-hover: rgba(255, 255, 255, 0.85);
   --text: #1e3156;
   --text-2: #44546f;
-  --muted: #56688a;
+  --muted: #4f6184;
   --border: rgba(30, 49, 86, 0.08);
   --border-strong: rgba(30, 49, 86, 0.16);
   --glass-edge: rgba(255, 255, 255, 0.8);
   --glass-blur: blur(20px) saturate(1.5);
-  --accent: #496995;
+  --accent: #3f5f8a;
   --accent-soft: rgba(73, 105, 149, 0.1);
 
-  --ok: #2e7d5b;
-  --warn: #b7791f;
-  --danger: #c94c4c;
+  --ok: #276b4e;
+  --warn: #7f520f;
+  --danger: #b03a3a;
   --on-status: #ffffff;
 
   --body-gradient:

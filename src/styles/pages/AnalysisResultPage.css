@@ -67,14 +67,15 @@
   color: var(--color-success);
 
   background:
-    color-mix(in srgb, var(--color-success) 10%, transparent);
+    /* ฐานทึบ — ป้ายอยู่บนพื้นไล่สีโดยตรง ใช้ transparent แล้ว contrast ไม่พอ */
+    color-mix(in srgb, var(--color-success) 10%, var(--color-surface-solid));
 }
 
 .analysis-status--failed {
   color: var(--color-danger);
 
   background:
-    color-mix(in srgb, var(--color-danger) 8%, transparent);
+    color-mix(in srgb, var(--color-danger) 8%, var(--color-surface-solid));
 }
 
 .analysis-status--pending,
