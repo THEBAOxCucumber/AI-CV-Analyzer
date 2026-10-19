@@ -21,8 +21,10 @@ COPY public ./public
 COPY src ./src
 
 # ฝังตอน build — ว่าง = เรียก /api บนโดเมนเดียวกัน (แนะนำ)
+# ค่าว่าง (deploy.yml ส่งมาเมื่อไม่ได้ตั้ง Variable) → /api
+# ต้องไม่ปล่อยเป็น "" เพราะ api.ts ใช้ ?? ซึ่งไม่แทนค่า string ว่าง
 ARG VITE_API_BASE_URL=""
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api}
 
 # typecheck ทำใน CI แล้ว → ที่นี่ build อย่างเดียว
 RUN npx vite build
