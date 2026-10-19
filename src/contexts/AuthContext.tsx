@@ -24,6 +24,8 @@ export interface AuthContextValue {
     user: User,
   ) => void
   logout: () => void
+  // ต่ออายุเซสชัน (กดที่ตัวนับเวลา) — token หมดอายุแล้ว → ออกจากระบบ
+  extendSession: () => Promise<void>
 }
 
 export const AuthContext =

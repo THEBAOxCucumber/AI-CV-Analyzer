@@ -1,8 +1,8 @@
 import {
-  Clock3,
   LogOut,
   Menu,
   Moon,
+  RotateCw,
   Settings,
   Sun,
 } from "lucide-react"
@@ -25,6 +25,10 @@ import {
 import {
   useAuth,
 } from "../../hooks/useAuth"
+
+import {
+  useExtendSession,
+} from "../../hooks/useExtendSession"
 
 import {
   useTheme,
@@ -52,6 +56,11 @@ export function MobileTopbar({
     logout,
     sessionRemainingSeconds,
   } = useAuth()
+
+  const {
+    isExtending,
+    handleExtendSession,
+  } = useExtendSession()
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -175,19 +184,27 @@ export function MobileTopbar({
       </Link>
 
       <div className="mobile-topbar__actions">
-        <span
+        <button
+          type="button"
           className={
             isSessionEnding
               ? "mobile-topbar__session mobile-topbar__session--warning"
               : "mobile-topbar__session"
           }
-          title="เวลาที่เหลือก่อนต้องเข้าสู่ระบบใหม่"
+          onClick={handleExtendSession}
+          disabled={isExtending}
+          aria-label={`ต่ออายุเซสชัน (เหลือ ${formatSessionTime(sessionRemainingSeconds)})`}
+          title="กดเพื่อต่ออายุเซสชัน"
         >
-          <Clock3 size={14} />
+          <RotateCw
+            size={14}
+            aria-hidden="true"
+            className={isExtending ? "session-spin" : undefined}
+          />
           {formatSessionTime(
             sessionRemainingSeconds,
           )}
-        </span>
+        </button>
 
         <button
           type="button"

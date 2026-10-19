@@ -251,13 +251,97 @@ function showApp() {
   $("admin-name").textContent = `${state.me.firstName ?? ""} ${state.me.lastName ?? ""}`.trim() || "Admin";
   $("admin-avatar").textContent = initials(state.me.firstName, state.me.lastName, state.me.email);
 
+  startSessionTimer();
   route();
+}
+
+/* ---------- session (นับถอยหลังตาม exp ใน JWT + ต่ออายุ) ---------- */
+
+const SESSION_WARNING_SECONDS = 120;
+let sessionTimer = null;
+
+function tokenExpiresAt(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload.exp === "number" ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+function formatSessionTime(totalSeconds) {
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function renderSession() {
+  const expiresAt = state.token ? tokenExpiresAt(state.token) : null;
+  if (expiresAt === null) return;
+
+  const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+  const time = formatSessionTime(remaining);
+  const button = $("session-button");
+
+  $("session-time").textContent = time;
+  button.setAttribute("aria-label", `ต่ออายุเซสชัน (เหลือ ${time})`);
+  button.classList.toggle("session-pill--warning", remaining <= SESSION_WARNING_SECONDS);
+
+  if (remaining <= 0) logout("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
+}
+
+function startSessionTimer() {
+  stopSessionTimer();
+  renderSession();
+  sessionTimer = setInterval(renderSession, 1000);
+}
+
+function stopSessionTimer() {
+  clearInterval(sessionTimer);
+  sessionTimer = null;
+}
+
+async function extendSession() {
+  const button = $("session-button");
+  if (button.disabled) return;
+
+  button.disabled = true;
+  button.classList.add("session-pill--busy");
+
+  try {
+    const data = await api("/auth/refresh", { method: "POST" });
+
+    // สิทธิ์อ่านจาก DB ใหม่ — ถูกลดสิทธิ์ระหว่างใช้งาน → ออก
+    if (data.user?.role !== "ADMIN") {
+      logout("บัญชีนี้ไม่มีสิทธิ์ ADMIN");
+      return;
+    }
+
+    state.token = data.token;
+    state.me = data.user;
+
+    try {
+      sessionStorage.setItem(TOKEN_KEY, state.token);
+    } catch {
+      /* ใช้ได้เฉพาะหน้านี้ */
+    }
+
+    renderSession();
+    toast("ต่ออายุเซสชันแล้ว");
+  } catch (error) {
+    // 401 → api() ออกจากระบบให้แล้ว
+    if (error.status !== 401) toast(error.message, true);
+  } finally {
+    button.disabled = false;
+    button.classList.remove("session-pill--busy");
+  }
 }
 
 function logout(message) {
   state.token = null;
   state.me = null;
   stopStatusTimer();
+  stopSessionTimer();
 
   try {
     sessionStorage.removeItem(TOKEN_KEY);
@@ -1291,6 +1375,7 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 
 $("login-form").addEventListener("submit", handleLogin);
 $("logout-button").addEventListener("click", () => logout());
+$("session-button").addEventListener("click", extendSession);
 window.addEventListener("hashchange", () => {
   closeMenu(false);
   route();

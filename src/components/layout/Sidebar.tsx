@@ -1,12 +1,12 @@
 import {
   BarChart3,
   BriefcaseBusiness,
-  Clock3,
   History,
   LayoutDashboard,
   LogOut,
   Menu,
   Moon,
+  RotateCw,
   Settings,
   Sun,
   Upload,
@@ -27,6 +27,10 @@ import {
 import {
   useAuth,
 } from "../../hooks/useAuth"
+
+import {
+  useExtendSession,
+} from "../../hooks/useExtendSession"
 
 import {
   useTheme,
@@ -137,6 +141,11 @@ export function Sidebar({
     logout,
     sessionRemainingSeconds,
   } = useAuth()
+
+  const {
+    isExtending,
+    handleExtendSession,
+  } = useExtendSession()
 
   const navigate = useNavigate()
 
@@ -300,15 +309,23 @@ export function Sidebar({
 
         <div className="sidebar__footer">
           <div className="sidebar__footer-row">
-            <div
+            <button
+              type="button"
               className={
                 isSessionEnding
                   ? "sidebar__session sidebar__session--warning"
                   : "sidebar__session"
               }
-              title="เวลาที่เหลือก่อนต้องเข้าสู่ระบบใหม่"
+              onClick={handleExtendSession}
+              disabled={isExtending}
+              aria-label={`ต่ออายุเซสชัน (เหลือ ${formatSessionTime(sessionRemainingSeconds)})`}
+              title="กดเพื่อต่ออายุเซสชัน"
             >
-              <Clock3 size={15} />
+              <RotateCw
+                size={15}
+                aria-hidden="true"
+                className={isExtending ? "session-spin" : undefined}
+              />
 
               <span className="sidebar__session-label">เซสชัน</span>
 
@@ -317,7 +334,7 @@ export function Sidebar({
                   sessionRemainingSeconds,
                 )}
               </strong>
-            </div>
+            </button>
 
             <button
               type="button"

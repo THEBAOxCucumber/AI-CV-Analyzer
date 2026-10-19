@@ -7,6 +7,7 @@ import {
   deleteAccount,
   getCurrentUser,
   login,
+  refreshSession,
   register,
   setInitialPassword,
 } from "./auth.service.js";
@@ -72,6 +73,29 @@ export const getMeController = asyncHandler(
       data: {
         user,
       },
+    });
+  },
+);
+
+/*
+ * ต่ออายุเซสชัน — ต้องมี token ที่ยังไม่หมดอายุ (authenticateToken ตรวจแล้ว)
+ */
+export const refreshSessionController = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new AppError(
+        "กรุณาเข้าสู่ระบบ",
+        401,
+        "UNAUTHENTICATED",
+      );
+    }
+
+    const result = await refreshSession(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      message: "ต่ออายุเซสชันสำเร็จ",
+      data: result,
     });
   },
 );

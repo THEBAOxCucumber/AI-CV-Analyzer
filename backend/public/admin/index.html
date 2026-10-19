@@ -95,6 +95,13 @@
         </nav>
 
         <div class="sidebar__footer">
+          <!-- เวลาเซสชันที่เหลือ — กดเพื่อต่ออายุ -->
+          <button id="session-button" type="button" class="session-pill" title="กดเพื่อต่ออายุเซสชัน">
+            <span data-icon="refresh"></span>
+            <span class="session-pill__label">เซสชัน</span>
+            <strong id="session-time">--:--</strong>
+          </button>
+
           <div class="theme-switch" role="group" aria-label="ธีม">
             <button type="button" data-theme-option="light" title="สว่าง"><span data-icon="sun"></span></button>
             <button type="button" data-theme-option="dark" title="มืด"><span data-icon="moon"></span></button>

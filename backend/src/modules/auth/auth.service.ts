@@ -255,6 +255,21 @@ export async function getCurrentUser(
   return toPublicUser(userRow);
 }
 
+/*
+ * ต่ออายุเซสชัน — ออก JWT ใหม่ให้ผู้ใช้ที่ token ยังไม่หมดอายุ
+ * role อ่านจาก DB ใหม่ → ถูกลดสิทธิ์แล้วจะได้ token ตามสิทธิ์ปัจจุบัน
+ */
+export async function refreshSession(
+  userId: number,
+): Promise<AuthResult> {
+  const user = await getCurrentUser(userId);
+
+  return {
+    user,
+    token: createToken(user),
+  };
+}
+
 export async function changePassword(
   userId: number,
   input: ChangePasswordBody,

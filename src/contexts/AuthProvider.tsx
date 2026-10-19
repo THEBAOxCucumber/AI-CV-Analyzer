@@ -10,9 +10,11 @@ import {
   exchangeOAuthCode,
   getMe,
   login as loginRequest,
+  refreshSession,
 } from "../services/auth.service"
 
 import {
+  ApiError,
   clearAccessToken,
   getAccessToken,
   setAccessToken,
@@ -271,6 +273,34 @@ export function AuthProvider({
     setUser(null)
   }, [])
 
+  /*
+   * ต่ออายุเซสชัน: token ใหม่ → setUser ทำให้ตัวนับถอยหลังเริ่มใหม่ตาม exp ใหม่
+   * 401 (token หมดอายุไปแล้ว) → ออกจากระบบ, error อื่นส่งต่อให้ผู้เรียก
+   */
+  const extendSession = useCallback(async (): Promise<void> => {
+    try {
+      const response =
+        await refreshSession()
+
+      setAccessToken(response.data.token)
+
+      setSessionRemainingSeconds(
+        getRemainingSeconds(response.data.token),
+      )
+
+      setUser(response.data.user)
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === 401
+      ) {
+        logout()
+      }
+
+      throw error
+    }
+  }, [logout])
+
   const value = useMemo(
     () => ({
       user,
@@ -282,6 +312,7 @@ export function AuthProvider({
       loginWithOAuthCode,
       updateUser,
       logout,
+      extendSession,
     }),
     [
       user,
@@ -291,6 +322,7 @@ export function AuthProvider({
       loginWithOAuthCode,
       updateUser,
       logout,
+      extendSession,
     ],
   )
 

@@ -285,7 +285,39 @@
 
   box-shadow: var(--shadow-sm);
 
+  font: inherit;
   font-size: var(--font-size-xs);
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+/* ตัวนับเวลาเป็นปุ่ม — กดเพื่อต่ออายุเซสชัน */
+.sidebar__session:hover {
+  background: var(--color-surface-solid);
+}
+
+.sidebar__session:active {
+  transform: scale(0.97);
+}
+
+.sidebar__session:disabled {
+  cursor: progress;
+}
+
+/* ไอคอน ↻ หมุนระหว่างต่ออายุ (Sidebar + แถบบนมือถือ) */
+.session-spin {
+  animation: session-spin 0.8s linear infinite;
+}
+
+@keyframes session-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .sidebar__session strong {
@@ -690,9 +722,16 @@
 
     box-shadow: var(--shadow-sm);
 
+    font: inherit;
     font-size: var(--font-size-xs);
     font-weight: 500;
     font-variant-numeric: tabular-nums;
+
+    cursor: pointer;
+  }
+
+  .mobile-topbar__session:disabled {
+    cursor: progress;
   }
 
   .mobile-topbar__session--warning {
@@ -854,7 +893,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar__session--warning,
-  .mobile-topbar__dropdown {
+  .mobile-topbar__dropdown,
+  .session-spin {
     animation: none;
   }
 

@@ -694,6 +694,79 @@ input::placeholder {
   height: 16px;
 }
 
+/* เวลาเซสชันที่เหลือ — กดเพื่อต่ออายุ */
+.session-pill {
+  min-height: 38px;
+  padding: 6px 12px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  border: 1px solid var(--glass-edge);
+  border-radius: 999px;
+
+  color: var(--text-2);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.session-pill:hover {
+  background: var(--surface-solid);
+}
+
+.session-pill:disabled {
+  cursor: progress;
+}
+
+.session-pill .icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.session-pill strong {
+  margin-left: auto;
+
+  color: var(--text);
+
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-pill--warning,
+.session-pill--warning strong {
+  color: var(--danger);
+}
+
+.session-pill--warning {
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface-solid));
+}
+
+.session-pill--busy .icon {
+  animation: session-spin 0.8s linear infinite;
+}
+
+@keyframes session-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-pill--busy .icon {
+    animation: none;
+  }
+}
+
 .me {
   min-width: 0;
   padding: 8px;
@@ -1927,6 +2000,7 @@ tbody tr:not(.row--skeleton) {
 
   /* ซ่อนจากตา แต่ screen reader ยังอ่านชื่อได้ */
   .app--collapsed .nav a > span:last-child,
+  .app--collapsed .session-pill__label,
   .app--collapsed .me__info {
     position: absolute;
     width: 1px;
@@ -1943,6 +2017,18 @@ tbody tr:not(.row--skeleton) {
   .app--collapsed .me {
     flex-direction: column;
     padding: 8px 0;
+  }
+
+  .app--collapsed .session-pill {
+    padding: 8px 0;
+    flex-direction: column;
+    gap: 2px;
+    border-radius: 16px;
+  }
+
+  .app--collapsed .session-pill strong {
+    margin-left: 0;
+    font-size: 0.72rem;
   }
 }
 

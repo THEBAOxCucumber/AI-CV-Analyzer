@@ -9,7 +9,7 @@ AI CV Analyzer is a full-stack web application for uploading, analyzing, and man
   - Accounts created through Google must set a password before using the app
   - A Google sign-in whose verified email matches an existing account is linked to that account
 - Forgot password with a 6-digit email OTP; password-change notification emails
-- 15-minute JWT session with a countdown and automatic logout
+- 15-minute JWT session with a countdown and automatic logout; click the countdown to renew the session (also on the admin page)
 - Resume upload (PDF, max 5 MB) and management
 - AI resume analysis: overall score, section scores (radar chart), strengths, weaknesses, recommendations
 - Job matching against a job description: match score, matching / missing skills, keyword matches
@@ -172,7 +172,7 @@ npm run type-check
 npm test
 ```
 
-Current automated test suite: **180 backend tests** (24 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
+Current automated test suite: **184 backend tests** (25 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
 
 End-to-end tests (Playwright, using the installed Microsoft Edge) drive the real app: register → sign in → delete account, the hamburger menu on desktop and mobile, the public privacy page, and a full upload → AI analysis → result flow. They also run axe (WCAG 2.1 A/AA) on every page in light and dark themes; because axe cannot measure contrast over gradients, the scan swaps the background for each theme's worst-case solid color. Start Docker, Ollama, the backend and the frontend, seed the demo account (used by the signed-in accessibility scans), then:
 

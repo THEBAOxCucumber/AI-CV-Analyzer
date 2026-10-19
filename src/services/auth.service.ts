@@ -35,6 +35,18 @@ export function register(
   )
 }
 
+/*
+ * ต่ออายุเซสชัน — ได้ token ใหม่อายุเต็ม (token ปัจจุบันต้องยังไม่หมดอายุ)
+ */
+export function refreshSession(): Promise<ApiResponse<AuthData>> {
+  return apiRequest<ApiResponse<AuthData>>(
+    "/auth/refresh",
+    {
+      method: "POST",
+    },
+  )
+}
+
 export function changePassword(input: {
   currentPassword: string
   newPassword: string

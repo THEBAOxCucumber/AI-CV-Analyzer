@@ -12,6 +12,7 @@ import {
   forgotPasswordController,
   getMeController,
   loginController,
+  refreshSessionController,
   registerController,
   resetPasswordController,
   setPasswordController,
@@ -48,6 +49,13 @@ authRouter.get(
   "/me",
   authenticateToken,
   getMeController,
+);
+
+// ต่ออายุเซสชัน (ปุ่มที่ตัวนับเวลา) — token หมดอายุแล้วต่อไม่ได้ ต้อง login ใหม่
+authRouter.post(
+  "/refresh",
+  authenticateToken,
+  refreshSessionController,
 );
 
 authRouter.post(
