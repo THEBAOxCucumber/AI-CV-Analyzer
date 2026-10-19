@@ -28,6 +28,8 @@ VPS: Nginx + HTTPS (certbot) → 127.0.0.1:3310 → app (เว็บ + API + wo
 | `.github/workflows/deploy.yml` | push image ไป GHCR + deploy ผ่าน SSH (ไม่ตั้ง Secrets = ข้าม) |
 | `deploy/make-env.sh` | สร้าง `.env` บน VPS สุ่มรหัสผ่านให้ |
 | `deploy/nginx.conf` | reverse proxy ของโดเมนนี้ |
+| `deploy/backup.sh` | สำรอง MySQL + ไฟล์ PDF + vector (Qdrant) เก็บ 14 วัน |
+| `deploy/restore.sh` | กู้คืนจากชุดที่เลือก (สำรองสถานะปัจจุบันให้ก่อนเสมอ) |
 
 ## ทดลองในเครื่อง (PowerShell)
 
@@ -107,3 +109,46 @@ Repo → Settings → Secrets and variables → Actions
 ### Google sign-in
 
 เพิ่ม `https://<โดเมน>/api/auth/oauth/google/callback` ใน Google Cloud Console (ดู `backend/docs/OAUTH_SETUP.md`)
+
+## สำรองและกู้คืนข้อมูล
+
+ข้อมูลที่หายแล้วสร้างใหม่ไม่ได้: ฐานข้อมูล (บัญชี, Resume, ผลวิเคราะห์), ไฟล์ PDF และ vector ใน Qdrant — Redis เป็นคิวชั่วคราว ไม่ต้องสำรอง
+
+### ติดตั้ง (บน VPS ครั้งเดียว)
+
+```bash
+cd ~/ai-cv-analyzer
+BASE=https://raw.githubusercontent.com/THEBAOxCucumber/AI-CV-Analyzer/main
+curl -fsSLO $BASE/deploy/backup.sh
+curl -fsSLO $BASE/deploy/restore.sh
+bash backup.sh          # ลองรันมือ 1 ครั้ง → ได้ 3 ไฟล์ใน backups/
+```
+
+ตั้งให้รันทุกวัน (`crontab -e` แล้วเพิ่มบรรทัดนี้ — เวลาตามนาฬิกาของ VPS ดูได้ด้วย `timedatectl`; ถ้าเป็น UTC, 20:00 = ตี 3 เวลาไทย):
+
+```text
+0 20 * * * cd /root/ai-cv-analyzer && bash backup.sh >> backups/backup.log 2>&1
+```
+
+ตรวจย้อนหลัง: `tail backups/backup.log` และ `ls -lh backups/`
+
+### เก็บสำเนาไว้นอก VPS (สำคัญ)
+
+backup ที่อยู่บน VPS เครื่องเดียวกันไม่ช่วยถ้า VPS พังหรือถูกลบ — ดึงลงเครื่องตัวเองเป็นระยะ (PowerShell):
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\ai-cv-backups" | Out-Null
+scp "root@179.197.241.29:ai-cv-analyzer/backups/*-*" "$HOME\ai-cv-backups\"
+```
+
+ไฟล์มีข้อมูลส่วนตัวของผู้ใช้ (ชื่อ อีเมล Resume) — เก็บในที่ปลอดภัย ห้ามอัปโหลดขึ้นที่สาธารณะ
+
+### กู้คืน
+
+```bash
+cd ~/ai-cv-analyzer
+bash restore.sh                    # แสดงชุดที่มี
+bash restore.sh 20261020-200000    # พิมพ์ restore เพื่อยืนยัน
+```
+
+สคริปต์ backup สถานะปัจจุบันให้อีกชุดก่อนกู้คืนเสมอ — เลือกชุดผิดก็กู้กลับได้
