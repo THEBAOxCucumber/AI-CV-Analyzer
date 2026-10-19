@@ -82,6 +82,19 @@ export const env = {
     5000,
   ),
 
+  // ใน container ต้องฟังทุก interface — ไม่งั้นเข้าจากนอก container ไม่ได้
+  host:
+    process.env.HOST ??
+    "0.0.0.0",
+
+  /*
+   * โฟลเดอร์หน้าเว็บ React ที่ build แล้ว (ตั้งใน Docker)
+   * ว่าง = dev ใช้ Vite dev server เหมือนเดิม
+   */
+  webDirectory:
+    process.env.PUBLIC_WEB_DIR ??
+    "",
+
   database: {
     host:
       getRequiredEnv("DB_HOST"),

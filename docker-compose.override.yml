@@ -1,0 +1,20 @@
+# ใช้ในเครื่องเท่านั้น — docker compose อ่านไฟล์นี้อัตโนมัติ
+# บน VPS ไม่ต้อง copy ไฟล์นี้ไป (ใช้ image จาก GHCR และไม่เปิด port DB)
+
+services:
+  # build image จากโค้ดในเครื่อง แทนการ pull จาก GHCR
+  migrate:
+    build:
+      context: .
+      target: migrator
+
+  app:
+    build:
+      context: .
+      target: runtime
+
+  # เปิด MySQL ให้ดูจากเครื่องได้ (เช่น MySQL Workbench)
+  # ใช้ 3307 เพราะ 3306 เป็นของ backend/docker-compose.yml ที่ใช้ตอน dev
+  mysql:
+    ports:
+      - "127.0.0.1:3307:3306"

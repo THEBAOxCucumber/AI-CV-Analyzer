@@ -1,0 +1,117 @@
+# AI CV Analyzer — ทั้งระบบ (ใช้ได้ทั้งในเครื่องและบน VPS)
+#
+#   ในเครื่อง : docker compose up --build -d        (อ่าน docker-compose.override.yml อัตโนมัติ → build เอง)
+#   บน VPS    : docker compose pull; docker compose up -d   (ไม่ copy override ไป → ใช้ image จาก GHCR)
+#   เปิด AI   : docker compose --profile ai up -d    (ต้องมี RAM ว่าง ≥ 6 GB)
+#
+# ค่าทั้งหมดอ่านจาก .env ข้างไฟล์นี้ (ดู .env.example / deploy/make-env.sh)
+# ห้ามใช้ `docker compose down -v` — จะลบ volume (ฐานข้อมูล + ไฟล์ Resume) ทิ้ง
+#
+# backend/docker-compose.yml (เดิม) ยังใช้ตอน dev แบบ npm run dev ได้ตามปกติ — คนละ project / คนละ volume
+
+name: ai-cv-analyzer
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?ตั้ง MYSQL_ROOT_PASSWORD ใน .env}
+      MYSQL_DATABASE: ${DB_NAME:-ai_resume_analyzer}
+      MYSQL_USER: ${DB_USER:-resume_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?ตั้ง DB_PASSWORD ใน .env}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # ไม่เปิด port ออกนอก — app คุยผ่าน network ภายในของ compose
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    image: qdrant/qdrant:v1.18.3
+    restart: unless-stopped
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    # image ไม่มี curl → ทดสอบเปิด TCP ด้วย bash
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # รัน migration ที่ยังไม่เคยรัน แล้วจบ (exit 0) — app เริ่มหลังจากนี้เท่านั้น
+  migrate:
+    image: ${MIGRATOR_IMAGE:-ai-cv-analyzer-migrator:local}
+    restart: "no"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-resume_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-ai_resume_analyzer}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  app:
+    image: ${APP_IMAGE:-ai-cv-analyzer:local}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # ที่อยู่ service ภายใน compose (ทับค่าใน .env)
+      DB_HOST: mysql
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QDRANT_URL: http://qdrant:6333
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://ollama:11434}
+      # request มาจาก Nginx บน VPS 1 hop → req.ip = IP จริงของผู้ใช้ (rate limit)
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+    ports:
+      # bind เฉพาะ 127.0.0.1 — ภายนอกเข้าผ่าน Nginx เท่านั้น
+      - "127.0.0.1:${APP_PORT:-3310}:5000"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # AI บนเครื่อง (CPU) — เริ่มเฉพาะเมื่อสั่ง --profile ai
+  # ดึงโมเดลครั้งแรก: docker compose exec ollama ollama pull qwen3:4b-instruct
+  ollama:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    profiles: ["ai"]
+    restart: unless-stopped
+    volumes:
+      - ollama_models:/root/.ollama
+
+volumes:
+  mysql_data:
+  redis_data:
+  qdrant_storage:
+  uploads:
+  ollama_models:

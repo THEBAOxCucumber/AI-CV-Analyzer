@@ -1,0 +1,31 @@
+# ความลับ — ห้ามเข้า image เด็ดขาด (.env.example ไม่จำเป็นต่อ build เช่นกัน)
+.env
+.env.*
+**/.env
+**/.env.*
+
+# ติดตั้ง / build ใหม่ใน image
+node_modules
+**/node_modules
+dist
+**/dist
+
+# ข้อมูลผู้ใช้ — อยู่ใน volume ไม่ใช่ image
+backend/uploads
+
+# ไม่ใช้ตอนรัน
+.git
+.github
+.vscode
+.idea
+e2e
+e2e-report
+test-results
+playwright
+backend/tests
+backend/demo
+docs
+deploy
+*.md
+*.log
+test code.txt

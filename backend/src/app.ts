@@ -1,3 +1,4 @@
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import cors from "cors";
@@ -65,6 +66,22 @@ app.use(
   }),
 );
 
+
+/*
+ * หน้าเว็บ React ที่ build แล้ว (Docker) — 1 container ให้ทั้งเว็บและ API
+ * path ที่ไม่ใช่ /api และ /admin → index.html ให้ React Router จัดการ
+ * ต้องอยู่ก่อน GET / (JSON) ที่ใช้ตอน dev
+ */
+if (env.webDirectory) {
+  const webDirectory = path.resolve(env.webDirectory);
+
+  app.use(express.static(webDirectory, { index: false }));
+
+  app.get(/^\/(?!api(?:\/|$)|admin(?:\/|$)).*/, (_req, res) => {
+    res.set("Cache-Control", "no-cache");
+    res.sendFile(path.join(webDirectory, "index.html"));
+  });
+}
 
 app.get("/", (_req, res) => {
   res.status(200).json({

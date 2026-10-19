@@ -32,9 +32,10 @@ async function startServer(): Promise<void> {
 
     server = app.listen(
       env.port,
+      env.host,
       () => {
         console.log(
-          `Server is running at http://localhost:${env.port}`,
+          `Server is running at http://${env.host}:${env.port}`,
         );
         console.log(
           `Environment: ${env.nodeEnv}`,

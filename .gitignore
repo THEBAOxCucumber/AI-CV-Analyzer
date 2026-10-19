@@ -27,3 +27,8 @@ dist-ssr
 e2e-report
 test-results
 playwright/.cache
+
+# ความลับ (docker compose ที่ root) — commit ได้แค่ .env.example
+.env
+.env.*
+!.env.example
