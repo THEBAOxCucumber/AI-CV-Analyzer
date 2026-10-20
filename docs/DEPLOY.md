@@ -162,6 +162,7 @@ bash restore.sh 20261020-200000    # พิมพ์ restore เพื่อย�
 cd ~/ai-cv-analyzer
 curl -fsSLO https://raw.githubusercontent.com/THEBAOxCucumber/AI-CV-Analyzer/main/deploy/nginx-security.conf
 cp nginx-security.conf /etc/nginx/conf.d/ai-cv-security.conf
+sed -i 's/^\(\s*\)server_tokens [a-z]*;/\1server_tokens off;/' /etc/nginx/nginx.conf   # ซ่อนเลขเวอร์ชัน
 nginx -t && systemctl reload nginx
 curl -sI https://learnace.tech | grep -iE 'server|strict|x-frame|referrer|x-content|permissions'
 ```
