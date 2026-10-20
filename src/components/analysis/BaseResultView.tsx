@@ -1,6 +1,12 @@
 import {
+  Link,
+} from "react-router-dom"
+
+import {
+  BriefcaseBusiness,
   CheckCircle2,
   CircleAlert,
+  Search,
   Sparkles,
   ThumbsDown,
   ThumbsUp,
@@ -14,6 +20,10 @@ import type {
 import {
   buildSectionScores,
 } from "../../utils/section-scores"
+
+import {
+  buildJobSearchPath,
+} from "../../utils/job-search"
 
 import {
   AnalysisHeader,
@@ -80,6 +90,76 @@ function FeedbackCard({
   )
 }
 
+/*
+ * ทำต่อหลังวิเคราะห์: หางานตามตำแหน่งที่ AI แนะนำจาก Resume
+ * ผลก่อน prompt v2.1.0 ไม่มีตำแหน่ง → ปุ่มหางานธรรมดา (เลือก Resume นี้ไว้ให้)
+ */
+function JobSuggestionsCard({
+  analysis,
+}: {
+  analysis: ResumeAnalysisRun
+}) {
+  const titles =
+    analysis.suggestedJobTitles ?? []
+
+  return (
+    <section
+      className="job-suggestions"
+      aria-labelledby="job-suggestions-title"
+    >
+      <div className="job-suggestions__text">
+        <h2 id="job-suggestions-title">
+          <BriefcaseBusiness
+            size={20}
+            aria-hidden="true"
+          />
+          ตำแหน่งงานที่เหมาะกับคุณ
+        </h2>
+
+        <p>
+          {titles.length > 0
+            ? "AI แนะนำจากทักษะและประสบการณ์ใน Resume — กดเพื่อค้นหางานตำแหน่งนั้น"
+            : "ค้นหางานในประเทศไทย แล้วเทียบกับ Resume นี้ได้ทันที"}
+        </p>
+
+        {titles.length > 0 && (
+          <ul className="job-suggestions__chips">
+            {titles.map((title) => (
+              <li key={title}>
+                <Link
+                  className="job-suggestions__chip"
+                  to={buildJobSearchPath(
+                    analysis.resumeId,
+                    title,
+                  )}
+                >
+                  {title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <Link
+        className="job-match-action job-match-action--primary"
+        to={buildJobSearchPath(
+          analysis.resumeId,
+          titles[0],
+        )}
+      >
+        <Search
+          size={17}
+          aria-hidden="true"
+        />
+        {titles.length > 0
+          ? "หางานที่เหมาะกับฉัน"
+          : "หางาน"}
+      </Link>
+    </section>
+  )
+}
+
 export function BaseResultView({
   analysis,
 }: {
@@ -126,6 +206,8 @@ export function BaseResultView({
           </p>
         </div>
       </section>
+
+      <JobSuggestionsCard analysis={analysis} />
 
       <div className="analysis-insights-grid">
         <section className="analysis-section analysis-section--scores">

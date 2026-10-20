@@ -354,7 +354,7 @@ export const env = {
     promptVersion:
       process.env
         .RESUME_ANALYSIS_PROMPT_VERSION ??
-      "resume-analysis-v2.0.0",
+      "resume-analysis-v2.1.0",
 
     maxContextCharacters:
       getNumberEnv(

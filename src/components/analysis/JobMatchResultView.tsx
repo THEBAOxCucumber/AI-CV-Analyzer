@@ -27,6 +27,10 @@ import {
 } from "../../utils/dashboard-stats"
 
 import {
+  buildJobSearchPath,
+} from "../../utils/job-search"
+
+import {
   AnalysisHeader,
   AnalysisTagList,
   RecommendationsCard,
@@ -307,7 +311,7 @@ export function JobMatchResultView({
 
         <Link
           className="job-match-action"
-          to="/jobs"
+          to={buildJobSearchPath(analysis.resumeId)}
         >
           <BriefcaseBusiness size={17} aria-hidden="true" />
           วิเคราะห์งานอื่น

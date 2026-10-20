@@ -113,6 +113,13 @@ function createSuccessfulOllamaResponse() {
             recommendations: [
                 "เพิ่มตัวเลขผลลัพธ์ของโครงการและประสบการณ์",
             ],
+
+            // ซ้ำ + ช่องว่างเกิน → normalizer เหลือ 2 ตำแหน่ง
+            suggestedJobTitles: [
+                " Backend  Developer ",
+                "Node.js Developer",
+                "backend developer",
+            ],
             }),
         },
     };
@@ -160,6 +167,9 @@ function createSuccessfulJobMatchOllamaResponse() {
             ],
             recommendations: [
                 "เพิ่มประสบการณ์ Docker หากมี",
+            ],
+            suggestedJobTitles: [
+                "Backend Developer",
             ],
             }),
         },
@@ -368,6 +378,7 @@ interface AnalysisStatusRow
     attempt_count: number;
     error_code: string | null;
     error_message: string | null;
+    suggested_job_titles: string[] | null;
 }
 
 async function waitForAnalysisStatus(
@@ -398,7 +409,8 @@ async function waitForAnalysisStatus(
             job_match_score,
             attempt_count,
             error_code,
-            error_message
+            error_message,
+            suggested_job_titles
           FROM resume_analysis_runs
           WHERE id = ?
           LIMIT 1
@@ -629,6 +641,14 @@ describe(
                 expect(
                     completed.attempt_count,
                 ).toBe(1);
+
+                // ตำแหน่งที่ AI แนะนำ ผ่าน normalizer แล้ว
+                expect(
+                    completed.suggested_job_titles,
+                ).toEqual([
+                    "Backend Developer",
+                    "Node.js Developer",
+                ]);
 
                 /*
                  * Ollama ต้องถูกเรียก 1 ครั้ง

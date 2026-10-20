@@ -127,3 +127,32 @@ describe("normalizeResumeAnalysisResult — job match skills", () => {
     expect(input.jobMatch.missingSkills).toEqual(["Git"]);
   });
 });
+
+describe("normalizeResumeAnalysisResult — suggested job titles", () => {
+  it("trims, de-duplicates case-insensitively and keeps the first 3", () => {
+    const result = normalizeResumeAnalysisResult({
+      suggestedJobTitles: [
+        "  Frontend   Developer ",
+        "frontend developer",
+        "",
+        "React Developer",
+        "UX Engineer",
+        "Web Developer",
+      ],
+    }) as { suggestedJobTitles: string[] };
+
+    expect(result.suggestedJobTitles).toEqual([
+      "Frontend Developer",
+      "React Developer",
+      "UX Engineer",
+    ]);
+  });
+
+  it("leaves a non-array value for Zod to reject", () => {
+    const result = normalizeResumeAnalysisResult({
+      suggestedJobTitles: "Frontend Developer",
+    }) as { suggestedJobTitles: unknown };
+
+    expect(result.suggestedJobTitles).toBe("Frontend Developer");
+  });
+});

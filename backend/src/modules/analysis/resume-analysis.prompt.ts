@@ -37,8 +37,14 @@ function formatResumeChunks(
     .join("\n\n---\n\n");
 }
 
+/*
+ * v2.1.0 = v2.0.0 + ให้ AI แนะนำตำแหน่งงานจาก Resume (suggestedJobTitles)
+ */
 function buildResumeAnalysisPromptV2(
   input: BuildResumeAnalysisPromptInput,
+  options: {
+    suggestJobTitles?: boolean;
+  } = {},
 ): string {
   const context =
     formatResumeChunks(
@@ -203,7 +209,12 @@ Output ต้องเป็น JSON object ที่มีโครงสร้
   "summary": string,
   "strengths": string[],
   "weaknesses": string[],
-  "recommendations": string[]
+  "recommendations": string[]${
+    options.suggestJobTitles
+      ? `,
+  "suggestedJobTitles": string[]`
+      : ""
+  }
 }
 
 กฎสำหรับ summary, strengths, weaknesses และ recommendations:
@@ -211,7 +222,17 @@ Output ต้องเป็น JSON object ที่มีโครงสร้
 - ถ้ามี Job Description สามารถอ้างอิงความสอดคล้องกับงานได้
 - ใช้ภาษาไทย
 - เขียนให้เฉพาะเจาะจงและนำไปปรับ Resume ได้จริง
-
+${
+  options.suggestJobTitles
+    ? `
+กฎสำหรับ suggestedJobTitles:
+- ชื่อตำแหน่งงาน 1–3 ตำแหน่งที่เหมาะกับ Resume นี้มากที่สุด เรียงจากเหมาะที่สุด
+- ใช้ภาษาอังกฤษ สั้น แบบที่ใช้ในประกาศงาน เช่น "Frontend Developer", "Data Analyst"
+- อิงจากทักษะ ประสบการณ์ และโปรเจกต์ใน Resume เท่านั้น ไม่อิง Job Description
+- ห้ามใส่ระดับ (Senior, Junior) ชื่อบริษัท หรือสถานที่
+`
+    : ""
+}
 Resume Context:
 
 ${context}
@@ -228,6 +249,11 @@ const promptBuilders: Record<
 > = {
   "resume-analysis-v2.0.0":
     buildResumeAnalysisPromptV2,
+
+  "resume-analysis-v2.1.0": (input) =>
+    buildResumeAnalysisPromptV2(input, {
+      suggestJobTitles: true,
+    }),
 };
 
 export function buildResumeAnalysisPrompt(

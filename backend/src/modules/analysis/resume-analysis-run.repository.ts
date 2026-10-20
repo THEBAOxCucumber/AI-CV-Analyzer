@@ -60,6 +60,8 @@ interface AnalysisRunRow
   string | string[] | null
   recommendations:
   string | string[] | null
+  suggested_job_titles:
+  string | string[] | null
   prompt_version: string;
   model: string | null;
   attempt_count: number;
@@ -102,6 +104,7 @@ const analysisRunSelectColumns = `
   ar.strengths,
   ar.weaknesses,
   ar.recommendations,
+  ar.suggested_job_titles,
 
   ar.prompt_version,
   ar.model,
@@ -254,6 +257,12 @@ function mapAnalysisRun(
     recommendations:
       parseStringArray(
         row.recommendations,
+      ),
+
+    // ผลก่อน prompt v2.1.0 เป็น NULL → []
+    suggestedJobTitles:
+      parseStringArray(
+        row.suggested_job_titles,
       ),
 
     promptVersion: row.prompt_version,
@@ -474,6 +483,7 @@ export async function markAnalysisRunCompleted(
         strengths = ?,
         weaknesses = ?,
         recommendations = ?,
+        suggested_job_titles = ?,
 
         model = ?,
 
@@ -512,6 +522,9 @@ export async function markAnalysisRunCompleted(
       JSON.stringify(result.weaknesses),
       JSON.stringify(
         result.recommendations,
+      ),
+      JSON.stringify(
+        result.suggestedJobTitles ?? [],
       ),
 
       model,

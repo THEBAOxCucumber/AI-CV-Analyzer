@@ -97,6 +97,11 @@ const resumeAnalysisResultObjectSchema =
     recommendations: z.array(
       z.string().min(1),
     ),
+
+    // ตำแหน่งงาน (ภาษาอังกฤษ) ที่เหมาะกับ Resume — ใช้เป็นคำค้นในหน้าหางาน
+    suggestedJobTitles: z
+      .array(z.string().min(1).max(80))
+      .max(3),
   })
     .strict();
 

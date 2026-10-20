@@ -218,6 +218,55 @@
   cursor: not-allowed;
 }
 
+/*
+ * ตำแหน่งที่ AI แนะนำจาก Resume ที่เลือก — กดเพื่อค้นตำแหน่งนั้น
+ */
+.job-suggestion-chips {
+  margin: calc(var(--space-6) * -0.5) 0 var(--space-6);
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.job-suggestion-chips__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.job-suggestion-chip {
+  min-height: 36px;
+  padding: 0 var(--space-4);
+
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+
+  color: var(--color-navy);
+  background: var(--color-surface);
+
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.job-suggestion-chip:hover {
+  background: var(--color-surface-solid);
+}
+
+.job-suggestion-chip[aria-pressed="true"] {
+  border-color: transparent;
+
+  color: var(--color-on-brand);
+  background: var(--color-brand-solid);
+}
+
 .job-results-summary {
   margin-bottom: var(--space-4);
 

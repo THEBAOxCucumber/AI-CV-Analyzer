@@ -30,6 +30,9 @@ function createValidResult() {
     recommendations: [
       "เพิ่มผลลัพธ์เชิงปริมาณ",
     ],
+    suggestedJobTitles: [
+      "Backend Developer",
+    ],
   };
 }
 
@@ -210,6 +213,40 @@ describe(
           });
 
         expect(result.success).toBe(false);
+      },
+    );
+
+    it(
+      "rejects more than 3 suggested job titles",
+      () => {
+        const result =
+          createResumeAnalysisResultSchemaFor(
+            "BASE",
+          ).safeParse({
+            ...createValidResult(),
+            suggestedJobTitles: ["A", "B", "C", "D"],
+          });
+
+        expect(result.success).toBe(false);
+      },
+    );
+
+    it(
+      "requires suggestedJobTitles in the JSON Schema sent to Ollama",
+      () => {
+        const jsonSchema =
+          z.toJSONSchema(
+            createResumeAnalysisResultSchemaFor(
+              "BASE",
+            ),
+            {
+              target: "draft-07",
+            },
+          ) as { required?: string[] };
+
+        expect(jsonSchema.required).toContain(
+          "suggestedJobTitles",
+        );
       },
     );
 

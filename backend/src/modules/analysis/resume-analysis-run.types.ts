@@ -52,6 +52,7 @@ export interface ResumeAnalysisResult {
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
+  suggestedJobTitles: string[];
 }
 
 export interface AnalysisJobSummary {
@@ -92,6 +93,8 @@ export interface ResumeAnalysisRunRecord {
   strengths: string[]
   weaknesses: string[]
   recommendations: string[]
+  // ตำแหน่งงานที่ AI แนะนำ (ภาษาอังกฤษ) — ผลก่อน prompt v2.1.0 เป็น []
+  suggestedJobTitles: string[]
 
   
 

@@ -185,6 +185,37 @@ function resolveSkillConflicts(
   jobMatch.keywordMatches = without(keywordMatches, notInResume);
 }
 
+/*
+ * ตำแหน่งงานที่ AI แนะนำ: ตัดช่องว่าง ตัดซ้ำ (ไม่สนตัวพิมพ์) เก็บ 3 อันดับแรก
+ * ไม่ใช่ array → ปล่อยให้ Zod ปฏิเสธ
+ */
+function normalizeJobTitles(
+  list: unknown,
+): unknown {
+  if (!Array.isArray(list)) {
+    return list;
+  }
+
+  const seen = new Set<string>();
+  const titles: string[] = [];
+
+  for (const item of list) {
+    if (typeof item !== "string") {
+      continue;
+    }
+
+    const title = item.trim().replace(/\s+/g, " ");
+    const key = title.toLowerCase();
+
+    if (title && !seen.has(key)) {
+      seen.add(key);
+      titles.push(title);
+    }
+  }
+
+  return titles.slice(0, 3);
+}
+
 export function normalizeResumeAnalysisResult(
   value: unknown,
   options: {
@@ -229,6 +260,13 @@ export function normalizeResumeAnalysisResult(
     resolveSkillConflicts(jobMatch, options.resumeText);
 
     result.jobMatch = jobMatch;
+  }
+
+  if ("suggestedJobTitles" in result) {
+    result.suggestedJobTitles =
+      normalizeJobTitles(
+        result.suggestedJobTitles,
+      );
   }
 
   return result;

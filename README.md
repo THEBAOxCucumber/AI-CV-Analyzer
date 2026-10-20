@@ -13,7 +13,7 @@ AI CV Analyzer is a full-stack web application for uploading, analyzing, and man
 - Resume upload (PDF, max 5 MB) and management
 - AI resume analysis: overall score, section scores (radar chart), strengths, weaknesses, recommendations
 - Job matching against a job description: match score, matching / missing skills, keyword matches
-- Job search (Careerjet) and one-click import as a job description
+- Job search (Careerjet) and one-click import as a job description; the AI suggests 1–3 job titles from the resume, and the job page searches them automatically
 - Analysis history, insights dashboard and score trends
 - Profile and career preferences (Thai province picker)
 - **Light / Dark / System theme** and adjustable font size
@@ -172,7 +172,7 @@ npm run type-check
 npm test
 ```
 
-Current automated test suite: **184 backend tests** (25 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **45 frontend tests** (7 files).
+Current automated test suite: **191 backend tests** (26 files), including OAuth, admin, account deletion, rate-limiting, and analysis-worker integration tests, plus **47 frontend tests** (8 files).
 
 End-to-end tests (Playwright, using the installed Microsoft Edge) drive the real app: register → sign in → delete account, the hamburger menu on desktop and mobile, the public privacy page, and a full upload → AI analysis → result flow. They also run axe (WCAG 2.1 A/AA) on every page in light and dark themes; because axe cannot measure contrast over gradients, the scan swaps the background for each theme's worst-case solid color. Start Docker, Ollama, the backend and the frontend, seed the demo account (used by the signed-in accessibility scans), then:
 

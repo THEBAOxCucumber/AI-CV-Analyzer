@@ -27,6 +27,7 @@ function makeRun(
     strengths: [],
     weaknesses: [],
     recommendations: [],
+    suggestedJobTitles: [],
     promptVersion: "test",
     model: null,
     attemptCount: 1,

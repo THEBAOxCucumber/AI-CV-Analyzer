@@ -59,6 +59,9 @@ export interface ResumeAnalysisRun {
   weaknesses: string[]
   recommendations: string[]
 
+  // ตำแหน่งงานที่ AI แนะนำจาก Resume (ภาษาอังกฤษ) — ผลก่อน prompt v2.1.0 เป็น []
+  suggestedJobTitles: string[]
+
   promptVersion: string
   model: string | null
   attemptCount: number
