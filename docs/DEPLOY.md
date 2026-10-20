@@ -4,7 +4,7 @@
 git push (main) → CI (test + docker build) → Deploy: build image → GHCR (Private, latest + sha-xxxxxxx)
                                                   → VPS: docker compose pull + up -d → รอ health
 VPS: Nginx + HTTPS (certbot) → 127.0.0.1:3310 → app (เว็บ + API + worker) → mysql / redis / qdrant (volume)
-                                                                         → ollama (เฉพาะ profile ai)
+                                                                         → Ollama บนเครื่องผู้พัฒนา (Tailscale)
 ```
 
 | ค่า | ใช้ |
@@ -13,7 +13,8 @@ VPS: Nginx + HTTPS (certbot) → 127.0.0.1:3310 → app (เว็บ + API + wo
 | Port บน VPS | `127.0.0.1:3310` (แอป Lab ใช้ 3300) |
 | Image | `ghcr.io/thebaoxcucumber/ai-cv-analyzer` และ `ghcr.io/thebaoxcucumber/ai-cv-analyzer-migrator` |
 | Health | `GET /api/health` — 200 เมื่อ DB พร้อม, 503 เมื่อ DB ล่ม |
-| โดเมน | `cv.example.com` (ตัวอย่าง — เปลี่ยนเป็นของจริง) |
+| โดเมน | `learnace.tech` (+ `www`) — DNS ที่ Hostinger, HTTPS จาก certbot |
+| AI (Ollama) | เครื่อง Windows ของผู้พัฒนา (GPU) ผ่าน Tailscale — VPS RAM ไม่พอรัน `qwen3:4b-instruct` |
 
 ## ไฟล์
 
@@ -107,9 +108,83 @@ Repo → Settings → Secrets and variables → Actions
 
 จากนั้น Actions → **Deploy** → Run workflow → เปิดเว็บ `https://<โดเมน>` ตรวจว่าใช้ได้
 
+## ตั้งค่าเพิ่มเติมบนเว็บจริง
+
+### AI: ใช้ GPU เครื่องตัวเองผ่าน Tailscale
+
+VPS (RAM 3.8 GB, ไม่มี GPU) รัน `qwen3:4b-instruct` ไม่ได้ — `qwen3:1.7b` บน CPU ทดสอบแล้วไม่ผ่าน (ให้ 100/100 ทุกคน แต่งข้อมูลเอง และเกินเวลา 4 นาที)
+จึงให้ VPS เรียก Ollama บนเครื่อง Windows ผ่าน Tailscale (เครือข่ายส่วนตัว เข้ารหัส — Ollama ไม่เปิดสู่อินเทอร์เน็ต)
+
+เครื่อง Windows (PowerShell):
+
+```powershell
+winget install --id Tailscale.Tailscale -e      # แล้ว Log in ในแอป
+tailscale ip -4                                 # จด IP 100.x.y.z
+tailscale serve --bg --tcp 11434 tcp://127.0.0.1:11434
+```
+
+VPS:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+tailscale up                                    # login บัญชีเดียวกัน
+nano ~/ai-cv-analyzer/.env                      # OLLAMA_HOST=http://100.x.y.z:11434
+                                                # OLLAMA_MODEL=qwen3:4b-instruct
+                                                # OLLAMA_NUM_GPU=99   (COMPOSE_PROFILES ว่าง)
+cd ~/ai-cv-analyzer && docker compose up -d
+docker compose exec app node -e "fetch(process.env.OLLAMA_HOST+'/api/tags').then(r=>r.json()).then(j=>console.log(j.models.map(m=>m.name)))"
+```
+
+- วิเคราะห์ได้เฉพาะตอนเครื่อง Windows เปิดอยู่ (Ollama + Tailscale) และไม่ sleep — ปิดอยู่ = งานลองซ้ำ 3 ครั้งแล้วขึ้นว่าล้มเหลว ส่วนอื่นของเว็บใช้ได้ปกติ
+- embedding บนเว็บจริงใช้ Gemini (`GEMINI_API_KEY`) ไม่ต้องพึ่งเครื่อง Windows
+- เลิกให้ VPS ใช้ GPU: `tailscale serve --tcp 11434 off`
+
+### Careerjet (ค้นหางาน / Job Match)
+
+key ของ Careerjet ผูกกับ IP — ต้องเพิ่ม IP ของ VPS (`179.197.241.29`) ในบัญชี Careerjet Partner
+อาการถ้ายังไม่เพิ่ม: ค้นหางานไม่ได้ และ log มี `Careerjet API error: { status: 403, error: 'Unauthorized access from IP ...' }`
+
 ### Google sign-in
 
-เพิ่ม `https://<โดเมน>/api/auth/oauth/google/callback` ใน Google Cloud Console (ดู `backend/docs/OAUTH_SETUP.md`)
+Google Cloud Console → OAuth client:
+
+- Authorized JavaScript origins: `https://learnace.tech`
+- Authorized redirect URIs: `https://learnace.tech/api/auth/oauth/google/callback`
+- (คง `http://localhost:5173` ไว้สำหรับ dev)
+
+Google Auth Platform → **Branding**: App name, support email, home page `https://learnace.tech`, privacy policy `https://learnace.tech/privacy`, authorized domain `learnace.tech` — **ไม่ใส่โลโก้** (ใส่แล้ว Google บังคับตรวจหลายวัน) → **Audience** → Publish app
+ขอแค่ `openid email profile` จึงไม่ต้องรอ Google ตรวจสอบ — รายละเอียดเพิ่ม: `backend/docs/OAUTH_SETUP.md`
+
+### ตั้งผู้ดูแลระบบ (ADMIN)
+
+สมัครบัญชีบนเว็บจริงก่อน (หน้า admin ใช้อีเมล + รหัสผ่าน) แล้วบน VPS:
+
+```bash
+cd ~/ai-cv-analyzer
+docker compose exec mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" -e "UPDATE users SET role = \"ADMIN\" WHERE email = \"you@example.com\"; SELECT id, email, role FROM users WHERE email = \"you@example.com\";"'
+```
+
+หน้า admin: `https://learnace.tech/admin/` — คนต่อไปให้ admin ใช้ **Promote by email** ในหน้า admin ได้เลย
+
+### SSH: ใช้ key เท่านั้น
+
+ตั้ง key ของเครื่องตัวเองก่อน (`ssh-keygen` → ส่ง `.pub` ขึ้น `~/.ssh/authorized_keys` → ทดสอบ `ssh -o PasswordAuthentication=no ...` ผ่าน) แล้วบน VPS:
+
+```bash
+cat > /etc/ssh/sshd_config.d/00-hardening.conf <<'EOF'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin prohibit-password
+EOF
+sshd -t && systemctl reload ssh
+```
+
+ชื่อไฟล์ขึ้นต้น `00-` ให้ชนะ `50-cloud-init.conf` (sshd ใช้ค่าแรกที่เจอ) — เข้าไม่ได้: hPanel → VPS → Browser terminal
+
+### แจ้งเตือนเมื่อเว็บล่ม
+
+UptimeRobot (ฟรี): HTTP(s) monitor → `https://learnace.tech/api/health` ทุก 5 นาที → แจ้งทางอีเมล
+DB ล่ม = health ตอบ 503 = นับเป็น Down ด้วย (ไม่ครอบคลุม AI — เครื่อง Windows ปิดยังขึ้น Up)
 
 ## สำรองและกู้คืนข้อมูล
 
