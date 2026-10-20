@@ -11,10 +11,18 @@
 
 name: ai-cv-analyzer
 
+# log ของทุก container: ไม่เกิน 10MB × 3 ไฟล์ — กันดิสก์ VPS เต็ม
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   mysql:
     image: mysql:8.4
     restart: unless-stopped
+    logging: *logging
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?ตั้ง MYSQL_ROOT_PASSWORD ใน .env}
       MYSQL_DATABASE: ${DB_NAME:-ai_resume_analyzer}
@@ -36,6 +44,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    logging: *logging
     volumes:
       - redis_data:/data
     healthcheck:
@@ -47,6 +56,7 @@ services:
   qdrant:
     image: qdrant/qdrant:v1.18.3
     restart: unless-stopped
+    logging: *logging
     volumes:
       - qdrant_storage:/qdrant/storage
     # image ไม่มี curl → ทดสอบเปิด TCP ด้วย bash
@@ -60,6 +70,7 @@ services:
   migrate:
     image: ${MIGRATOR_IMAGE:-ai-cv-analyzer-migrator:local}
     restart: "no"
+    logging: *logging
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
@@ -73,6 +84,7 @@ services:
   app:
     image: ${APP_IMAGE:-ai-cv-analyzer:local}
     restart: unless-stopped
+    logging: *logging
     env_file:
       - .env
     environment:
@@ -106,6 +118,7 @@ services:
     image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
     profiles: ["ai"]
     restart: unless-stopped
+    logging: *logging
     volumes:
       - ollama_models:/root/.ollama
 

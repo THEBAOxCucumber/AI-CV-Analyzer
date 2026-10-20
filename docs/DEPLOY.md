@@ -28,6 +28,7 @@ VPS: Nginx + HTTPS (certbot) → 127.0.0.1:3310 → app (เว็บ + API + wo
 | `.github/workflows/deploy.yml` | push image ไป GHCR + deploy ผ่าน SSH (ไม่ตั้ง Secrets = ข้าม) |
 | `deploy/make-env.sh` | สร้าง `.env` บน VPS สุ่มรหัสผ่านให้ |
 | `deploy/nginx.conf` | reverse proxy ของโดเมนนี้ |
+| `deploy/nginx-security.conf` | security headers + ซ่อนเลขเวอร์ชัน Nginx (วางใน `/etc/nginx/conf.d/`) |
 | `deploy/backup.sh` | สำรอง MySQL + ไฟล์ PDF + vector (Qdrant) เก็บ 14 วัน |
 | `deploy/restore.sh` | กู้คืนจากชุดที่เลือก (สำรองสถานะปัจจุบันให้ก่อนเสมอ) |
 
@@ -152,3 +153,30 @@ bash restore.sh 20261020-200000    # พิมพ์ restore เพื่อย�
 ```
 
 สคริปต์ backup สถานะปัจจุบันให้อีกชุดก่อนกู้คืนเสมอ — เลือกชุดผิดก็กู้กลับได้
+
+## Security headers (Nginx)
+
+ไฟล์ site ของ Nginx บน VPS ถูก certbot แก้เพิ่ม HTTPS ไปแล้ว — **อย่า copy `nginx.conf` ทับ** ให้ติดตั้ง header เป็นไฟล์แยกแทน:
+
+```bash
+cd ~/ai-cv-analyzer
+curl -fsSLO https://raw.githubusercontent.com/THEBAOxCucumber/AI-CV-Analyzer/main/deploy/nginx-security.conf
+cp nginx-security.conf /etc/nginx/conf.d/ai-cv-security.conf
+nginx -t && systemctl reload nginx
+curl -sI https://learnace.tech | grep -iE 'server|strict|x-frame|referrer|x-content|permissions'
+```
+
+ได้ HSTS, `X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options`, `Permissions-Policy` และ `Server: nginx` (ไม่มีเลขเวอร์ชัน) — หน้า `/admin` ใช้ค่าที่แอปตั้งเอง (CSP เข้มกว่า)
+
+## อัปเดต docker-compose.yml บน VPS
+
+workflow Deploy อัปเดตเฉพาะ **image** — ไฟล์ `docker-compose.yml` บน VPS ไม่เปลี่ยนตาม เมื่อแก้ไฟล์นี้ใน repo ต้องดึงไปเอง:
+
+```bash
+cd ~/ai-cv-analyzer
+cp docker-compose.yml docker-compose.yml.bak
+curl -fsSLO https://raw.githubusercontent.com/THEBAOxCucumber/AI-CV-Analyzer/main/docker-compose.yml
+docker compose config -q && docker compose up -d
+```
+
+`up -d` สร้าง container ที่ config เปลี่ยนใหม่ (เว็บสะดุดราว 20–30 วินาที) ข้อมูลใน volume ไม่หาย — ห้ามใช้ `down -v`
