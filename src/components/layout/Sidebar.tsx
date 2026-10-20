@@ -66,6 +66,12 @@ const mainNavigation: NavigationItem[] = [
     label: "อัปโหลด Resume",
     icon: Upload,
   },
+  // ต่อจากอัปโหลด: อัปโหลดแล้วหางานมาเทียบ (Job Match) ได้ทันที
+  {
+    to: "/jobs",
+    label: "หางาน",
+    icon: BriefcaseBusiness,
+  },
   {
     to: "/history",
     label: "ประวัติ",
@@ -75,11 +81,6 @@ const mainNavigation: NavigationItem[] = [
     to: "/insights",
     label: "ข้อมูลเชิงลึก",
     icon: BarChart3,
-  },
-  {
-    to: "/jobs",
-    label: "หางาน",
-    icon: BriefcaseBusiness,
   },
 ]
 
