@@ -98,15 +98,16 @@
           <!-- เวลาเซสชันที่เหลือ — กดเพื่อต่ออายุ -->
           <button id="session-button" type="button" class="session-pill" title="กดเพื่อต่ออายุเซสชัน">
             <span data-icon="refresh"></span>
+            <span class="sr-only">ต่ออายุ</span>
             <span class="session-pill__label">เซสชัน</span>
             <strong id="session-time">--:--</strong>
           </button>
 
-          <div class="theme-switch" role="group" aria-label="ธีม">
+          <fieldset class="theme-switch" aria-label="ธีม">
             <button type="button" data-theme-option="light" title="สว่าง"><span data-icon="sun"></span></button>
             <button type="button" data-theme-option="dark" title="มืด"><span data-icon="moon"></span></button>
             <button type="button" data-theme-option="system" title="ตามระบบ"><span data-icon="monitor"></span></button>
-          </div>
+          </fieldset>
 
           <div class="me">
             <span id="admin-avatar" class="avatar avatar--light" aria-hidden="true"></span>
@@ -146,10 +147,10 @@
               <h2 class="section-title">แนวโน้ม</h2>
               <p class="muted small">นับตามวันที่สร้างงาน (เวลาไทย)</p>
             </div>
-            <div class="segmented" role="group" aria-label="ช่วงเวลา">
+            <fieldset class="segmented" aria-label="ช่วงเวลา">
               <button type="button" data-days="7" aria-pressed="true">7 วัน</button>
               <button type="button" data-days="30" aria-pressed="false">30 วัน</button>
-            </div>
+            </fieldset>
           </div>
 
           <div class="charts">
@@ -330,6 +331,6 @@
       </main>
     </div>
 
-    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <output id="toast" class="toast" aria-live="polite" hidden></output>
   </body>
 </html>

@@ -102,8 +102,8 @@ function getTheme() {
 }
 
 function applyTheme(theme) {
-  if (theme === "system") document.documentElement.removeAttribute("data-theme");
-  else document.documentElement.setAttribute("data-theme", theme);
+  if (theme === "system") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = theme;
 
   for (const button of document.querySelectorAll("[data-theme-option]")) {
     button.setAttribute("aria-pressed", String(button.dataset.themeOption === theme));
@@ -128,21 +128,26 @@ applyTheme(getTheme());
 /*
  * สร้าง element: el("td", { className: "num" }, "123")
  */
+function isBlank(value) {
+  return value === undefined || value === null || value === false;
+}
+
+function setProp(node, key, value) {
+  if (key === "className") node.className = value;
+  else if (key === "dataset") Object.assign(node.dataset, value);
+  else if (key.startsWith("on")) node.addEventListener(key.slice(2).toLowerCase(), value);
+  else node.setAttribute(key, value === true ? "" : String(value));
+}
+
 function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
 
   for (const [key, value] of Object.entries(props)) {
-    if (value === undefined || value === null || value === false) continue;
-
-    if (key === "className") node.className = value;
-    else if (key === "dataset") Object.assign(node.dataset, value);
-    else if (key.startsWith("on")) node.addEventListener(key.slice(2).toLowerCase(), value);
-    else node.setAttribute(key, value === true ? "" : String(value));
+    if (!isBlank(value)) setProp(node, key, value);
   }
 
   for (const child of children.flat()) {
-    if (child === null || child === undefined || child === false) continue;
-    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+    if (!isBlank(child)) node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
 
   return node;
@@ -283,8 +288,8 @@ function renderSession() {
   const time = formatSessionTime(remaining);
   const button = $("session-button");
 
+  // ชื่อที่ screen reader อ่านมาจากข้อความในปุ่ม ("ต่ออายุ เซสชัน 14:32") — ไม่ใช้ aria-label (WCAG 2.5.3)
   $("session-time").textContent = time;
-  button.setAttribute("aria-label", `ต่ออายุเซสชัน (เหลือ ${time})`);
   button.classList.toggle("session-pill--warning", remaining <= SESSION_WARNING_SECONDS);
 
   if (remaining <= 0) logout("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
@@ -420,13 +425,13 @@ async function restoreSession() {
 
 /* ---------- routing (#tab) ---------- */
 
-const TABS = ["overview", "status", "users", "analyses", "audit"];
+const TABS = new Set(["overview", "status", "users", "analyses", "audit"]);
 
 function route() {
   if (!state.me) return;
 
   const hash = location.hash.slice(1);
-  state.tab = TABS.includes(hash) ? hash : "overview";
+  state.tab = TABS.has(hash) ? hash : "overview";
 
   for (const tab of TABS) {
     $(`tab-${tab}`).hidden = tab !== state.tab;
@@ -451,7 +456,7 @@ function route() {
  * เปิดซ้ำ = เห็นข้อมูลเดิมระหว่างโหลดใหม่ ไม่กระพริบ
  */
 function skeletonBar(size = "") {
-  return el("span", { className: `skeleton${size ? ` skeleton--${size}` : ""}`, "aria-hidden": "true" });
+  return el("span", { className: size ? `skeleton skeleton--${size}` : "skeleton", "aria-hidden": "true" });
 }
 
 function skeletonCards(count, compact = false) {
@@ -532,7 +537,7 @@ function statCard(label, value, hint, options = {}) {
     "article",
     { className: iconName ? "card" : "card card--compact" },
     iconName
-      ? el("div", { className: "card__top" }, el("span", { className: `card__icon${tone ? ` card__icon--${tone}` : ""}` }, icon(iconName)))
+      ? el("div", { className: "card__top" }, el("span", { className: tone ? `card__icon card__icon--${tone}` : "card__icon" }, icon(iconName)))
       : null,
     el("span", { className: "card__label" }, label),
     el("strong", { className: "card__value" }, value),
@@ -621,10 +626,10 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const CHART_HEIGHT = 200;
 const CHART_MARGIN = { top: 14, right: 44, bottom: 24, left: 40 };
 
-function svgEl(tag, attrs = {}, text) {
+function svgEl(tag, attrs, text) {
   const node = document.createElementNS(SVG_NS, tag);
 
-  for (const [key, value] of Object.entries(attrs)) {
+  for (const [key, value] of Object.entries(attrs ?? {})) {
     if (value !== undefined && value !== null) node.setAttribute(key, String(value));
   }
 
@@ -648,7 +653,7 @@ function formatDay(isoDate) {
  * integer: ขั้นอย่างน้อย 1 (จำนวนงานไม่มี 0.25)
  */
 function niceMax(value, { integer = false } = {}) {
-  if (!(value > 0)) return 4;
+  if (!Number.isFinite(value) || value <= 0) return 4;
 
   const rawStep = value / 4;
   const magnitude = 10 ** Math.floor(Math.log10(rawStep));
@@ -936,7 +941,7 @@ function renderTrends() {
   // แกนเป็นนาที (ตัวเลขกลมกว่าวินาที) — tooltip ยังบอกละเอียดเป็นนาที+วินาที
   renderLineChart($("chart-duration"), series, {
     valueOf: (point) => (point.avgDurationSeconds === null ? null : point.avgDurationSeconds / 60),
-    yMax: (values) => niceMax(Math.max(...values.filter((value) => value !== null))),
+    yMax: (values) => niceMax(Math.max(...values.filter((value) => typeof value === "number"))),
     formatY: (value) => formatMinutes(value),
     formatValue: (value) => (value === null ? "—" : formatDuration(Math.round(value * 60))),
     label: "เวลาเฉลี่ย",
@@ -1050,7 +1055,7 @@ function emptyRow(columns, text) {
 function smallButton(iconName, label, props = {}) {
   return el(
     "button",
-    { type: "button", ...props, className: `button button--small${props.className ? ` ${props.className}` : ""}` },
+    { type: "button", ...props, className: props.className ? `button button--small ${props.className}` : "button button--small" },
     icon(iconName),
     label,
   );
