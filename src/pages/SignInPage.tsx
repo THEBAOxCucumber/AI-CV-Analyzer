@@ -214,16 +214,13 @@ export function SignInPage() {
           </div>
 
           {notice && !error && (
-            <div
-              className="sign-in__notice"
-              role="status"
-            >
+            <output className="sign-in__notice">
               <CheckCircle2
                 size={18}
                 aria-hidden="true"
               />
               {notice}
-            </div>
+            </output>
           )}
 
           <form

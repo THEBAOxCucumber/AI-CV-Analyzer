@@ -135,9 +135,9 @@ export function applyTheme(
   const root = document.documentElement
 
   if (theme === "system") {
-    root.removeAttribute("data-theme")
+    delete root.dataset.theme
   } else {
-    root.setAttribute("data-theme", theme)
+    root.dataset.theme = theme
   }
 }
 

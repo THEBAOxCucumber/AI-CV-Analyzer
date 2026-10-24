@@ -79,10 +79,40 @@ function clampRatio(value: number): number {
   return Math.min(1, Math.max(0, value))
 }
 
+function getLabelAnchor(
+  cos: number,
+): "start" | "end" | "middle" {
+  if (cos > 0.25) {
+    return "start"
+  }
+
+  if (cos < -0.25) {
+    return "end"
+  }
+
+  return "middle"
+}
+
+/*
+ * ป้ายบนสุดยกขึ้น (มี 2 บรรทัด)
+ * ป้ายล่างดันลง
+ */
+function getLabelOffsetY(sin: number): number {
+  if (sin < -0.5) {
+    return -18
+  }
+
+  if (sin > 0.5) {
+    return 12
+  }
+
+  return -4
+}
+
 export function RadarChart({
   axes,
   ariaLabel,
-}: RadarChartProps) {
+}: Readonly<RadarChartProps>) {
   const [activeIndex, setActiveIndex] =
     useState<number | null>(null)
 
@@ -106,7 +136,8 @@ export function RadarChart({
       <svg
         className="radar-chart__svg"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        role="group"
+        // <fieldset> ใช้ใน SVG ไม่ได้ / role="img" จะซ่อนจุดข้อมูลที่โฟกัสได้ข้างใน
+        role="group" // NOSONAR
         aria-label={ariaLabel}
       >
         <g aria-hidden="true">
@@ -174,23 +205,8 @@ export function RadarChart({
               LABEL_RADIUS / RADIUS,
             )
 
-            const anchor =
-              point.cos > 0.25
-                ? "start"
-                : point.cos < -0.25
-                  ? "end"
-                  : "middle"
-
-            /*
-             * ป้ายบนสุดยกขึ้น (มี 2 บรรทัด)
-             * ป้ายล่างดันลง
-             */
-            const offsetY =
-              point.sin < -0.5
-                ? -18
-                : point.sin > 0.5
-                  ? 12
-                  : -4
+            const anchor = getLabelAnchor(point.cos)
+            const offsetY = getLabelOffsetY(point.sin)
 
             return (
               <text

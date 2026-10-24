@@ -51,9 +51,9 @@ const MATCH_LEVEL: Record<ScoreTone, string> = {
  */
 function MatchScoreCard({
   score,
-}: {
+}: Readonly<{
   score: number | null
-}) {
+}>) {
   const tone =
     score === null
       ? null
@@ -84,10 +84,10 @@ function MatchScoreCard({
 function SkillCoverage({
   matched,
   missing,
-}: {
+}: Readonly<{
   matched: number
   missing: number
-}) {
+}>) {
   const total = matched + missing
 
   if (total === 0) {
@@ -134,9 +134,9 @@ function SkillCoverage({
  */
 function CopyAllButton({
   items,
-}: {
+}: Readonly<{
   items: string[]
-}) {
+}>) {
   const [copied, setCopied] =
     useState(false)
 
@@ -179,9 +179,9 @@ function CopyAllButton({
 
 export function JobMatchResultView({
   analysis,
-}: {
+}: Readonly<{
   analysis: ResumeAnalysisRun
-}) {
+}>) {
   const jobMatch = analysis.jobMatch
 
   const matchScore =
@@ -244,8 +244,7 @@ export function JobMatchResultView({
               <ThumbsUp size={20} />
 
               <h3>
-                ทักษะที่ตรง
-                <span className="job-match-count">
+                {"ทักษะที่ตรง"}<span className="job-match-count">
                   {matchedCount}
                 </span>
               </h3>
@@ -263,8 +262,7 @@ export function JobMatchResultView({
               <ThumbsDown size={20} />
 
               <h3>
-                ทักษะที่ยังขาด
-                <span className="job-match-count">
+                {"ทักษะที่ยังขาด"}<span className="job-match-count">
                   {missingCount}
                 </span>
               </h3>

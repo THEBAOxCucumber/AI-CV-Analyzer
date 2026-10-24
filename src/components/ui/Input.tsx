@@ -27,7 +27,7 @@ export function Input({
   type,
   className = "",
   ...props
-}: InputProps) {
+}: Readonly<InputProps>) {
   const [isVisible, setIsVisible] =
     useState(false)
 

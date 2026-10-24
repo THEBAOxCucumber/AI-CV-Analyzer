@@ -32,11 +32,12 @@ export function useTheme(): {
     getSystemPrefersDark,
   )
 
+  const systemTheme: ResolvedTheme =
+    prefersDark ? "dark" : "light"
+
   const resolvedTheme: ResolvedTheme =
     theme === "system"
-      ? prefersDark
-        ? "dark"
-        : "light"
+      ? systemTheme
       : theme
 
   /*

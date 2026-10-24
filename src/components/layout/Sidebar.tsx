@@ -131,12 +131,12 @@ export function Sidebar({
   onToggleCollapsed,
   mobileOpen,
   onCloseMobile,
-}: {
+}: Readonly<{
   collapsed: boolean
   onToggleCollapsed: () => void
   mobileOpen: boolean
   onCloseMobile: () => void
-}) {
+}>) {
   const {
     user,
     logout,
@@ -319,7 +319,6 @@ export function Sidebar({
               }
               onClick={handleExtendSession}
               disabled={isExtending}
-              aria-label={`ต่ออายุเซสชัน (เหลือ ${formatSessionTime(sessionRemainingSeconds)})`}
               title="กดเพื่อต่ออายุเซสชัน"
             >
               <RotateCw
@@ -327,6 +326,9 @@ export function Sidebar({
                 aria-hidden="true"
                 className={isExtending ? "session-spin" : undefined}
               />
+
+              {/* ชื่อที่ screen reader อ่าน = "ต่ออายุ เซสชัน 14:32" — มีข้อความที่ตาเห็นครบ (WCAG 2.5.3) */}
+              <span className="sr-only">ต่ออายุ</span>
 
               <span className="sidebar__session-label">เซสชัน</span>
 

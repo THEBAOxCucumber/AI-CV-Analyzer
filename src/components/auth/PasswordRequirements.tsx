@@ -21,9 +21,9 @@ const LEVEL_LABELS = ["", "อ่อน", "พอใช้", "ดี", "คร�
 
 export function PasswordRequirements({
   password,
-}: {
+}: Readonly<{
   password: string
-}) {
+}>) {
   const results = RULES.map((rule) => ({
     label: rule.label,
     passed: rule.test(password),

@@ -10,6 +10,14 @@ import type {
   ResumeAnalysisRun,
 } from "../types/analysis"
 
+import type {
+  Resume,
+} from "../types/resume"
+
+import {
+  getResumes,
+} from "./resume.service"
+
 export function startBaseAnalysis(
   resumeId: number,
 ): Promise<
@@ -84,6 +92,44 @@ export function getResumeAnalysisHistory(
   >(
     `/resumes/${resumeId}/analyses?limit=${limit}`,
   )
+}
+
+/*
+ * ผลวิเคราะห์ของทุก Resume ของผู้ใช้ เรียงใหม่สุดก่อน (Dashboard / Insights)
+ */
+export async function getAllResumeAnalyses(): Promise<{
+  resumes: Resume[]
+  analyses: ResumeAnalysisRun[]
+}> {
+  const resumeResponse =
+    await getResumes()
+
+  const resumes =
+    resumeResponse.data.resumes
+
+  const historyResponses =
+    await Promise.all(
+      resumes.map((resume) =>
+        getResumeAnalysisHistory(
+          resume.id,
+          100,
+        ),
+      ),
+    )
+
+  const analyses =
+    historyResponses
+      .flatMap(
+        (response) =>
+          response.data.analyses,
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime(),
+      )
+
+  return { resumes, analyses }
 }
 
 export function retryAnalysis(

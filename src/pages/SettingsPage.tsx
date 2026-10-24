@@ -74,7 +74,7 @@ import {
 
 import {
   getFontSize,
-  setFontSize,
+  setFontSize as saveFontSize,
   type FontSize,
   type Theme,
 } from "../utils/appearance"
@@ -171,9 +171,7 @@ function toNullable(
 ): string | null {
   const trimmed = value.trim()
 
-  return trimmed
-    ? trimmed
-    : null
+  return trimmed || null
 }
 
 function toForm(
@@ -212,10 +210,10 @@ function getErrorMessage(
 function SectionTitle({
   number,
   title,
-}: {
+}: Readonly<{
   number: number
   title: string
-}) {
+}>) {
   return (
     <div className="settings-card__title">
       <span aria-hidden="true">
@@ -236,7 +234,7 @@ function SegmentedControl<T extends string>({
   options,
   value,
   onChange,
-}: {
+}: Readonly<{
   legend: string
   name: string
   options: Array<{
@@ -246,7 +244,7 @@ function SegmentedControl<T extends string>({
   }>
   value: T
   onChange: (value: T) => void
-}) {
+}>) {
   return (
     <fieldset className="segmented-field">
       <legend className="settings-subheading">
@@ -291,22 +289,33 @@ function SegmentedControl<T extends string>({
 function Message({
   type,
   children,
-}: {
+}: Readonly<{
   type: "error" | "success"
   children: ReactNode
-}) {
+}>) {
   const Icon = type === "error"
     ? CircleAlert
     : CheckCircle2
 
-  return (
-    <p
-      className={`settings-message settings-message--${type}`}
-      role={type === "error" ? "alert" : "status"}
-    >
+  const className =
+    `settings-message settings-message--${type}`
+
+  const content = (
+    <>
       <Icon size={16} aria-hidden="true" />
       <span>{children}</span>
+    </>
+  )
+
+  // error = alert (อ่านทันที), success = <output> (role status ในตัว)
+  return type === "error" ? (
+    <p className={className} role="alert">
+      {content}
     </p>
+  ) : (
+    <output className={className}>
+      {content}
+    </output>
   )
 }
 
@@ -328,11 +337,11 @@ function SaveButton({
   isSaving,
   isSaved,
   disabled,
-}: {
+}: Readonly<{
   isSaving: boolean
   isSaved: boolean
   disabled: boolean
-}) {
+}>) {
   let label = "บันทึก"
 
   if (isSaving) {
@@ -372,7 +381,7 @@ function PasswordField({
   minLength,
   maxLength,
   hint,
-}: {
+}: Readonly<{
   label: string
   value: string
   onChange: (value: string) => void
@@ -380,7 +389,7 @@ function PasswordField({
   minLength?: number
   maxLength?: number
   hint?: string
-}) {
+}>) {
   const [isVisible, setIsVisible] =
     useState(false)
 
@@ -438,9 +447,9 @@ function SettingsSkeleton() {
         </p>
       </header>
 
-      <p className="sr-only" role="status">
+      <output className="sr-only">
         กำลังโหลดข้อมูล...
-      </p>
+      </output>
 
       <div
         className="settings-card"
@@ -537,7 +546,7 @@ export function SettingsPage() {
       message: string
     } | null>(null)
 
-  const [fontSize, setFontSizeState] =
+  const [fontSize, setFontSize] =
     useState<FontSize>(getFontSize)
 
   const {
@@ -856,8 +865,8 @@ export function SettingsPage() {
   function handleFontSizeChange(
     size: FontSize,
   ) {
+    saveFontSize(size)
     setFontSize(size)
-    setFontSizeState(size)
   }
 
   async function handleExportData() {

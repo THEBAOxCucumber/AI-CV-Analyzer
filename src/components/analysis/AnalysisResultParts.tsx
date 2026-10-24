@@ -22,9 +22,9 @@ import {
  */
 function CopyButton({
   text,
-}: {
+}: Readonly<{
   text: string
-}) {
+}>) {
   const [copied, setCopied] =
     useState(false)
 
@@ -66,12 +66,12 @@ export function AnalysisHeader({
   title,
   description,
   status,
-}: {
+}: Readonly<{
   eyebrow: string
   title: string
   description?: ReactNode
   status: "COMPLETED" | "FAILED"
-}) {
+}>) {
   return (
     <header className="analysis-header">
       <div>
@@ -110,11 +110,11 @@ export function AnalysisStateMessage({
   title,
   message,
   isLoading = false,
-}: {
+}: Readonly<{
   title: string
   message?: string
   isLoading?: boolean
-}) {
+}>) {
   return (
     <main className="analysis-page">
       <div
@@ -145,11 +145,11 @@ export function AnalysisTagList({
   items,
   variant,
   emptyText,
-}: {
+}: Readonly<{
   items: string[] | undefined
   variant?: "matched" | "missing"
   emptyText: string
-}) {
+}>) {
   if (!items || items.length === 0) {
     return (
       <p className="analysis-empty">
@@ -179,10 +179,10 @@ export function AnalysisTagList({
 export function RecommendationsCard({
   recommendations,
   description,
-}: {
+}: Readonly<{
   recommendations: string[]
   description: string
-}) {
+}>) {
   return (
     <section className="recommendations-card">
       <div className="recommendations-card__heading">

@@ -50,8 +50,8 @@ function getTokenExpirationMs(
 
     const normalized =
       payloadPart
-        .replace(/-/g, "+")
-        .replace(/_/g, "/")
+        .replaceAll("-", "+")
+        .replaceAll("_", "/")
 
     const payload =
       JSON.parse(
@@ -91,7 +91,7 @@ function getRemainingSeconds(
 
 export function AuthProvider({
   children,
-}: AuthProviderProps) {
+}: Readonly<AuthProviderProps>) {
   const [user, setUser] =
     useState<User | null>(null)
 

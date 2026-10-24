@@ -40,9 +40,9 @@ function GoogleLogo() {
  */
 export function OAuthButtons({
   dividerLabel = "หรือ",
-}: {
+}: Readonly<{
   dividerLabel?: string
-}) {
+}>) {
   const [enabled, setEnabled] =
     useState<Record<OAuthProvider, boolean> | null>(
       null,

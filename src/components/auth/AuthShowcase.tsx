@@ -30,10 +30,10 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 export function AuthShowcase({
   title,
   description,
-}: {
+}: Readonly<{
   title: ReactNode
   description: ReactNode
-}) {
+}>) {
   const { resolvedTheme } = useTheme()
 
   return (

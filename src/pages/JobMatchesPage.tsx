@@ -323,7 +323,7 @@ const [
 
   function handleSubmit(
     event:
-      React.FormEvent<HTMLFormElement>,
+      React.SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault()
 
@@ -589,17 +589,14 @@ const [
 
       {!hasKeywords &&
         !suggestionsReady && (
-          <p
-            className="job-loading-note"
-            role="status"
-          >
+          <output className="job-loading-note">
             <LoaderCircle
               className="job-spinner"
               size={16}
               aria-hidden="true"
             />
             กำลังหาตำแหน่งงานที่เหมาะกับ Resume…
-          </p>
+          </output>
         )}
 
       {!hasKeywords &&
@@ -694,17 +691,14 @@ const [
 
       {isLoading && (
         <>
-          <p
-            className="job-loading-note"
-            role="status"
-          >
+          <output className="job-loading-note">
             <LoaderCircle
               className="job-spinner"
               size={16}
               aria-hidden="true"
             />
             กำลังค้นหางานจาก Careerjet — อาจใช้เวลาถึง 15 วินาที
-          </p>
+          </output>
 
           <section
             className="job-list"

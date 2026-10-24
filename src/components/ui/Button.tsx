@@ -30,7 +30,7 @@ export function Button({
   disabled,
   className = "",
   ...props
-}: ButtonProps) {
+}: Readonly<ButtonProps>) {
   const classes = [
     "button",
     `button--${variant}`,

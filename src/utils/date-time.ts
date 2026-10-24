@@ -1,7 +1,9 @@
 const THAI_TIME_ZONE = "Asia/Bangkok"
 
+type DateInput = string | number | Date
+
 function parseDate(
-  value: string | number | Date,
+  value: DateInput,
 ): Date {
   if (value instanceof Date) {
     return value
@@ -11,7 +13,7 @@ function parseDate(
 }
 
 export function formatThaiDateTime(
-  value: string | number | Date,
+  value: DateInput,
 ): string {
   const date = parseDate(value)
 
@@ -35,7 +37,7 @@ export function formatThaiDateTime(
 }
 
 export function formatThaiDate(
-  value: string | number | Date,
+  value: DateInput,
 ): string {
   const date = parseDate(value)
 
@@ -55,7 +57,7 @@ export function formatThaiDate(
 }
 
 export function formatThaiTime(
-  value: string | number | Date,
+  value: DateInput,
 ): string {
   const date = parseDate(value)
 
@@ -76,7 +78,7 @@ export function formatThaiTime(
 }
 
 export function formatThaiShortDate(
-  value: string | number | Date,
+  value: DateInput,
 ): string {
   const date = parseDate(value)
 
@@ -99,7 +101,7 @@ export function formatThaiShortDate(
  * ใช้เทียบข้อมูลรายเดือน
  */
 export function getThaiMonthKey(
-  value: string | number | Date,
+  value: DateInput,
 ): string {
   const parts =
     new Intl.DateTimeFormat(

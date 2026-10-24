@@ -27,7 +27,6 @@ import {
 
 import {
   deleteResume,
-  getResumes,
 } from "../services/resume.service"
 
 import type {
@@ -35,7 +34,7 @@ import type {
 } from "../types/resume"
 
 import {
-  getResumeAnalysisHistory,
+  getAllResumeAnalyses,
 } from "../services/analysis.service"
 
 import type {
@@ -73,9 +72,9 @@ import "../styles/pages/DashboardPage.css"
  */
 function DashboardSkeletonRows({
   count,
-}: {
+}: Readonly<{
   count: number
-}) {
+}>) {
   return (
     <div aria-busy="true" aria-label="กำลังโหลดข้อมูล">
       {Array.from({ length: count }, (_, index) => (
@@ -124,10 +123,10 @@ function getStatusLabel(
 function TrendText({
   value,
   suffix,
-}: {
+}: Readonly<{
   value: number
   suffix: string
-}) {
+}>) {
   const isDown = value < 0
 
   return (
@@ -173,38 +172,10 @@ export function DashboardPage() {
 
     async function loadDashboard() {
       try {
-        const resumeResponse =
-          await getResumes()
-
-        const loadedResumes =
-          resumeResponse.data.resumes
-
-        const historyResponses =
-          await Promise.all(
-            loadedResumes.map(
-              (resume) =>
-                getResumeAnalysisHistory(
-                  resume.id,
-                  100,
-                ),
-            ),
-          )
-
-        const loadedAnalyses =
-          historyResponses
-            .flatMap(
-              (response) =>
-                response.data.analyses,
-            )
-            .sort(
-              (a, b) =>
-                new Date(
-                  b.createdAt,
-                ).getTime() -
-                new Date(
-                  a.createdAt,
-                ).getTime(),
-            )
+        const {
+          resumes: loadedResumes,
+          analyses: loadedAnalyses,
+        } = await getAllResumeAnalyses()
 
         if (!cancelled) {
           setResumes(
@@ -335,8 +306,7 @@ export function DashboardPage() {
           <span className="stat-card__label">
             <span className="stat-card__icon">
               <FileCheck2 size={18} />
-            </span>
-            Resume ที่วิเคราะห์แล้ว
+            </span>{"Resume ที่วิเคราะห์แล้ว"}
           </span>
 
           <strong className="stat-card__value">
@@ -364,8 +334,7 @@ export function DashboardPage() {
           <span className="stat-card__label">
             <span className="stat-card__icon">
               <Gauge size={18} />
-            </span>
-            คะแนน Resume เฉลี่ย
+            </span>{"คะแนน Resume เฉลี่ย"}
           </span>
 
           <strong className="stat-card__value">
@@ -394,8 +363,7 @@ export function DashboardPage() {
           <span className="stat-card__label">
             <span className="stat-card__icon">
               <Briefcase size={18} />
-            </span>
-            Job Match
+            </span>{"Job Match"}
           </span>
 
           <strong className="stat-card__value">
@@ -427,13 +395,17 @@ export function DashboardPage() {
             การวิเคราะห์ล่าสุด
           </h2>
 
-          {isLoading ? (
+          {isLoading && (
             <DashboardSkeletonRows count={3} />
-          ) : recentAnalyses.length === 0 ? (
+          )}
+
+          {!isLoading && recentAnalyses.length === 0 && (
             <p className="dashboard-card__empty">
               ยังไม่มีผลการวิเคราะห์
             </p>
-          ) : (
+          )}
+
+          {!isLoading && recentAnalyses.length > 0 && (
             <ul className="recent-analysis__list">
               {recentAnalyses.map(
                 (analysis) => {
@@ -505,7 +477,7 @@ export function DashboardPage() {
               ทักษะที่ตรงกับงานบ่อยที่สุด
             </h2>
 
-            {isLoading ? (
+            {isLoading && (
               <div
                 className="top-skills__list"
                 aria-busy="true"
@@ -520,12 +492,16 @@ export function DashboardPage() {
                   />
                 ))}
               </div>
-            ) : topSkills.length === 0 ? (
+            )}
+
+            {!isLoading && topSkills.length === 0 && (
               <p className="dashboard-card__empty">
                 วิเคราะห์แบบ Job Match
                 เพื่อดูทักษะที่ตรงกับงาน
               </p>
-            ) : (
+            )}
+
+            {!isLoading && topSkills.length > 0 && (
               <ul className="top-skills__list">
                 {topSkills.map((item) => (
                   <li key={item.skill}>
@@ -600,11 +576,13 @@ export function DashboardPage() {
           </Link>
         </div>
 
-        {isLoading ? (
+        {isLoading && (
           <div className="dashboard__panel-skeleton">
             <DashboardSkeletonRows count={2} />
           </div>
-        ) : recentResumes.length === 0 ? (
+        )}
+
+        {!isLoading && recentResumes.length === 0 && (
           <div className="dashboard__empty">
             <div className="dashboard__empty-icon">
               <FileText size={30} />
@@ -626,7 +604,9 @@ export function DashboardPage() {
               อัปโหลด Resume
             </Link>
           </div>
-        ) : (
+        )}
+
+        {!isLoading && recentResumes.length > 0 && (
           <div className="resume-list">
             {recentResumes.map(
               (resume) => (

@@ -8,9 +8,9 @@ import {
  */
 export function CountUp({
   value,
-}: {
+}: Readonly<{
   value: number
-}) {
+}>) {
   const displayed = useCountUp(value)
 
   return (

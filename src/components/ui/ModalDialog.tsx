@@ -17,12 +17,12 @@ export function ModalDialog({
   dismissible,
   onClose,
   children,
-}: {
+}: Readonly<{
   labelledBy: string
   dismissible: boolean
   onClose: () => void
   children: ReactNode
-}) {
+}>) {
   const dialogRef =
     useRef<HTMLDialogElement>(null)
 
@@ -39,7 +39,8 @@ export function ModalDialog({
   }, [])
 
   return (
-    <dialog
+    // คลิกพื้นหลัง = ทางลัดของเมาส์ — คีย์บอร์ดปิดด้วย Esc ผ่าน onCancel ของ <dialog> แล้ว
+    <dialog // NOSONAR
       ref={dialogRef}
       className="modal-dialog"
       aria-labelledby={labelledBy}

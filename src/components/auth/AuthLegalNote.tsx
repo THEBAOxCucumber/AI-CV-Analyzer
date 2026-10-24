@@ -9,8 +9,7 @@ export function AuthLegalNote() {
   return (
     <p className="auth-legal">
       <Link to="/privacy">นโยบายความเป็นส่วนตัว</Link>
-      <span aria-hidden="true"> · </span>
-      เว็บไซต์นี้เป็นส่วนหนึ่งของรายวิชา 02739499 Information Technology Project
+      <span aria-hidden="true"> · </span>{"เว็บไซต์นี้เป็นส่วนหนึ่งของรายวิชา 02739499 Information Technology Project"}
     </p>
   )
 }

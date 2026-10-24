@@ -15,10 +15,10 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 export function ScoreRing({
   score,
   max = 100,
-}: {
+}: Readonly<{
   score: number | null
   max?: number
-}) {
+}>) {
   const displayed =
     useCountUp(score ?? 0)
 

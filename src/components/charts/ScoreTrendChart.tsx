@@ -35,7 +35,7 @@ export function ScoreTrendChart({
   points,
   ariaLabel,
   max = 100,
-}: ScoreTrendChartProps) {
+}: Readonly<ScoreTrendChartProps>) {
   const [activeIndex, setActiveIndex] =
     useState<number | null>(null)
 
@@ -74,9 +74,11 @@ export function ScoreTrendChart({
 
   const baselineY = PADDING.top + plotHeight
 
+  const lastCoord = coords.at(-1)
+
   const areaPath =
-    coords.length > 1
-      ? `${linePath} L${coords[coords.length - 1].x.toFixed(1)},${baselineY} L${coords[0].x.toFixed(1)},${baselineY} Z`
+    lastCoord && coords.length > 1
+      ? `${linePath} L${lastCoord.x.toFixed(1)},${baselineY} L${coords[0].x.toFixed(1)},${baselineY} Z`
       : ""
 
   /*
@@ -98,7 +100,8 @@ export function ScoreTrendChart({
       <svg
         className="trend-chart__svg"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        role="group"
+        // <fieldset> ใช้ใน SVG ไม่ได้ / role="img" จะซ่อนจุดข้อมูลที่โฟกัสได้ข้างใน
+        role="group" // NOSONAR
         aria-label={ariaLabel}
       >
         <g aria-hidden="true">

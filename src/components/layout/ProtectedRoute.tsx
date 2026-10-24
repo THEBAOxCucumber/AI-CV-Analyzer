@@ -17,7 +17,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({
   children,
-}: ProtectedRouteProps) {
+}: Readonly<ProtectedRouteProps>) {
   const {
     user,
     isAuthenticated,

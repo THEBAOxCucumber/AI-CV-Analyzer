@@ -58,11 +58,11 @@ function Section({
   id,
   number,
   children,
-}: {
+}: Readonly<{
   id: string
   number: number
   children: ReactNode
-}) {
+}>) {
   const title = SECTIONS.find((section) => section.id === id)?.title
 
   return (

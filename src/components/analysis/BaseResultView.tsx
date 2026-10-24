@@ -47,13 +47,13 @@ function FeedbackCard({
   tone,
   headingIcon: HeadingIcon,
   itemIcon: ItemIcon,
-}: {
+}: Readonly<{
   title: string
   items: string[]
   tone: "strength" | "weakness"
   headingIcon: LucideIcon
   itemIcon: LucideIcon
-}) {
+}>) {
   return (
     <article className="feedback-card">
       <div
@@ -96,9 +96,9 @@ function FeedbackCard({
  */
 function JobSuggestionsCard({
   analysis,
-}: {
+}: Readonly<{
   analysis: ResumeAnalysisRun
-}) {
+}>) {
   const titles =
     analysis.suggestedJobTitles ?? []
 
@@ -162,9 +162,9 @@ function JobSuggestionsCard({
 
 export function BaseResultView({
   analysis,
-}: {
+}: Readonly<{
   analysis: ResumeAnalysisRun
-}) {
+}>) {
   const sectionScores =
     buildSectionScores(analysis.scores)
 

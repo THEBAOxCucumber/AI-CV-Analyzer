@@ -23,12 +23,8 @@ import {
 } from "react-router-dom"
 
 import {
-    getResumeAnalysisHistory,
+    getAllResumeAnalyses,
 } from "../services/analysis.service"
-
-import {
-    getResumes,
-} from "../services/resume.service"
 
 import type {
     ResumeAnalysisRun,
@@ -112,33 +108,31 @@ function average(
         : null
 }
 
+const DELTA_ICONS = {
+    up: ArrowUp,
+    down: ArrowDown,
+    flat: Minus,
+}
+
 /*
  * ลูกศร + ตัวเลข (ไม่สื่อด้วยสีอย่างเดียว)
  */
 function DeltaBadge({
     value,
     suffix = "",
-}: {
+}: Readonly<{
     value: number | null
     suffix?: string
-}) {
+}>) {
     if (value === null) {
         return null
     }
 
-    const tone =
-        value > 0
-            ? "up"
-            : value < 0
-                ? "down"
-                : "flat"
+    let tone: keyof typeof DELTA_ICONS = "flat"
+    if (value > 0) tone = "up"
+    else if (value < 0) tone = "down"
 
-    const Icon =
-        tone === "up"
-            ? ArrowUp
-            : tone === "down"
-                ? ArrowDown
-                : Minus
+    const Icon = DELTA_ICONS[tone]
 
     return (
         <span
@@ -172,43 +166,15 @@ export function InsightsPage() {
             try {
                 setError("")
 
-                const resumeResponse =
-                    await getResumes()
-
-                const resumes =
-                    resumeResponse.data.resumes
-
-                const historyResponses =
-                    await Promise.all(
-                        resumes.map(
-                            (resume) =>
-                                getResumeAnalysisHistory(
-                                    resume.id,
-                                    100,
-                                ),
-                        ),
-                    )
+                const { analyses: allAnalyses } =
+                    await getAllResumeAnalyses()
 
                 const loadedAnalyses =
-                    historyResponses
-                        .flatMap(
-                            (response) =>
-                                response.data.analyses,
-                        )
-                        .filter(
-                            (analysis) =>
-                                analysis.status ===
-                                "COMPLETED",
-                        )
-                        .sort(
-                            (a, b) =>
-                                new Date(
-                                    b.createdAt,
-                                ).getTime() -
-                                new Date(
-                                    a.createdAt,
-                                ).getTime(),
-                        )
+                    allAnalyses.filter(
+                        (analysis) =>
+                            analysis.status ===
+                            "COMPLETED",
+                    )
 
                 if (!cancelled) {
                     setAnalyses(
@@ -336,9 +302,11 @@ export function InsightsPage() {
             tooltip: `${analysis.baseResumeScore}/100 · ${getAnalysisTypeLabel(analysis.analysisType)} · ${formatThaiDate(analysis.createdAt)}`,
         }))
 
+    const latestTrendPoint = trendPoints.at(-1)
+
     const trendChange =
-        trendPoints.length > 1
-            ? trendPoints[trendPoints.length - 1].value -
+        latestTrendPoint && trendPoints.length > 1
+            ? latestTrendPoint.value -
             trendPoints[0].value
             : null
 

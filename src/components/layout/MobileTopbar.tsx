@@ -47,10 +47,10 @@ import {
 export function MobileTopbar({
   menuOpen,
   onOpenMenu,
-}: {
+}: Readonly<{
   menuOpen: boolean
   onOpenMenu: () => void
-}) {
+}>) {
   const {
     user,
     logout,
@@ -193,7 +193,6 @@ export function MobileTopbar({
           }
           onClick={handleExtendSession}
           disabled={isExtending}
-          aria-label={`ต่ออายุเซสชัน (เหลือ ${formatSessionTime(sessionRemainingSeconds)})`}
           title="กดเพื่อต่ออายุเซสชัน"
         >
           <RotateCw
@@ -201,6 +200,9 @@ export function MobileTopbar({
             aria-hidden="true"
             className={isExtending ? "session-spin" : undefined}
           />
+
+          {/* ชื่อที่ screen reader อ่าน = "ต่ออายุเซสชัน 14:32" — มีข้อความที่ตาเห็นครบ (WCAG 2.5.3) */}
+          <span className="sr-only">ต่ออายุเซสชัน</span>
           {formatSessionTime(
             sessionRemainingSeconds,
           )}

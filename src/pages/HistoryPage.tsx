@@ -20,6 +20,7 @@ import {
 } from "react"
 
 import {
+  Link,
   useNavigate,
 } from "react-router-dom"
 
@@ -79,9 +80,9 @@ const STATUS_META: Record<
 
 function StatusBadge({
   status,
-}: {
+}: Readonly<{
   status: ResumeAnalysisRun["status"]
-}) {
+}>) {
   const meta = STATUS_META[status]
   const Icon = meta.icon
 
@@ -429,28 +430,11 @@ export function HistoryPage() {
                   getAnalysisScore(analysis)
 
                 return (
+                  // ทั้งแถวกดได้ผ่านลิงก์ชื่อไฟล์ (stretched link — ::after คลุมทั้งแถว)
+                  // ปุ่มลบอยู่ชั้นบน แยกจากลิงก์ ไม่ซ้อน element ที่กดได้
                   <li
                     key={analysis.id}
                     className="history-row"
-                    tabIndex={0}
-                    aria-label={`เปิดผลวิเคราะห์ ${resume.originalName}`}
-                    onClick={() =>
-                      navigate(
-                        `/analyses/${analysis.id}`,
-                      )
-                    }
-                    onKeyDown={(event) => {
-                      if (
-                        event.key === "Enter" ||
-                        event.key === " "
-                      ) {
-                        event.preventDefault()
-
-                        navigate(
-                          `/analyses/${analysis.id}`,
-                        )
-                      }
-                    }}
                   >
                     <div className="history-row__main">
                       <span className="history-row__icon">
@@ -459,7 +443,13 @@ export function HistoryPage() {
 
                       <div className="history-row__text">
                         <strong>
-                          {resume.originalName}
+                          <Link
+                            className="history-row__link"
+                            to={`/analyses/${analysis.id}`}
+                            aria-label={`เปิดผลวิเคราะห์ ${resume.originalName}`}
+                          >
+                            {resume.originalName}
+                          </Link>
                         </strong>
 
                         <span className="history-row__meta">
@@ -527,17 +517,12 @@ export function HistoryPage() {
                             analysis.status ===
                             "PROCESSING"
                           }
-                          onClick={(event) => {
-                            event.stopPropagation()
-
+                          onClick={() => {
                             setDeleteError("")
                             setAnalysisToDelete({
                               analysis,
                               resume,
                             })
-                          }}
-                          onKeyDown={(event) => {
-                            event.stopPropagation()
                           }}
                         >
                           <Trash2 size={17} />

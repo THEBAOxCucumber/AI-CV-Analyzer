@@ -12,9 +12,9 @@ import "../../styles/components/SectionScores.css"
 
 export function SectionScoresPanel({
   sections,
-}: {
+}: Readonly<{
   sections: SectionScore[]
-}) {
+}>) {
   const axes: RadarAxis[] = sections.map(
     (section) => ({
       key: section.key,

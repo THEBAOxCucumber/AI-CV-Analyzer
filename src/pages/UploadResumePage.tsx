@@ -362,11 +362,17 @@ export function UploadResumePage() {
                   </span>
 
                   {isUploading && (
-                    <span
-                      className="selected-file__progress"
-                      role="progressbar"
-                      aria-label="กำลังอัปโหลด"
-                    />
+                    <>
+                      {/* <progress> ไม่มี value = ไม่ทราบความคืบหน้า (screen reader) — แถบวิ่งด้านล่างไว้ให้ตาเห็น */}
+                      <progress
+                        className="sr-only"
+                        aria-label="กำลังอัปโหลด"
+                      />
+                      <span
+                        className="selected-file__progress"
+                        aria-hidden="true"
+                      />
+                    </>
                   )}
                 </div>
 
@@ -494,12 +500,9 @@ export function UploadResumePage() {
               // อัปโหลดแล้ว → ขั้นที่ 2
               const currentStep = uploadedResume ? 2 : 1
               const stepNumber = index + 1
-              const state =
-                stepNumber < currentStep
-                  ? "done"
-                  : stepNumber === currentStep
-                    ? "active"
-                    : "upcoming"
+              let state = "upcoming"
+              if (stepNumber < currentStep) state = "done"
+              else if (stepNumber === currentStep) state = "active"
 
               return (
                 <li

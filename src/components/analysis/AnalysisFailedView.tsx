@@ -104,9 +104,9 @@ function getAnalysisFailureMessage(
 
 export function AnalysisFailedView({
   analysis,
-}: {
+}: Readonly<{
   analysis: ResumeAnalysisRun
-}) {
+}>) {
   const navigate = useNavigate()
 
   const [isRetrying, setIsRetrying] =

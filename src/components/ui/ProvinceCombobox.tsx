@@ -67,7 +67,7 @@ export function ProvinceCombobox({
   isLoading = false,
   placeholder = "พิมพ์เพื่อค้นหาจังหวัด",
   onChange,
-}: ProvinceComboboxProps) {
+}: Readonly<ProvinceComboboxProps>) {
   const listboxId = useId()
 
   const listRef =
@@ -267,7 +267,8 @@ export function ProvinceCombobox({
             </li>
           ) : (
             filtered.map((province, index) => (
-              <li
+              // combobox ตาม ARIA: คีย์บอร์ด (ลูกศร / Enter) อยู่ที่ช่อง input ผ่าน aria-activedescendant
+              <li // NOSONAR
                 key={province.id}
                 id={`${listboxId}-${province.id}`}
                 data-index={index}

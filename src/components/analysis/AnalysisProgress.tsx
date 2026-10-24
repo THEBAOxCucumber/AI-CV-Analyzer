@@ -92,6 +92,52 @@ function getActiveStep(
   return 3
 }
 
+function getStepState(
+  index: number,
+  activeStep: number,
+): StepState {
+  if (index < activeStep) {
+    return "done"
+  }
+
+  if (index === activeStep) {
+    return "active"
+  }
+
+  return "waiting"
+}
+
+function getTitle(
+  isQueued: boolean,
+  isJobMatch: boolean,
+): string {
+  if (isQueued) {
+    return "อยู่ในคิว กำลังจะเริ่มวิเคราะห์"
+  }
+
+  return isJobMatch
+    ? "AI กำลังเทียบ Resume กับตำแหน่งงาน"
+    : "AI กำลังวิเคราะห์ Resume ของคุณ"
+}
+
+function StepMarker({
+  state,
+  index,
+}: Readonly<{
+  state: StepState
+  index: number
+}>) {
+  if (state === "done") {
+    return <Check size={14} />
+  }
+
+  if (state === "active") {
+    return <span className="progress-steps__pulse" />
+  }
+
+  return <>{index + 1}</>
+}
+
 function formatElapsed(
   totalSeconds: number,
 ): string {
@@ -103,9 +149,9 @@ function formatElapsed(
 
 export function AnalysisProgress({
   analysis,
-}: {
+}: Readonly<{
   analysis: ResumeAnalysisRun
-}) {
+}>) {
   const [now, setNow] =
     useState(() => Date.now())
 
@@ -157,11 +203,7 @@ export function AnalysisProgress({
         TIPS.length
     ]
 
-  const title = isQueued
-    ? "อยู่ในคิว กำลังจะเริ่มวิเคราะห์"
-    : isJobMatch
-      ? "AI กำลังเทียบ Resume กับตำแหน่งงาน"
-      : "AI กำลังวิเคราะห์ Resume ของคุณ"
+  const title = getTitle(isQueued, isJobMatch)
 
   return (
     <div className="analysis-progress">
@@ -249,18 +291,12 @@ export function AnalysisProgress({
       <div className="analysis-progress__grid">
         <section className="analysis-progress__card">
           <h2>
-            ขั้นตอน
-            <small>ประมาณการ</small>
+            {"ขั้นตอน"}<small>ประมาณการ</small>
           </h2>
 
           <ol className="progress-steps">
             {steps.map((step, index) => {
-              const state: StepState =
-                index < activeStep
-                  ? "done"
-                  : index === activeStep
-                    ? "active"
-                    : "waiting"
+              const state = getStepState(index, activeStep)
 
               return (
                 <li
@@ -276,13 +312,10 @@ export function AnalysisProgress({
                     className="progress-steps__marker"
                     aria-hidden="true"
                   >
-                    {state === "done" ? (
-                      <Check size={14} />
-                    ) : state === "active" ? (
-                      <span className="progress-steps__pulse" />
-                    ) : (
-                      index + 1
-                    )}
+                    <StepMarker
+                      state={state}
+                      index={index}
+                    />
                   </span>
 
                   <span>
