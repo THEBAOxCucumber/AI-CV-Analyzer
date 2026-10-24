@@ -1,3 +1,6 @@
+/// <reference lib="dom" />
+// โค้ดใน waitForFunction รันในเบราว์เซอร์ → ต้องรู้จัก document
+
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
 
@@ -22,9 +25,16 @@ const APP_PAGES = ["/dashboard", "/resumes/upload", "/history", "/insights", "/s
 const WORST_CASE_BACKGROUND = { light: "#d8e2f6", dark: "#272a56" }
 
 async function scan(page: Page, label: string, theme: "light" | "dark") {
-  // รอ animation / ข้อมูลโหลดเสร็จ — สีระหว่าง fade-in ทำให้วัด contrast ผิด
+  // รอข้อมูลโหลด + animation จบจริง — สีระหว่าง fade-in ทำให้วัด contrast ผิด
+  // (ไม่นับ animation วนไม่รู้จบ เช่น spinner / pulse)
   await page.waitForLoadState("networkidle")
-  await page.waitForTimeout(800)
+  await expect(page.locator('[aria-busy="true"]')).toHaveCount(0)
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) =>
+      animation.playState !== "running" ||
+      animation.effect?.getComputedTiming().iterations === Infinity,
+    ),
+  )
 
   await page.addStyleTag({
     content: `

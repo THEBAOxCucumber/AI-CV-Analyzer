@@ -76,7 +76,10 @@ function DashboardSkeletonRows({
   count: number
 }>) {
   return (
-    <div aria-busy="true" aria-label="กำลังโหลดข้อมูล">
+    // div ไม่มี role ใส่ aria-label ไม่ได้ (axe: aria-prohibited-attr) → ใช้ข้อความ sr-only
+    <div aria-busy="true">
+      <span className="sr-only">กำลังโหลดข้อมูล</span>
+
       {Array.from({ length: count }, (_, index) => (
         <div
           key={index}
@@ -481,8 +484,9 @@ export function DashboardPage() {
               <div
                 className="top-skills__list"
                 aria-busy="true"
-                aria-label="กำลังโหลดทักษะ"
               >
+                <span className="sr-only">กำลังโหลดทักษะ</span>
+
                 {[78, 64, 52, 40].map((width) => (
                   <span
                     key={width}
