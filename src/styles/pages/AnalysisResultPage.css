@@ -206,10 +206,6 @@
   stroke-linecap: round;
 }
 
-.score-ring-gauge__label strong {
-  font-variant-numeric: tabular-nums;
-}
-
 .score-ring-gauge__label {
   position: absolute;
   inset: 0;
@@ -226,6 +222,7 @@
   font-size: 2.5rem;
   line-height: 1;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .score-ring-gauge__label span {
@@ -605,6 +602,13 @@
   background: var(--gradient-accent);
   box-shadow: var(--shadow-sm);
   color: var(--color-text-primary);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+
+  text-align: center;
 }
 
 .job-match-score-card::after {
@@ -619,15 +623,6 @@
   background: radial-gradient(circle at 35% 35%, #d9cbff, #8fb0f5);
   filter: blur(22px);
   opacity: 0.75;
-}
-
-.job-match-score-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-
-  text-align: center;
 }
 
 .job-match-score-card__label {
@@ -814,6 +809,11 @@
 .job-match-skills-card__heading h3 {
   margin: 0;
   font-size: 1rem;
+
+  /* จำนวนทักษะข้างหัวการ์ด */
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .job-match-tags {
@@ -831,6 +831,9 @@
   background: var(--color-primary-soft);
   color: var(--color-steel-blue);
   font-size: 0.84rem;
+
+  /* ทยอยขึ้น — หน่วงเวลาตามลำดับด้วย :nth-child ด้านล่าง */
+  animation: tag-in 280ms var(--ease-out) both;
 }
 
 .job-match-tag--matched {
@@ -1054,13 +1057,6 @@
   }
 }
 
-/* จำนวนทักษะข้างหัวการ์ด */
-.job-match-skills-card__heading h3 {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
 .job-match-count {
   min-width: 24px;
   padding: 1px 8px;
@@ -1077,10 +1073,6 @@
 }
 
 /* ป้ายทักษะทยอยขึ้น */
-.job-match-tag {
-  animation: tag-in 280ms var(--ease-out) both;
-}
-
 .job-match-tag:nth-child(2) { animation-delay: 40ms; }
 .job-match-tag:nth-child(3) { animation-delay: 80ms; }
 .job-match-tag:nth-child(4) { animation-delay: 120ms; }

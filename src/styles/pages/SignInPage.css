@@ -235,6 +235,8 @@
   background: var(--color-surface);
 
   box-shadow: var(--shadow-lg);
+
+  animation: auth-card-in 420ms var(--ease-out) both;
 }
 
 .sign-in__icon {
@@ -274,18 +276,26 @@
   gap: var(--space-5);
 }
 
+/* error: ไอคอน (mask ใช้สีตัวอักษร ดู ::before ด้านล่าง) + สั่นเบาๆ ตอนขึ้น */
 .sign-in__error {
   padding:
     var(--space-3)
     var(--space-4);
 
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+
+  border-left: 3px solid var(--color-danger);
   border-radius: var(--radius-md);
 
   color: var(--color-danger);
   background:
-    color-mix(in srgb, var(--color-danger) 8%, transparent);
+    color-mix(in srgb, var(--color-danger) 10%, transparent);
 
   font-size: var(--font-size-sm);
+
+  animation: auth-shake 360ms var(--ease-out);
 }
 
 .sign-in__register {
@@ -536,27 +546,11 @@
   }
 }
 /* ===== ขัดเกลา: การ์ด / แจ้งเตือน / กฎรหัสผ่าน ===== */
-.sign-in__card {
-  animation: auth-card-in 420ms var(--ease-out) both;
-}
-
 @keyframes auth-card-in {
   from {
     opacity: 0;
     transform: translateY(12px) scale(0.99);
   }
-}
-
-/* error: ไอคอน (mask ใช้สีตัวอักษร) + สั่นเบาๆ ตอนขึ้น */
-.sign-in__error {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-
-  border-left: 3px solid var(--color-danger);
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-
-  animation: auth-shake 360ms var(--ease-out);
 }
 
 .sign-in__error::before {

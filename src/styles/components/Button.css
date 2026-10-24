@@ -25,8 +25,10 @@
   transform: translateY(-1px);
 }
 
+/* กดแล้วยุบเล็กน้อย (spring กลับ) */
 .button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.98);
+  transition-timing-function: var(--ease-spring);
 }
 
 .button:focus-visible {
@@ -97,14 +99,6 @@
 
 .button--danger:hover:not(:disabled) {
   filter: brightness(1.05);
-}
-
-/*
- * กดแล้วยุบเล็กน้อย (spring กลับ)
- */
-.button:active:not(:disabled) {
-  transform: scale(0.98);
-  transition-timing-function: var(--ease-spring);
 }
 
 /* กำลังโหลด: ไม่จางเหมือน disabled */

@@ -128,7 +128,27 @@
   box-shadow: inset 3px 0 0 var(--color-soft-peach);
 }
 
-.history-row:focus-visible {
+/*
+ * stretched link: ลิงก์ชื่อไฟล์คลุมทั้งแถวด้วย ::after (แถวเป็น position: relative)
+ * focus ของลิงก์ → วาดกรอบที่แถว ให้เห็นว่าทั้งแถวกดได้
+ */
+.history-row__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.history-row__link::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+}
+
+.history-row__link:focus-visible {
+  outline: none;
+}
+
+.history-row:has(.history-row__link:focus-visible) {
   outline: 2px solid var(--color-steel-blue);
   outline-offset: -2px;
 }
@@ -264,6 +284,7 @@
 
   font-size: var(--font-size-lg);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 
   white-space: nowrap;
 }
@@ -314,6 +335,10 @@
 }
 
 .history-delete-button {
+  /* อยู่เหนือลิงก์ที่คลุมทั้งแถว */
+  position: relative;
+  z-index: 1;
+
   width: 36px;
   height: 36px;
 
@@ -633,10 +658,6 @@
 .history-score-cell {
   display: grid;
   gap: 6px;
-}
-
-.history-score {
-  font-variant-numeric: tabular-nums;
 }
 
 /* แถบคะแนนเล็กใต้ตัวเลข — สีตามระดับเดียวกับ Dashboard */

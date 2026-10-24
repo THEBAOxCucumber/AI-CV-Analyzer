@@ -368,6 +368,8 @@
   padding: var(--space-8) var(--space-2);
 
   text-align: center;
+
+  animation: file-in 320ms var(--ease-out);
 }
 
 .upload-success__icon {
@@ -385,6 +387,8 @@
   background: color-mix(in srgb, var(--color-success) 10%, transparent);
 
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-success) 5%, transparent);
+
+  animation: success-pop 520ms var(--ease-spring);
 }
 
 .upload-success h2 {
@@ -537,6 +541,11 @@
 
   font-size: var(--font-size-sm);
   font-weight: 600;
+
+  /* ขั้นตอน: ผ่านแล้ว / ตอนนี้ / ยังไม่ถึง (สีตาม data-state ด้านล่าง) */
+  transition:
+    background var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .upload-steps strong {
@@ -691,14 +700,6 @@
   }
 }
 
-.upload-success {
-  animation: file-in 320ms var(--ease-out);
-}
-
-.upload-success__icon {
-  animation: success-pop 520ms var(--ease-spring);
-}
-
 @keyframes success-pop {
   from {
     transform: scale(0.4);
@@ -707,12 +708,6 @@
 }
 
 /* ขั้นตอน: ผ่านแล้ว / ตอนนี้ / ยังไม่ถึง */
-.upload-steps li > span {
-  transition:
-    background var(--transition-normal),
-    box-shadow var(--transition-normal);
-}
-
 .upload-steps li[data-state="active"] > span {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-steel-blue) 22%, transparent);
 }

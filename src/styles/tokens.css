@@ -163,6 +163,10 @@
   /* Skeleton ตอนโหลด */
   --skeleton-base: rgba(205, 220, 245, 0.6);
   --skeleton-shine: rgba(255, 255, 255, 0.75);
+
+  /* ความสูงแถบเมนูล่าง (ใช้เว้นพื้นที่ท้ายหน้า) — media query ด้านล่างปรับตามขนาดจอ */
+  --bottom-nav-height: 72px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /*
@@ -176,13 +180,6 @@
  *  (max-height: 500px) and (orientation: landscape)
  *         มือถือแนวนอน                     → แถบล่างเตี้ยลง
  */
-:root {
-  /*
-   * ความสูงแถบเมนูล่าง (ใช้เว้นพื้นที่ท้ายหน้า)
-   */
-  --bottom-nav-height: 72px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-}
 
 @media (max-width: 1200px) {
   :root {
