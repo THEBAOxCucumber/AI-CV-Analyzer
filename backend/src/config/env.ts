@@ -304,18 +304,6 @@ export const env = {
       ),
   },
 
-  jooble: {
-    apiKey:
-      getRequiredEnv(
-        "JOOBLE_API_KEY",
-      ),
-
-    baseUrl:
-      process.env
-        .JOOBLE_BASE_URL ??
-      "https://jooble.org/api",
-  },
-
   careerjet: {
     apiKey:
       getRequiredEnv(

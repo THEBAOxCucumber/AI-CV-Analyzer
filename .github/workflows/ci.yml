@@ -91,7 +91,6 @@ jobs:
       QDRANT_URL: http://127.0.0.1:6333
       JWT_SECRET: ci-only-jwt-secret-not-used-anywhere-else-0123456789
       GEMINI_API_KEY: ci-dummy
-      JOOBLE_API_KEY: ci-dummy
       CAREERJET_API_KEY: ci-dummy
 
     defaults:
