@@ -792,7 +792,6 @@ D:\CV
         │   ├── job
         │   ├── job-description
         │   └── resume
-        ├── scripts
         └── workers
 ```
 
@@ -806,7 +805,6 @@ src/modules/analysis/resume-analysis-normalizer.ts
 src/modules/analysis/resume-analysis-processor.service.ts
 src/modules/analysis/llm-retry.util.ts
 src/workers/resume-analysis.worker.ts
-src/scripts/test-ollama.ts
 ```
 
 ## 23. End-to-End Target
