@@ -39,6 +39,21 @@ export function getGeminiErrorDetails(
   };
 }
 
+// code อาจเป็นเลขหรือข้อความตัวเลข ("429")
+function toNumericCode(
+  code: GeminiErrorDetails["code"],
+): number | undefined {
+  if (typeof code === "number") {
+    return code;
+  }
+
+  if (typeof code === "string" && /^\d+$/.test(code)) {
+    return Number(code);
+  }
+
+  return undefined;
+}
+
 export function isRetryableGeminiError(
   error: unknown,
 ): boolean {
@@ -47,16 +62,8 @@ export function isRetryableGeminiError(
     code,
   } = getGeminiErrorDetails(error);
 
-  const numericCode =
-    typeof code === "number"
-      ? code
-      : typeof code === "string" &&
-          /^\d+$/.test(code)
-        ? Number(code)
-        : undefined;
-
   const httpStatus =
-    status ?? numericCode;
+    status ?? toNumericCode(code);
 
   return (
     httpStatus === 408 ||

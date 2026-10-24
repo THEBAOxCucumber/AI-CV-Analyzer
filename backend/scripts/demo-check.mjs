@@ -3,7 +3,15 @@
 import "dotenv/config";
 import net from "node:net";
 import os from "node:os";
+import path from "node:path";
+import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+
+// nvidia-smi จากตำแหน่งที่ driver ติดตั้งไว้ — ไม่พึ่ง PATH (กันโปรแกรมปลอมที่ชื่อซ้ำ)
+const NVIDIA_SMI = [
+  process.env.SystemRoot && path.join(process.env.SystemRoot, "System32", "nvidia-smi.exe"),
+  "/usr/bin/nvidia-smi",
+].find((candidate) => candidate && existsSync(candidate));
 
 const API = process.env.API_URL ?? "http://localhost:5000/api";
 const FRONTEND = process.env.FRONTEND_CHECK_URL ?? "http://localhost:5173";
@@ -15,13 +23,15 @@ const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? "gemini-embedding-001";
 const KEEP_ALIVE = process.env.OLLAMA_KEEP_ALIVE ?? "30m";
 const EMBEDDING_KEEP_ALIVE = process.env.EMBEDDING_KEEP_ALIVE ?? "2m";
 const DEMO_EMAIL = process.env.DEMO_EMAIL ?? "demo@example.com";
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "Demo12345";
+// บัญชีสาธิตที่เปิดเผยใน docs/DEMO.md โดยตั้งใจ (ไม่ใช่ความลับ) — เปลี่ยนได้ด้วย DEMO_PASSWORD
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD ?? "Demo12345"; // NOSONAR
 
 let failures = 0;
 
 function report(ok, label, detail = "") {
   if (!ok) failures += 1;
-  console.log(`${ok ? "✓" : "✗"} ${label}${detail ? ` — ${detail}` : ""}`);
+  const suffix = detail ? ` — ${detail}` : "";
+  console.log(`${ok ? "✓" : "✗"} ${label}${suffix}`);
 }
 
 async function getJson(url, init) {
@@ -94,8 +104,10 @@ try {
     report(true, onGpu ? "โมเดลวิเคราะห์อยู่บน GPU ทั้งหมด" : "โมเดลวิเคราะห์บางส่วนอยู่บน CPU (ช้ากว่า)",
       `${Math.round(model.size_vram / 1e6)}/${Math.round(model.size / 1e6)} MB${onGpu ? "" : " — ลองปิดโปรแกรมที่ใช้ GPU หรือตั้ง OLLAMA_NUM_GPU"}`);
   }
-  const gpu = execFileSync("nvidia-smi", ["--query-gpu=name,memory.used,memory.total", "--format=csv,noheader"], { encoding: "utf8" }).trim();
-  console.log(`  GPU: ${gpu}`);
+  if (NVIDIA_SMI) {
+    const gpu = execFileSync(NVIDIA_SMI, ["--query-gpu=name,memory.used,memory.total", "--format=csv,noheader"], { encoding: "utf8" }).trim();
+    console.log(`  GPU: ${gpu}`);
+  }
 } catch {
   /* ไม่มี nvidia-smi */
 }

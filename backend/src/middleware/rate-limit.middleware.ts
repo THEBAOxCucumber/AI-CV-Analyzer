@@ -201,7 +201,7 @@ export async function clearLoginRateLimit(
   const escapedEmail = email
     .trim()
     .toLowerCase()
-    .replace(/[*?[\]\\]/g, "\\$&");
+    .replaceAll(/[*?[\]\\]/g, String.raw`\$&`);
 
   const pattern =
     `${loginKeyPrefix()}*:${escapedEmail}`;
@@ -262,12 +262,13 @@ export const loginRateLimit = rateLimit({
   skipSuccessfulRequests: true,
   store: createStore("login"),
   keyGenerator: (req) => {
-    const email = String(
-      (req.body as { email?: unknown })
-        ?.email ?? "",
-    )
-      .trim()
-      .toLowerCase();
+    // ไม่ใช่ string (เช่น object) → ไม่เอามาเป็น key — กัน "[object Object]"
+    const rawEmail =
+      (req.body as { email?: unknown } | undefined)?.email;
+    const email =
+      typeof rawEmail === "string"
+        ? rawEmail.trim().toLowerCase()
+        : "";
 
     return `${ipKeyGenerator(req.ip ?? "unknown")}:${email}`;
   },

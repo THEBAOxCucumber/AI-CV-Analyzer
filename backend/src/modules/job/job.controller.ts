@@ -112,9 +112,6 @@ export async function importJobController(
   source,
 } = req.body;
 
-  const metadata =
-    getRequestMetadata(req);
-
   const jobDescription =
   await importCareerjetJob({
     userId,

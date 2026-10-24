@@ -11,7 +11,6 @@ import {
   markChunkEmbeddingCompleted,
   markChunksEmbeddingFailed,
   markChunksProcessing,
-  resetProcessingChunksToPending,
 } from "../resume/resume-chunk.repository.js";
 import type {
   PendingResumeChunk,

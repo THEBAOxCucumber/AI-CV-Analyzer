@@ -137,8 +137,7 @@ export async function resetPasswordWithOtp(input: {
     await findLatestOtpByUserId(user.id);
 
   if (
-    !otpRow ||
-    otpRow.consumed_at !== null ||
+    otpRow?.consumed_at !== null ||
     Number(otpRow.is_expired) === 1
   ) {
     throw invalidOtpError();

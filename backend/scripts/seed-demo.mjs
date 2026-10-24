@@ -11,7 +11,8 @@ import { fileURLToPath } from "node:url";
 
 const API = process.env.API_URL ?? "http://localhost:5000/api";
 const EMAIL = process.env.DEMO_EMAIL ?? "demo@example.com";
-const PASSWORD = process.env.DEMO_PASSWORD ?? "Demo12345";
+// บัญชีสาธิตที่เปิดเผยใน docs/DEMO.md โดยตั้งใจ (ไม่ใช่ความลับ) — เปลี่ยนได้ด้วย DEMO_PASSWORD
+const PASSWORD = process.env.DEMO_PASSWORD ?? "Demo12345"; // NOSONAR
 
 const demoDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../demo");
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

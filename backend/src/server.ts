@@ -108,4 +108,4 @@ process.on("SIGINT", () => {
   void shutdown("SIGINT");
 });
 
-void startServer();
+await startServer();

@@ -509,9 +509,7 @@ describe(
             ],
           );
 
-        expect(
-          runs.length,
-        ).toBe(0);
+        expect(runs).toHaveLength(0);
 
         const rateLimitKey =
           await redisConnection.get(
@@ -599,9 +597,7 @@ describe(
             ],
           );
 
-        expect(
-          runs.length,
-        ).toBe(0);
+        expect(runs).toHaveLength(0);
 
         const rateLimitKey =
           await redisConnection.get(
@@ -792,9 +788,7 @@ describe(
             ],
           );
 
-        expect(
-          runs.length,
-        ).toBe(1);
+        expect(runs).toHaveLength(1);
 
         expect(
           runs[0]?.analysis_type,
@@ -1078,9 +1072,7 @@ it(
         ],
       );
 
-    expect(
-      runs.length,
-    ).toBe(0);
+    expect(runs).toHaveLength(0);
   },
 );
 

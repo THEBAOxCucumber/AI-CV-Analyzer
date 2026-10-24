@@ -47,12 +47,27 @@ function getNumberEnv(
     Number(rawValue);
 
   if (!Number.isFinite(parsedValue)) {
-    throw new Error(
+    throw new TypeError(
       `${key} ต้องเป็นตัวเลข`,
     );
   }
 
   return parsedValue;
+}
+
+/*
+ * ตัด "/" ท้าย URL (วนจากท้าย — แทน regex /\/+$/ ที่ backtrack ได้)
+ */
+function trimTrailingSlashes(
+  value: string,
+): string {
+  let end = value.length;
+
+  while (end > 0 && value[end - 1] === "/") {
+    end--;
+  }
+
+  return value.slice(0, end);
 }
 
 /*
@@ -428,13 +443,17 @@ export const env = {
    */
   oauth: {
     publicBaseUrl:
-      (process.env.OAUTH_PUBLIC_BASE_URL ??
-        "http://localhost:5173").replace(/\/+$/, ""),
+      trimTrailingSlashes(
+        process.env.OAUTH_PUBLIC_BASE_URL ??
+        "http://localhost:5173",
+      ),
 
     frontendUrl:
-      (process.env.FRONTEND_URL ??
+      trimTrailingSlashes(
+        process.env.FRONTEND_URL ??
         process.env.CORS_ORIGIN ??
-        "http://localhost:5173").replace(/\/+$/, ""),
+        "http://localhost:5173",
+      ),
 
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",

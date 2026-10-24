@@ -21,11 +21,14 @@ export const registerSchema = z.object({
     .min(1, "กรุณากรอกนามสกุล")
     .max(100, "นามสกุลต้องไม่เกิน 100 ตัวอักษร"),
 
+  // trim ก่อนตรวจรูปแบบ — z.email() แทน .email() ที่เลิกใช้ใน Zod 4
   email: z
     .string()
     .trim()
-    .email("รูปแบบอีเมลไม่ถูกต้อง")
-    .max(255, "อีเมลต้องไม่เกิน 255 ตัวอักษร")
+    .pipe(
+      z.email("รูปแบบอีเมลไม่ถูกต้อง")
+        .max(255, "อีเมลต้องไม่เกิน 255 ตัวอักษร"),
+    )
     .transform((value) => value.toLowerCase()),
 
   password: passwordSchema,
@@ -35,7 +38,7 @@ export const loginSchema = z.object({
   email: z
     .string()
     .trim()
-    .email("รูปแบบอีเมลไม่ถูกต้อง")
+    .pipe(z.email("รูปแบบอีเมลไม่ถูกต้อง"))
     .transform((value) => value.toLowerCase()),
 
   password: z
@@ -64,7 +67,7 @@ export const changePasswordSchema = z
 const emailSchema = z
   .string()
   .trim()
-  .email("รูปแบบอีเมลไม่ถูกต้อง")
+  .pipe(z.email("รูปแบบอีเมลไม่ถูกต้อง"))
   .transform((value) => value.toLowerCase());
 
 export const forgotPasswordSchema = z.object({

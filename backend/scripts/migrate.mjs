@@ -58,7 +58,7 @@ try {
 
   const files = (await fs.readdir(migrationsDir))
     .filter((file) => file.endsWith(".sql"))
-    .sort();
+    .sort((a, b) => a.localeCompare(b, "en"));
 
   if (applied.size === 0) {
     const [tables] = await connection.query(

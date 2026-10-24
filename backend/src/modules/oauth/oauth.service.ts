@@ -270,7 +270,7 @@ export async function completeAuthorization(
   const rawState = await redisConnection.getdel(stateKey(query.state));
   const stored = rawState ? (JSON.parse(rawState) as StoredState) : null;
 
-  if (!stored || stored.provider !== provider.id) {
+  if (stored?.provider !== provider.id) {
     throw new OAuthFlowError("OAUTH_STATE_INVALID", "unknown or expired state");
   }
 

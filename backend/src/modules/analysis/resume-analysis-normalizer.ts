@@ -103,7 +103,7 @@ function cleanSkillList(value: unknown): unknown {
 }
 
 function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 /*
@@ -115,7 +115,7 @@ export function resumeMentionsSkill(
   skill: string,
 ): boolean {
   const pattern = new RegExp(
-    `(?<![\\p{L}\\p{N}])${escapeRegExp(skill.trim())}(?![\\p{L}\\p{N}])`,
+    String.raw`(?<![\p{L}\p{N}])${escapeRegExp(skill.trim())}(?![\p{L}\p{N}])`,
     "iu",
   );
 

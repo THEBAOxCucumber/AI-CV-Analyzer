@@ -69,8 +69,7 @@ export const importJobBodySchema =
         .nullable(),
 
     sourceUrl:
-      z.string()
-        .url(),
+      z.url(),
 
     source:
       z.literal("CAREERJET"),

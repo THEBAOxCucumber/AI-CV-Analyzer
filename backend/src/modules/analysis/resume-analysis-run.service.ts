@@ -28,7 +28,6 @@ import {
   findActiveAnalysisRun,
   findAnalysisHistory,
   findAnalysisRunById,
-  markAnalysisRunFailed,
 } from "./resume-analysis-run.repository.js";
 
 import type {

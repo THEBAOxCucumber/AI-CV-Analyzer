@@ -49,8 +49,7 @@ export const promoteAdminBodySchema = z.object({
   email: z
     .string()
     .trim()
-    .email("รูปแบบอีเมลไม่ถูกต้อง")
-    .max(255)
+    .pipe(z.email("รูปแบบอีเมลไม่ถูกต้อง").max(255))
     .transform((value) => value.toLowerCase()),
 });
 

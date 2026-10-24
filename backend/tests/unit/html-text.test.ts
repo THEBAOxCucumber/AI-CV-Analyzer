@@ -29,6 +29,17 @@ describe("toPlainText", () => {
     ).toBe("line one line two end");
   });
 
+  it("keeps a '<' that is never closed, like the old regex", () => {
+    expect(toPlainText("x < y")).toBe("x < y");
+    expect(toPlainText("<b>React</b> a<b<c>d")).toBe("React ad");
+  });
+
+  it("stays fast on many unclosed '<' (no backtracking)", () => {
+    const started = Date.now();
+    toPlainText(`${"<".repeat(50_000)}x`);
+    expect(Date.now() - started).toBeLessThan(100);
+  });
+
   it("keeps Thai text intact", () => {
     expect(
       toPlainText(

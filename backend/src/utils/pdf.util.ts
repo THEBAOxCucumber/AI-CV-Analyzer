@@ -16,8 +16,7 @@ export async function validatePdfSignature(
   const detectedType = await fileTypeFromFile(filePath);
 
   if (
-    !detectedType ||
-    detectedType.ext !== "pdf" ||
+    detectedType?.ext !== "pdf" ||
     detectedType.mime !== "application/pdf"
   ) {
     throw new AppError(

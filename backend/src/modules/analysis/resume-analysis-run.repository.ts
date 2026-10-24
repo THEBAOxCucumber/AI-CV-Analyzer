@@ -10,6 +10,8 @@ import type {
   CreateAnalysisRunInput,
   ResumeAnalysisResult,
   ResumeAnalysisRunRecord,
+  ResumeAnalysisStatus,
+  ResumeAnalysisType,
 } from "./resume-analysis-run.types.js";
 
 interface AnalysisRunRow
@@ -18,16 +20,8 @@ interface AnalysisRunRow
   resume_id: number;
   user_id: number;
   job_description_id: number | null;
-  analysis_type:
-  | "BASE"
-  | "JOB_MATCH"
-  | "COMBINED";
-  status:
-  | "PENDING"
-  | "QUEUED"
-  | "PROCESSING"
-  | "COMPLETED"
-  | "FAILED";
+  analysis_type: ResumeAnalysisType;
+  status: ResumeAnalysisStatus;
   base_resume_score: number | null;
   job_match_score: number | null;
   contact_information_score:
